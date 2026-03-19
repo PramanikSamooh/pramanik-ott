@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">प्रामाणिक</string>
+    <string name="app_tagline">मुनि श्री प्रमाणसागर जी महाराज</string>
+
+    <!-- Navigation -->
+    <string name="nav_home">होम</string>
+    <string name="nav_discourses">प्रवचन</string>
+    <string name="nav_qa">शंका समाधान</string>
+    <string name="nav_kids">बच्चे</string>
+    <string name="nav_search">खोजें</string>
+    <string name="nav_settings">सेटिंग्स</string>
+    <string name="nav_bhawna_yog">भावना योग</string>
+    <string name="nav_swadhyay">स्वाध्याय</string>
+    <string name="nav_live">लाइव</string>
+
+    <!-- Home -->
+    <string name="live_now">अभी लाइव</string>
+    <string name="view_all">सभी देखें</string>
+    <string name="latest_discourses">नवीनतम प्रवचन</string>
+    <string name="bhawna_yog">भावना योग</string>
+    <string name="shanka_samadhan">शंका समाधान</string>
+    <string name="agam_swadhyay">आगम स्वाध्याय</string>
+    <string name="jain_pathshala">जैन पाठशाला</string>
+    <string name="shanka_full">शंका समाधान (पूर्ण)</string>
+
+    <!-- Player -->
+    <string name="play">चलाएं</string>
+    <string name="related_videos">संबंधित वीडियो</string>
+
+    <!-- Search -->
+    <string name="search_hint">वीडियो खोजें…</string>
+    <string name="no_results">कोई परिणाम नहीं मिला</string>
+
+    <!-- Settings -->
+    <string name="language">भाषा</string>
+    <string name="hindi">हिन्दी</string>
+    <string name="english">English</string>
+
+    <!-- Errors -->
+    <string name="error_title">कुछ गलत हो गया</string>
+    <string name="error_no_internet">इंटरनेट कनेक्शन नहीं है</string>
+    <string name="error_retry">पुनः प्रयास करें</string>
+    <string name="loading">लोड हो रहा है…</string>
+</resources>

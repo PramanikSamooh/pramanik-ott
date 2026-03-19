@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Brand Colors -->
+    <color name="saffron">#FFE8730A</color>
+    <color name="saffron_dark">#FFB85A08</color>
+    <color name="gold">#FFC9932A</color>
+    <color name="gold_light">#FFF1B144</color>
+
+    <!-- Backgrounds -->
+    <color name="background">#FF0D0D0D</color>
+    <color name="surface">#FF1A1A1A</color>
+    <color name="surface_variant">#FF252525</color>
+
+    <!-- Text -->
+    <color name="on_background">#FFFFFFFF</color>
+    <color name="on_surface">#FFE0E0E0</color>
+    <color name="on_surface_variant">#FF9E9E9E</color>
+
+    <!-- Status -->
+    <color name="live_red">#FFFF1744</color>
+    <color name="kids_blue">#FF1A4E7A</color>
+</resources>
