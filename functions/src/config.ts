@@ -20,6 +20,15 @@ export interface CategoryConfig {
   priority: number;
 }
 
+export interface SectionConfig {
+  id: string;
+  label: string;
+  labelHi: string;
+  icon: string;
+  color: string;
+  priority: number;
+}
+
 export const CHANNELS: ChannelConfig[] = [
   {
     key: "pramansagarji",
@@ -128,6 +137,16 @@ export const CATEGORIES: CategoryConfig[] = [
     keywords: ["kids", "children", "animated", "story", "pathshala", "बच्चे"],
     priority: 7,
   },
+];
+
+export const SECTIONS: SectionConfig[] = [
+  { id: "pravachan", label: "Discourses", labelHi: "प्रवचन", icon: "om", color: "#E8730A", priority: 1 },
+  { id: "shanka-clips", label: "Q&A Highlights", labelHi: "शंका समाधान (क्लिप्स)", icon: "bolt", color: "#C9932A", priority: 2 },
+  { id: "shanka-full", label: "Q&A Full Episodes", labelHi: "शंका समाधान (पूर्ण)", icon: "movie", color: "#2D6A4F", priority: 3 },
+  { id: "bhawna-yog", label: "Bhawna Yog", labelHi: "भावना योग", icon: "self_improvement", color: "#C9932A", priority: 4 },
+  { id: "swadhyay", label: "Agam Swadhyay", labelHi: "आगम स्वाध्याय", icon: "menu_book", color: "#B8860B", priority: 5 },
+  { id: "events", label: "Events", labelHi: "कार्यक्रम", icon: "celebration", color: "#FF6B35", priority: 6 },
+  { id: "kids", label: "Jain Pathshala", labelHi: "जैन पाठशाला", icon: "star", color: "#1A4E7A", priority: 7 },
 ];
 
 export const HOME_ROWS = [

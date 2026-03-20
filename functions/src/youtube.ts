@@ -1,11 +1,35 @@
 const YOUTUBE_BASE = "https://www.googleapis.com/youtube/v3";
 
+// ── Response Interfaces ──
+
+interface YouTubePlaylistsResponse {
+  items: Array<{
+    id: string;
+    snippet: {
+      title: string;
+      description: string;
+      publishedAt: string;
+      channelTitle: string;
+      thumbnails: {
+        medium?: { url: string };
+        high?: { url: string };
+        maxres?: { url: string };
+      };
+    };
+    contentDetails: {
+      itemCount: number;
+    };
+  }>;
+  nextPageToken?: string;
+}
+
 interface YouTubePlaylistItemsResponse {
   items: Array<{
     snippet: {
       title: string;
       description: string;
       publishedAt: string;
+      position: number;
       resourceId: { videoId: string };
       thumbnails: {
         medium?: { url: string };
@@ -13,7 +37,7 @@ interface YouTubePlaylistItemsResponse {
         maxres?: { url: string };
       };
     };
-    contentDetails: { videoId: string };
+    contentDetails: { videoId: string; videoPublishedAt?: string };
   }>;
   nextPageToken?: string;
 }
@@ -52,6 +76,24 @@ interface YouTubeSearchResponse {
   }>;
 }
 
+// ── Data Interfaces ──
+
+export interface PlaylistData {
+  id: string;
+  title: string;
+  description: string;
+  thumbnailUrl: string;
+  channelKey: string;
+  channelName: string;
+  videoCount: number;
+  publishedAt: string;
+  section: string;
+  displayOrder: number;
+  pinned: boolean;
+  visible: boolean;
+  lastFetched: FirebaseFirestore.FieldValue | null;
+}
+
 export interface VideoData {
   id: string;
   title: string;
@@ -72,8 +114,93 @@ export interface VideoData {
   isUpcoming: boolean;
   tags: string[];
   youtubeUrl: string;
+  position: number;
 }
 
+// ── YouTube API Functions ──
+
+/**
+ * Fetch all playlists from a YouTube channel.
+ * Uses playlists.list with channelId parameter.
+ * Paginates to get all playlists (up to maxResults).
+ */
+export async function fetchChannelPlaylists(
+  channelId: string,
+  apiKey: string,
+  maxResults = 200
+): Promise<YouTubePlaylistsResponse["items"]> {
+  const allItems: YouTubePlaylistsResponse["items"] = [];
+  let pageToken: string | undefined;
+
+  while (allItems.length < maxResults) {
+    const url = new URL(`${YOUTUBE_BASE}/playlists`);
+    url.searchParams.set("part", "snippet,contentDetails");
+    url.searchParams.set("channelId", channelId);
+    url.searchParams.set("maxResults", String(Math.min(50, maxResults - allItems.length)));
+    url.searchParams.set("key", apiKey);
+    if (pageToken) url.searchParams.set("pageToken", pageToken);
+
+    console.log(`Fetching playlists for channel ${channelId} (page: ${pageToken || "first"})`);
+    const res = await fetch(url.toString());
+    if (!res.ok) {
+      const errorBody = await res.text();
+      console.error(`YouTube playlists.list error: ${res.status} for channel ${channelId}`, errorBody);
+      break;
+    }
+
+    const data: YouTubePlaylistsResponse = await res.json();
+    if (!data.items || data.items.length === 0) break;
+
+    allItems.push(...data.items);
+    pageToken = data.nextPageToken;
+    if (!pageToken) break;
+  }
+
+  return allItems;
+}
+
+/**
+ * Fetch video items from a YouTube playlist.
+ * Uses playlistItems.list with playlistId parameter.
+ * Returns raw playlist items (use fetchVideoDetails for full metadata).
+ */
+export async function fetchPlaylistItems(
+  playlistId: string,
+  apiKey: string,
+  maxResults = 50
+): Promise<YouTubePlaylistItemsResponse["items"]> {
+  const allItems: YouTubePlaylistItemsResponse["items"] = [];
+  let pageToken: string | undefined;
+
+  while (allItems.length < maxResults) {
+    const url = new URL(`${YOUTUBE_BASE}/playlistItems`);
+    url.searchParams.set("part", "snippet,contentDetails");
+    url.searchParams.set("playlistId", playlistId);
+    url.searchParams.set("maxResults", String(Math.min(50, maxResults - allItems.length)));
+    url.searchParams.set("key", apiKey);
+    if (pageToken) url.searchParams.set("pageToken", pageToken);
+
+    const res = await fetch(url.toString());
+    if (!res.ok) {
+      const errorBody = await res.text();
+      console.error(`YouTube playlistItems.list error: ${res.status} for playlist ${playlistId}`, errorBody);
+      break;
+    }
+
+    const data: YouTubePlaylistItemsResponse = await res.json();
+    if (!data.items || data.items.length === 0) break;
+
+    allItems.push(...data.items);
+    pageToken = data.nextPageToken;
+    if (!pageToken) break;
+  }
+
+  return allItems;
+}
+
+/**
+ * Fetch videos from a channel's "Uploads" playlist (backward compat).
+ */
 export async function fetchChannelVideos(
   channelId: string,
   apiKey: string,
@@ -91,8 +218,6 @@ export async function fetchChannelVideos(
     url.searchParams.set("key", apiKey);
     if (pageToken) url.searchParams.set("pageToken", pageToken);
 
-    console.log(`Fetching URL: ${url.toString().replace(apiKey, "API_KEY_REDACTED")}`);
-    console.log(`Playlist ID: ${uploadsPlaylistId}, API key length: ${apiKey.length}`);
     const res = await fetch(url.toString());
     if (!res.ok) {
       const errorBody = await res.text();
@@ -156,6 +281,8 @@ export async function checkLiveStreams(
   const data: YouTubeSearchResponse = await res.json();
   return data.items;
 }
+
+// ── Utility Functions ──
 
 export function parseDuration(iso: string): string {
   const match = iso.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
