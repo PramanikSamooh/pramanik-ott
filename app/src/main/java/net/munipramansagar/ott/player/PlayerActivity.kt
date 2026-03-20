@@ -1,32 +1,40 @@
 package net.munipramansagar.ott.player
 
-import android.annotation.SuppressLint
 import android.os.Bundle
+import android.util.Log
 import android.view.KeyEvent
 import android.view.View
 import android.view.WindowInsetsController
-import android.webkit.WebChromeClient
-import android.webkit.WebResourceRequest
-import android.webkit.WebSettings
-import android.webkit.WebView
-import android.webkit.WebViewClient
 import android.widget.FrameLayout
 import android.widget.ImageButton
+import android.widget.ProgressBar
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
+import androidx.media3.common.MediaItem
+import androidx.media3.common.PlaybackException
+import androidx.media3.common.Player
+import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.ui.PlayerView
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import net.munipramansagar.ott.R
-import net.munipramansagar.ott.util.Constants
+import org.schabi.newpipe.extractor.NewPipe
+import org.schabi.newpipe.extractor.ServiceList
+import org.schabi.newpipe.extractor.stream.StreamInfo
+import org.schabi.newpipe.extractor.stream.VideoStream
 
 @AndroidEntryPoint
 class PlayerActivity : AppCompatActivity() {
 
-    private lateinit var webView: WebView
-    private lateinit var titleOverlay: View
+    private lateinit var playerView: PlayerView
+    private lateinit var loadingSpinner: ProgressBar
     private lateinit var titleText: TextView
-    private lateinit var fullscreenContainer: FrameLayout
-    private var customView: View? = null
-    private var customViewCallback: WebChromeClient.CustomViewCallback? = null
+    private lateinit var titleOverlay: View
+    private var player: ExoPlayer? = null
 
     private val videoId: String by lazy {
         intent.getStringExtra("videoId") ?: ""
@@ -36,91 +44,119 @@ class PlayerActivity : AppCompatActivity() {
         intent.getStringExtra("videoTitle") ?: ""
     }
 
-    @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_player)
 
-        fullscreenContainer = findViewById(R.id.fullscreen_container)
+        playerView = findViewById(R.id.player_view)
+        loadingSpinner = findViewById(R.id.loading_spinner)
         titleOverlay = findViewById(R.id.title_overlay)
         titleText = findViewById(R.id.title_text)
-        webView = findViewById(R.id.player_webview)
 
         val backButton = findViewById<ImageButton>(R.id.back_button)
         backButton.setOnClickListener { finish() }
 
         titleText.text = videoTitle
 
-        setupWebView()
-        loadVideo()
-        hideSystemUI()
-    }
-
-    @SuppressLint("SetJavaScriptEnabled")
-    private fun setupWebView() {
-        webView.settings.apply {
-            javaScriptEnabled = true
-            domStorageEnabled = true
-            mediaPlaybackRequiresUserGesture = false
-            mixedContentMode = WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE
-            cacheMode = WebSettings.LOAD_DEFAULT
-        }
-
-        webView.setLayerType(View.LAYER_TYPE_HARDWARE, null)
-
-        // Only allow YouTube domains
-        webView.webViewClient = object : WebViewClient() {
-            override fun shouldOverrideUrlLoading(
-                view: WebView?,
-                request: WebResourceRequest?
-            ): Boolean {
-                val host = request?.url?.host ?: return true
-                return !isAllowedDomain(host)
-            }
-        }
-
-        webView.webChromeClient = object : WebChromeClient() {
-            override fun onShowCustomView(view: View?, callback: CustomViewCallback?) {
-                customView = view
-                customViewCallback = callback
-                fullscreenContainer.addView(view)
-                fullscreenContainer.visibility = View.VISIBLE
-                webView.visibility = View.GONE
-            }
-
-            override fun onHideCustomView() {
-                fullscreenContainer.removeAllViews()
-                fullscreenContainer.visibility = View.GONE
-                webView.visibility = View.VISIBLE
-                customView = null
-                customViewCallback?.onCustomViewHidden()
-                customViewCallback = null
-            }
-        }
-    }
-
-    private fun isAllowedDomain(host: String): Boolean {
-        val allowed = listOf(
-            "youtube-nocookie.com",
-            "youtube.com",
-            "www.youtube.com",
-            "www.youtube-nocookie.com",
-            "ytimg.com",
-            "i.ytimg.com",
-            "googleapis.com"
-        )
-        return allowed.any { host.endsWith(it) }
-    }
-
-    private fun loadVideo() {
         if (videoId.isEmpty()) {
             finish()
             return
         }
 
-        val embedUrl = "${Constants.YOUTUBE_EMBED_BASE}$videoId" +
-                "?autoplay=1&rel=0&modestbranding=1&playsinline=1&enablejsapi=1"
-        webView.loadUrl(embedUrl)
+        hideSystemUI()
+        initPlayer()
+        extractAndPlay()
+    }
+
+    private fun initPlayer() {
+        player = ExoPlayer.Builder(this).build().apply {
+            playWhenReady = true
+            addListener(object : Player.Listener {
+                override fun onPlaybackStateChanged(playbackState: Int) {
+                    when (playbackState) {
+                        Player.STATE_READY -> {
+                            loadingSpinner.visibility = View.GONE
+                            // Auto-hide title after 3 seconds
+                            titleOverlay.postDelayed({
+                                titleOverlay.animate().alpha(0f).setDuration(500).start()
+                            }, 3000)
+                        }
+                        Player.STATE_BUFFERING -> {
+                            loadingSpinner.visibility = View.VISIBLE
+                        }
+                    }
+                }
+
+                override fun onPlayerError(error: PlaybackException) {
+                    Log.e("PlayerActivity", "Playback error", error)
+                    Toast.makeText(
+                        this@PlayerActivity,
+                        "Playback error. Please try again.",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            })
+        }
+        playerView.player = player
+    }
+
+    private fun extractAndPlay() {
+        loadingSpinner.visibility = View.VISIBLE
+
+        lifecycleScope.launch {
+            try {
+                val streamUrl = withContext(Dispatchers.IO) {
+                    // Initialize NewPipe if not already done
+                    try {
+                        NewPipe.init(DownloaderImpl.getInstance())
+                    } catch (_: Exception) {
+                        // Already initialized
+                    }
+
+                    val url = "https://www.youtube.com/watch?v=$videoId"
+                    val info = StreamInfo.getInfo(
+                        ServiceList.YouTube,
+                        url
+                    )
+
+                    // Get best video stream (prefer 720p or lower for mobile)
+                    val videoStreams = info.videoStreams
+                        .filter { !it.isVideoOnly }
+                        .sortedByDescending { it.resolution?.replace("p", "")?.toIntOrNull() ?: 0 }
+
+                    // Pick 720p or best available under 1080p
+                    val bestStream = videoStreams.firstOrNull {
+                        val res = it.resolution?.replace("p", "")?.toIntOrNull() ?: 0
+                        res in 360..720
+                    } ?: videoStreams.firstOrNull()
+
+                    bestStream?.content ?: info.hlsUrl ?: ""
+                }
+
+                if (streamUrl.isNotEmpty()) {
+                    val mediaItem = MediaItem.fromUri(streamUrl)
+                    player?.setMediaItem(mediaItem)
+                    player?.prepare()
+                } else {
+                    Toast.makeText(
+                        this@PlayerActivity,
+                        "Could not load video stream",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    loadingSpinner.visibility = View.GONE
+                }
+            } catch (e: Exception) {
+                Log.e("PlayerActivity", "Stream extraction failed", e)
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(
+                        this@PlayerActivity,
+                        "Failed to load video: ${e.message?.take(80)}",
+                        Toast.LENGTH_LONG
+                    ).show()
+                    loadingSpinner.visibility = View.GONE
+                }
+            }
+        }
     }
 
     private fun hideSystemUI() {
@@ -135,34 +171,22 @@ class PlayerActivity : AppCompatActivity() {
     }
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
-        // TV D-pad controls
         when (keyCode) {
             KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_ENTER -> {
-                // Toggle play/pause
-                webView.evaluateJavascript(
-                    "document.querySelector('video')?.paused ? " +
-                            "document.querySelector('video')?.play() : " +
-                            "document.querySelector('video')?.pause()", null
-                )
+                player?.let {
+                    if (it.isPlaying) it.pause() else it.play()
+                }
                 return true
             }
             KeyEvent.KEYCODE_DPAD_LEFT -> {
-                webView.evaluateJavascript(
-                    "document.querySelector('video').currentTime -= 10", null
-                )
+                player?.seekTo((player?.currentPosition ?: 0) - 10000)
                 return true
             }
             KeyEvent.KEYCODE_DPAD_RIGHT -> {
-                webView.evaluateJavascript(
-                    "document.querySelector('video').currentTime += 10", null
-                )
+                player?.seekTo((player?.currentPosition ?: 0) + 10000)
                 return true
             }
             KeyEvent.KEYCODE_BACK -> {
-                if (customView != null) {
-                    webView.webChromeClient?.onHideCustomView()
-                    return true
-                }
                 finish()
                 return true
             }
@@ -171,17 +195,18 @@ class PlayerActivity : AppCompatActivity() {
     }
 
     override fun onPause() {
-        webView.onPause()
         super.onPause()
+        player?.pause()
     }
 
     override fun onResume() {
         super.onResume()
-        webView.onResume()
+        player?.play()
     }
 
     override fun onDestroy() {
-        webView.destroy()
+        player?.release()
+        player = null
         super.onDestroy()
     }
 }

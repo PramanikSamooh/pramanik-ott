@@ -51,7 +51,22 @@ dependencies {
     implementation("com.google.firebase:firebase-firestore-ktx")
     implementation("com.google.firebase:firebase-analytics-ktx")
     implementation("com.google.firebase:firebase-messaging-ktx")
-    implementation("com.google.firebase:firebase-appcheck-playintegrity")
+    // implementation("com.google.firebase:firebase-appcheck-playintegrity") // Enable for production
+
+    // NewPipeExtractor (extract direct YouTube stream URLs)
+    implementation("com.github.TeamNewPipe:NewPipeExtractor:v0.26.0") {
+        exclude(group = "com.google.protobuf", module = "protobuf-javalite")
+    }
+
+    // Media3 ExoPlayer (native video playback)
+    implementation("androidx.media3:media3-exoplayer:1.5.1")
+    implementation("androidx.media3:media3-ui:1.5.1")
+    implementation("androidx.media3:media3-exoplayer-hls:1.5.1")
+    implementation("androidx.media3:media3-exoplayer-dash:1.5.1")
+    implementation("androidx.media3:media3-datasource-okhttp:1.5.1")
+
+    // OkHttp (for NewPipe downloader)
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
 
     // Jetpack Compose
     implementation(platform("androidx.compose:compose-bom:2024.12.01"))

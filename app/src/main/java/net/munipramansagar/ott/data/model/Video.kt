@@ -1,9 +1,10 @@
 package net.munipramansagar.ott.data.model
 
-import com.google.firebase.firestore.DocumentId
+import com.google.firebase.firestore.IgnoreExtraProperties
 
+@IgnoreExtraProperties
 data class Video(
-    @DocumentId val id: String = "",
+    val id: String = "",
     val title: String = "",
     val description: String = "",
     val thumbnailUrl: String = "",
