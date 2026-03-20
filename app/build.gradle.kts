@@ -53,8 +53,9 @@ dependencies {
     // Firebase
     implementation(platform("com.google.firebase:firebase-bom:33.7.0"))
     implementation("com.google.firebase:firebase-firestore-ktx")
-    implementation("com.google.firebase:firebase-analytics-ktx")
-    implementation("com.google.firebase:firebase-messaging-ktx")
+    // Disabled for faster startup — re-enable when needed
+    // implementation("com.google.firebase:firebase-analytics-ktx")
+    // implementation("com.google.firebase:firebase-messaging-ktx")
     // implementation("com.google.firebase:firebase-appcheck-playintegrity") // Enable for production
 
     // NewPipeExtractor (extract direct YouTube stream URLs)

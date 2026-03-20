@@ -1,10 +1,16 @@
 package net.munipramansagar.ott.player
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.util.Log
 import android.view.KeyEvent
 import android.view.View
 import android.view.WindowInsetsController
+import android.webkit.WebChromeClient
+import android.webkit.WebResourceRequest
+import android.webkit.WebSettings
+import android.webkit.WebView
+import android.webkit.WebViewClient
 import android.widget.FrameLayout
 import android.widget.ImageButton
 import android.widget.ProgressBar
@@ -35,6 +41,8 @@ class PlayerActivity : AppCompatActivity() {
     private lateinit var titleText: TextView
     private lateinit var titleOverlay: View
     private var player: ExoPlayer? = null
+    private var webView: WebView? = null
+    private var isWebViewMode = false
 
     private val videoId: String by lazy {
         intent.getStringExtra("videoId") ?: ""
@@ -66,13 +74,6 @@ class PlayerActivity : AppCompatActivity() {
             }
 
             hideSystemUI()
-
-            // On older Android (< API 30 / Android 11), NewPipeExtractor crashes
-            // due to missing URLDecoder.decode(String, Charset). Use YouTube app instead.
-            if (android.os.Build.VERSION.SDK_INT < 30) {
-                openInYouTubeApp()
-                return
-            }
 
             initPlayer()
             extractAndPlay()
@@ -173,19 +174,125 @@ class PlayerActivity : AppCompatActivity() {
         }
     }
 
+    @SuppressLint("SetJavaScriptEnabled")
+    private fun initWebViewPlayer() {
+        isWebViewMode = true
+        // Hide ExoPlayer view, show WebView instead
+        playerView.visibility = View.GONE
+        loadingSpinner.visibility = View.GONE
+
+        val wv = WebView(this).apply {
+            layoutParams = FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT
+            )
+        }
+
+        // Add WebView to the root layout (behind title overlay)
+        val root = findViewById<FrameLayout>(android.R.id.content)
+            .getChildAt(0) as FrameLayout
+        root.addView(wv, 0)
+
+        wv.settings.apply {
+            javaScriptEnabled = true
+            domStorageEnabled = true
+            mediaPlaybackRequiresUserGesture = false
+            mixedContentMode = WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE
+            cacheMode = WebSettings.LOAD_DEFAULT
+            userAgentString = "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 " +
+                    "(KHTML, like Gecko) Chrome/125.0.0.0 Mobile Safari/537.36"
+        }
+
+        wv.setLayerType(View.LAYER_TYPE_HARDWARE, null)
+
+        wv.webViewClient = object : WebViewClient() {
+            override fun shouldOverrideUrlLoading(
+                view: WebView?, request: WebResourceRequest?
+            ): Boolean {
+                val host = request?.url?.host ?: return true
+                if (host.endsWith("youtube.com") || host.endsWith("ytimg.com") ||
+                    host.endsWith("googleapis.com") || host.endsWith("googlevideo.com") ||
+                    host.endsWith("google.com")
+                ) {
+                    // Block navigation to other videos
+                    val path = request.url?.path ?: ""
+                    if (path.startsWith("/watch")) {
+                        val clickedId = request.url?.getQueryParameter("v") ?: ""
+                        if (clickedId.isNotEmpty() && clickedId != videoId) return true
+                    }
+                    return false
+                }
+                return true
+            }
+
+            override fun onPageFinished(view: WebView?, url: String?) {
+                super.onPageFinished(view, url)
+                // Hide YouTube UI — show only video player fullscreen
+                val js = """
+                    (function(){
+                        var s=document.createElement('style');
+                        s.textContent=`
+                            ytm-mobile-topbar-renderer,header,.mobile-topbar-header,
+                            ytm-pivot-bar-renderer,#bottom-bar,footer,
+                            ytm-item-section-renderer,[section-identifier="related-items"],
+                            [section-identifier="comments-entry-point"],
+                            ytm-comments-entry-point-header-renderer,
+                            ytm-comment-section-renderer,
+                            .related-chips-slot-wrapper,
+                            ytm-chip-cloud-renderer,
+                            .slim-video-metadata-header,
+                            .slim-owner-icon-and-title,
+                            ytm-slim-video-action-bar-renderer,
+                            #below-the-player,#secondary,#menu,
+                            .watch-below-the-player,
+                            ytm-engagement-panel-section-list-renderer
+                            {display:none!important}
+                            .player-container,.html5-video-player,
+                            #player-container-id{
+                                position:fixed!important;top:0!important;left:0!important;
+                                width:100vw!important;height:100vh!important;z-index:9999!important
+                            }
+                            video{width:100vw!important;height:100vh!important;object-fit:contain!important}
+                            body{overflow:hidden!important;background:#000!important}
+                        `;
+                        document.head.appendChild(s);
+                    })();
+                """.trimIndent()
+                view?.evaluateJavascript(js, null)
+
+                // Auto-hide title overlay
+                titleOverlay.postDelayed({
+                    titleOverlay.animate().alpha(0f).setDuration(500).start()
+                }, 3000)
+            }
+        }
+
+        wv.webChromeClient = WebChromeClient()
+        wv.loadUrl("https://m.youtube.com/watch?v=$videoId")
+        webView = wv
+    }
+
     private fun openInYouTubeApp() {
         try {
-            val appIntent = android.content.Intent(
-                android.content.Intent.ACTION_VIEW,
-                android.net.Uri.parse("vnd.youtube:$videoId")
-            )
-            startActivity(appIntent)
-        } catch (_: android.content.ActivityNotFoundException) {
-            val webIntent = android.content.Intent(
+            // Use https URL — works better on Android TV YouTube app
+            // FLAG_ACTIVITY_NEW_TASK + CLEAR_TOP ensures new video loads
+            val intent = android.content.Intent(
                 android.content.Intent.ACTION_VIEW,
                 android.net.Uri.parse("https://www.youtube.com/watch?v=$videoId")
-            )
-            startActivity(webIntent)
+            ).apply {
+                flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK or
+                        android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP
+            }
+            startActivity(intent)
+        } catch (_: Exception) {
+            // Last resort: vnd.youtube deep link
+            try {
+                val appIntent = android.content.Intent(
+                    android.content.Intent.ACTION_VIEW,
+                    android.net.Uri.parse("vnd.youtube:$videoId")
+                )
+                startActivity(appIntent)
+            } catch (_: Exception) { }
         }
         finish()
     }
@@ -240,17 +347,22 @@ class PlayerActivity : AppCompatActivity() {
 
     override fun onPause() {
         super.onPause()
-        player?.pause()
+        if (isWebViewMode) webView?.onPause() else player?.pause()
     }
 
     override fun onResume() {
         super.onResume()
-        player?.play()
+        if (isWebViewMode) webView?.onResume() else player?.play()
     }
 
     override fun onDestroy() {
-        player?.release()
-        player = null
+        if (isWebViewMode) {
+            webView?.destroy()
+            webView = null
+        } else {
+            player?.release()
+            player = null
+        }
         super.onDestroy()
     }
 }
