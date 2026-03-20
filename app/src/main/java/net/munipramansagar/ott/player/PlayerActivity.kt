@@ -160,13 +160,18 @@ class PlayerActivity : AppCompatActivity() {
     }
 
     private fun hideSystemUI() {
-        window.insetsController?.let { controller ->
-            controller.hide(
-                android.view.WindowInsets.Type.statusBars() or
-                        android.view.WindowInsets.Type.navigationBars()
-            )
-            controller.systemBarsBehavior =
-                WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        window.addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        try {
+            window.insetsController?.let { controller ->
+                controller.hide(
+                    android.view.WindowInsets.Type.statusBars() or
+                            android.view.WindowInsets.Type.navigationBars()
+                )
+                controller.systemBarsBehavior =
+                    WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            }
+        } catch (_: Exception) {
+            // Some TVs don't support WindowInsetsController
         }
     }
 

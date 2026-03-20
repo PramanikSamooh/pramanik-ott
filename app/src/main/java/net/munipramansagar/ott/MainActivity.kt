@@ -13,7 +13,10 @@ import net.munipramansagar.ott.util.DeviceUtil
 class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        installSplashScreen()
+        // Skip splash screen on TV — it causes long black screen
+        if (!DeviceUtil.isTv(this)) {
+            installSplashScreen()
+        }
         super.onCreate(savedInstanceState)
 
         val targetActivity = if (DeviceUtil.isTv(this)) {
