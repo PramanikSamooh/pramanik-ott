@@ -99,8 +99,12 @@ dependencies {
     implementation("androidx.activity:activity-ktx:1.9.3")
     implementation("androidx.core:core-splashscreen:1.0.1")
 
-    // Leanback (TV)
+    // Leanback (TV) — kept for backward compat
     implementation("androidx.leanback:leanback:1.0.0")
+
+    // Compose for TV
+    implementation("androidx.tv:tv-foundation:1.0.0-alpha11")
+    implementation("androidx.tv:tv-material:1.0.0")
 
     // WebKit (Player WebView)
     implementation("androidx.webkit:webkit:1.12.1")

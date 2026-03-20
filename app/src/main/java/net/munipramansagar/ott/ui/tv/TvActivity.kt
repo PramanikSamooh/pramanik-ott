@@ -1,21 +1,33 @@
 package net.munipramansagar.ott.ui.tv
 
 import android.os.Bundle
-import androidx.fragment.app.FragmentActivity
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.activity.viewModels
 import dagger.hilt.android.AndroidEntryPoint
-import net.munipramansagar.ott.R
+import net.munipramansagar.ott.ui.tv.screen.TvApp
+import net.munipramansagar.ott.util.LanguageManager
+import net.munipramansagar.ott.viewmodel.HomeViewModel
+import net.munipramansagar.ott.viewmodel.SearchViewModel
+import javax.inject.Inject
 
 @AndroidEntryPoint
-class TvActivity : FragmentActivity() {
+class TvActivity : ComponentActivity() {
+
+    private val homeViewModel: HomeViewModel by viewModels()
+    private val searchViewModel: SearchViewModel by viewModels()
+
+    @Inject
+    lateinit var languageManager: LanguageManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_tv)
-
-        if (savedInstanceState == null) {
-            supportFragmentManager.beginTransaction()
-                .replace(R.id.tv_fragment_container, TvBrowseFragment())
-                .commit()
+        setContent {
+            TvApp(
+                homeViewModel = homeViewModel,
+                searchViewModel = searchViewModel,
+                languageManager = languageManager
+            )
         }
     }
 }
