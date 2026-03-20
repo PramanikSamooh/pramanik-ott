@@ -46,26 +46,40 @@ class PlayerActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_player)
+        Log.d("PlayerActivity", "onCreate videoId=$videoId")
+        try {
+            setContentView(R.layout.activity_player)
 
-        playerView = findViewById(R.id.player_view)
-        loadingSpinner = findViewById(R.id.loading_spinner)
-        titleOverlay = findViewById(R.id.title_overlay)
-        titleText = findViewById(R.id.title_text)
+            playerView = findViewById(R.id.player_view)
+            loadingSpinner = findViewById(R.id.loading_spinner)
+            titleOverlay = findViewById(R.id.title_overlay)
+            titleText = findViewById(R.id.title_text)
 
-        val backButton = findViewById<ImageButton>(R.id.back_button)
-        backButton.setOnClickListener { finish() }
+            val backButton = findViewById<ImageButton>(R.id.back_button)
+            backButton.setOnClickListener { finish() }
 
-        titleText.text = videoTitle
+            titleText.text = videoTitle
 
-        if (videoId.isEmpty()) {
-            finish()
-            return
+            if (videoId.isEmpty()) {
+                finish()
+                return
+            }
+
+            hideSystemUI()
+
+            // On older Android (< API 30 / Android 11), NewPipeExtractor crashes
+            // due to missing URLDecoder.decode(String, Charset). Use YouTube app instead.
+            if (android.os.Build.VERSION.SDK_INT < 30) {
+                openInYouTubeApp()
+                return
+            }
+
+            initPlayer()
+            extractAndPlay()
+        } catch (e: Throwable) {
+            Log.e("PlayerActivity", "onCreate crashed", e)
+            openInYouTubeApp()
         }
-
-        hideSystemUI()
-        initPlayer()
-        extractAndPlay()
     }
 
     private fun initPlayer() {
@@ -159,9 +173,27 @@ class PlayerActivity : AppCompatActivity() {
         }
     }
 
+    private fun openInYouTubeApp() {
+        try {
+            val appIntent = android.content.Intent(
+                android.content.Intent.ACTION_VIEW,
+                android.net.Uri.parse("vnd.youtube:$videoId")
+            )
+            startActivity(appIntent)
+        } catch (_: android.content.ActivityNotFoundException) {
+            val webIntent = android.content.Intent(
+                android.content.Intent.ACTION_VIEW,
+                android.net.Uri.parse("https://www.youtube.com/watch?v=$videoId")
+            )
+            startActivity(webIntent)
+        }
+        finish()
+    }
+
+    @Suppress("DEPRECATION")
     private fun hideSystemUI() {
         window.addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-        try {
+        if (android.os.Build.VERSION.SDK_INT >= 30) {
             window.insetsController?.let { controller ->
                 controller.hide(
                     android.view.WindowInsets.Type.statusBars() or
@@ -170,8 +202,15 @@ class PlayerActivity : AppCompatActivity() {
                 controller.systemBarsBehavior =
                     WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
             }
-        } catch (_: Exception) {
-            // Some TVs don't support WindowInsetsController
+        } else {
+            window.decorView.systemUiVisibility = (
+                View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                    or View.SYSTEM_UI_FLAG_FULLSCREEN
+                    or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                    or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                    or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                    or View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+            )
         }
     }
 
