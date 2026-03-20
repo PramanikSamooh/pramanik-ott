@@ -2,9 +2,15 @@ package net.munipramansagar.ott.ui.tv.component
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -15,8 +21,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -29,18 +35,24 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.tv.material3.Button
 import androidx.tv.material3.ButtonDefaults
 import androidx.tv.material3.ExperimentalTvMaterial3Api
 import androidx.tv.material3.Text
 import coil.compose.AsyncImage
 import kotlinx.coroutines.delay
+import net.munipramansagar.ott.data.model.Category
 import net.munipramansagar.ott.data.model.Video
-import net.munipramansagar.ott.ui.tv.theme.DarkBackground
+import net.munipramansagar.ott.ui.tv.theme.DarkBg
+import net.munipramansagar.ott.ui.tv.theme.GlassBorder
+import net.munipramansagar.ott.ui.tv.theme.GlassCard
 import net.munipramansagar.ott.ui.tv.theme.PramanikTvTheme
 import net.munipramansagar.ott.ui.tv.theme.Saffron
+import net.munipramansagar.ott.ui.tv.theme.SaffronLight
 import net.munipramansagar.ott.ui.tv.theme.TextGray
 import net.munipramansagar.ott.ui.tv.theme.TextWhite
 
@@ -55,10 +67,10 @@ fun TvHeroBanner(
 
     var currentIndex by remember { mutableIntStateOf(0) }
 
-    // Auto-advance every 5 seconds
+    // Auto-advance every 6 seconds
     LaunchedEffect(videos.size) {
         while (true) {
-            delay(5000)
+            delay(6000)
             currentIndex = (currentIndex + 1) % videos.size
         }
     }
@@ -68,12 +80,16 @@ fun TvHeroBanner(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(320.dp)
+            .height(360.dp)
+            .clip(RoundedCornerShape(bottomStart = 20.dp, bottomEnd = 20.dp))
     ) {
-        // Background image
+        // ── Background image with crossfade + subtle scale ──
         AnimatedContent(
             targetState = currentIndex,
-            transitionSpec = { fadeIn() togetherWith fadeOut() },
+            transitionSpec = {
+                (fadeIn(tween(700)) + scaleIn(tween(700), initialScale = 1.04f))
+                    .togetherWith(fadeOut(tween(500)) + scaleOut(tween(500), targetScale = 0.98f))
+            },
             label = "heroBanner"
         ) { index ->
             val video = videos[index]
@@ -85,51 +101,88 @@ fun TvHeroBanner(
             )
         }
 
-        // Gradient overlays
+        // ── Gradient overlays ──
+
+        // Bottom-to-top gradient (covers bottom 70%)
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(
                     Brush.verticalGradient(
                         colors = listOf(
-                            DarkBackground.copy(alpha = 0.3f),
-                            DarkBackground.copy(alpha = 0.7f),
-                            DarkBackground
-                        )
+                            Color.Transparent,
+                            DarkBg.copy(alpha = 0.4f),
+                            DarkBg.copy(alpha = 0.85f),
+                            DarkBg
+                        ),
+                        startY = 0f,
+                        endY = Float.POSITIVE_INFINITY
                     )
                 )
         )
+
+        // Left-to-right gradient (covers left 40%)
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(
                     Brush.horizontalGradient(
                         colors = listOf(
-                            DarkBackground.copy(alpha = 0.8f),
+                            DarkBg.copy(alpha = 0.9f),
+                            DarkBg.copy(alpha = 0.5f),
                             Color.Transparent
                         ),
                         startX = 0f,
-                        endX = 800f
+                        endX = 900f
                     )
                 )
         )
 
-        // Content
+        // ── Content (bottom-left) ──
         Column(
             modifier = Modifier
                 .align(Alignment.BottomStart)
-                .padding(start = 48.dp, bottom = 40.dp, end = 300.dp)
+                .padding(start = 48.dp, bottom = 48.dp, end = 320.dp)
         ) {
+            // Category pill
+            val category = remember(currentVideo.categorySlug) {
+                Category.fromSlug(currentVideo.categorySlug)
+            }
+            if (category != null) {
+                Text(
+                    text = category.labelHi,
+                    style = PramanikTvTheme.typography.labelMedium.copy(
+                        color = TextWhite,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 12.sp
+                    ),
+                    modifier = Modifier
+                        .background(Saffron.copy(alpha = 0.9f), PramanikTvTheme.shapes.pill)
+                        .padding(horizontal = 14.dp, vertical = 5.dp)
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+            }
+
+            // Title
             Text(
                 text = currentVideo.title,
-                style = PramanikTvTheme.typography.displayMedium,
+                style = PramanikTvTheme.typography.displayMedium.copy(
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = (-0.3).sp,
+                    lineHeight = 42.sp
+                ),
                 maxLines = 2,
-                overflow = TextOverflow.Ellipsis
+                overflow = TextOverflow.Ellipsis,
+                color = TextWhite
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            // Meta row: channel + duration + views
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
                 if (currentVideo.channelName.isNotEmpty()) {
                     Text(
                         text = currentVideo.channelName,
@@ -138,46 +191,108 @@ fun TvHeroBanner(
                 }
                 if (currentVideo.durationFormatted.isNotEmpty()) {
                     Text(
-                        text = " \u2022 ${currentVideo.durationFormatted}",
+                        text = "\u2022",
+                        style = PramanikTvTheme.typography.bodyLarge.copy(color = TextGray)
+                    )
+                    Text(
+                        text = currentVideo.durationFormatted,
+                        style = PramanikTvTheme.typography.bodyLarge.copy(color = TextGray)
+                    )
+                }
+                if (currentVideo.viewCountFormatted.isNotEmpty()) {
+                    Text(
+                        text = "\u2022",
+                        style = PramanikTvTheme.typography.bodyLarge.copy(color = TextGray)
+                    )
+                    Text(
+                        text = currentVideo.viewCountFormatted,
                         style = PramanikTvTheme.typography.bodyLarge.copy(color = TextGray)
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
-            Button(
-                onClick = { onPlayClick(currentVideo) },
-                colors = ButtonDefaults.colors(
-                    containerColor = Saffron,
-                    contentColor = TextWhite,
-                    focusedContainerColor = Saffron.copy(alpha = 0.85f),
-                    focusedContentColor = TextWhite
-                )
-            ) {
-                Text(
-                    text = "\u25B6  Play",
-                    style = PramanikTvTheme.typography.labelLarge
-                )
+            // Action buttons
+            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                // Play button – filled saffron
+                Button(
+                    onClick = { onPlayClick(currentVideo) },
+                    colors = ButtonDefaults.colors(
+                        containerColor = Saffron,
+                        contentColor = TextWhite,
+                        focusedContainerColor = SaffronLight,
+                        focusedContentColor = Color.White
+                    ),
+                    shape = ButtonDefaults.shape(
+                        shape = PramanikTvTheme.shapes.button
+                    )
+                ) {
+                    Text(
+                        text = "\u25B6  Play",
+                        style = PramanikTvTheme.typography.labelLarge.copy(
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 15.sp
+                        )
+                    )
+                }
+
+                // Details button – glass outlined
+                Button(
+                    onClick = { onPlayClick(currentVideo) },
+                    colors = ButtonDefaults.colors(
+                        containerColor = GlassCard,
+                        contentColor = TextWhite,
+                        focusedContainerColor = GlassCard.copy(alpha = 0.2f),
+                        focusedContentColor = TextWhite
+                    ),
+                    border = ButtonDefaults.border(
+                        border = androidx.tv.material3.Border(
+                            border = BorderStroke(1.dp, GlassBorder)
+                        ),
+                        focusedBorder = androidx.tv.material3.Border(
+                            border = BorderStroke(1.5.dp, TextWhite.copy(alpha = 0.4f))
+                        )
+                    ),
+                    shape = ButtonDefaults.shape(
+                        shape = PramanikTvTheme.shapes.button
+                    )
+                ) {
+                    Text(
+                        text = "\u2139  Details",
+                        style = PramanikTvTheme.typography.labelLarge.copy(
+                            fontWeight = FontWeight.Medium,
+                            fontSize = 15.sp
+                        )
+                    )
+                }
             }
         }
 
-        // Dots indicator
+        // ── Dot / pill indicators ──
         Row(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .padding(bottom = 16.dp),
-            horizontalArrangement = Arrangement.Center
+                .padding(bottom = 18.dp),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
         ) {
             videos.forEachIndexed { index, _ ->
+                val isActive = index == currentIndex
+                val pillWidth by animateDpAsState(
+                    targetValue = if (isActive) 24.dp else 8.dp,
+                    animationSpec = spring(dampingRatio = 0.75f, stiffness = 350f),
+                    label = "pillWidth"
+                )
                 Box(
                     modifier = Modifier
-                        .padding(horizontal = 4.dp)
-                        .size(if (index == currentIndex) 10.dp else 8.dp)
-                        .clip(CircleShape)
+                        .padding(horizontal = 3.dp)
+                        .width(pillWidth)
+                        .height(4.dp)
+                        .clip(PramanikTvTheme.shapes.pill)
                         .background(
-                            if (index == currentIndex) Saffron
-                            else TextGray.copy(alpha = 0.5f)
+                            if (isActive) Saffron
+                            else Color.White.copy(alpha = 0.2f)
                         )
                 )
             }
