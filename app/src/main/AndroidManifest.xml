@@ -35,9 +35,9 @@
             android:name="firebase_messaging_auto_init_enabled"
             android:value="false" />
 
-        <!-- Main entry point — routes to TV or Mobile -->
+        <!-- Splash screen with animation + intro music -->
         <activity
-            android:name=".MainActivity"
+            android:name=".SplashActivity"
             android:exported="true"
             android:theme="@style/Theme.PramanikOTT.Splash">
             <intent-filter>
@@ -46,6 +46,11 @@
                 <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- Old main entry — kept for deep links -->
+        <activity
+            android:name=".MainActivity"
+            android:exported="false" />
 
         <!-- Mobile UI (Compose) -->
         <activity
