@@ -58,7 +58,9 @@ class HomeViewModel @Inject constructor(
 
                 // Fetch sections and announcements in parallel
                 val sectionsDeferred = async { videoRepository.getSections() }
-                val announcementsDeferred = async { videoRepository.getActiveAnnouncements() }
+                val announcementsDeferred = async {
+                    try { videoRepository.getActiveAnnouncements() } catch (_: Exception) { emptyList() }
+                }
 
                 val sections = sectionsDeferred.await()
                 val announcements = announcementsDeferred.await()
@@ -66,14 +68,22 @@ class HomeViewModel @Inject constructor(
                 // For each section, fetch playlists (limit 5), then for each playlist fetch 10 videos
                 val sectionDataList = sections.map { section ->
                     async {
-                        val playlists = videoRepository.getPlaylistsBySection(section.id, limit = 5)
-                        val playlistsWithVideos = playlists.map { playlist ->
-                            async {
-                                val videos = videoRepository.getPlaylistVideos(playlist.id, limit = 10)
-                                PlaylistWithVideos(playlist, videos)
-                            }
-                        }.awaitAll()
-                        HomeSectionData(section, playlistsWithVideos.filter { it.videos.isNotEmpty() })
+                        try {
+                            val playlists = videoRepository.getPlaylistsBySection(section.id, limit = 5)
+                            val playlistsWithVideos = playlists.map { playlist ->
+                                async {
+                                    try {
+                                        val videos = videoRepository.getPlaylistVideos(playlist.id, limit = 10)
+                                        PlaylistWithVideos(playlist, videos)
+                                    } catch (_: Exception) {
+                                        PlaylistWithVideos(playlist, emptyList())
+                                    }
+                                }
+                            }.awaitAll()
+                            HomeSectionData(section, playlistsWithVideos.filter { it.videos.isNotEmpty() })
+                        } catch (_: Exception) {
+                            HomeSectionData(section, emptyList())
+                        }
                     }
                 }.awaitAll().filter { it.playlists.isNotEmpty() }
 
