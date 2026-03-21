@@ -45,7 +45,6 @@ import androidx.tv.material3.ExperimentalTvMaterial3Api
 import androidx.tv.material3.Text
 import coil.compose.AsyncImage
 import kotlinx.coroutines.delay
-import net.munipramansagar.ott.data.model.Category
 import net.munipramansagar.ott.data.model.Video
 import net.munipramansagar.ott.ui.tv.theme.DarkBg
 import net.munipramansagar.ott.ui.tv.theme.GlassBorder
@@ -144,13 +143,11 @@ fun TvHeroBanner(
                 .align(Alignment.BottomStart)
                 .padding(start = 48.dp, bottom = 48.dp, end = 320.dp)
         ) {
-            // Category pill
-            val category = remember(currentVideo.categorySlug) {
-                Category.fromSlug(currentVideo.categorySlug)
-            }
-            if (category != null) {
+            // Playlist / category pill
+            val pillLabel = currentVideo.playlistTitle.ifBlank { currentVideo.categorySlug }
+            if (pillLabel.isNotBlank()) {
                 Text(
-                    text = category.labelHi,
+                    text = pillLabel,
                     style = PramanikTvTheme.typography.labelMedium.copy(
                         color = TextWhite,
                         fontWeight = FontWeight.SemiBold,

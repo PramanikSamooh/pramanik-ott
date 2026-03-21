@@ -17,16 +17,15 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Book
-import androidx.compose.material.icons.filled.ChildCare
-import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.QuestionAnswer
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.ViewList
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -48,6 +47,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.tv.material3.ExperimentalTvMaterial3Api
 import androidx.tv.material3.Text
+import net.munipramansagar.ott.data.model.Section
 import net.munipramansagar.ott.ui.tv.theme.DarkBg
 import net.munipramansagar.ott.ui.tv.theme.DarkBg2
 import net.munipramansagar.ott.ui.tv.theme.GlassBorder
@@ -61,29 +61,21 @@ import net.munipramansagar.ott.util.LanguageManager
 import net.munipramansagar.ott.viewmodel.HomeViewModel
 import net.munipramansagar.ott.viewmodel.SearchViewModel
 
-sealed class TvScreen(
+// Navigation items: Home, dynamic sections from Firestore, Search, Settings
+sealed class TvNavItem(
     val titleEn: String,
     val titleHi: String,
     val icon: ImageVector
 ) {
-    data object Home : TvScreen("Home", "\u0939\u094B\u092E", Icons.Default.Home)
-    data object Discourses : TvScreen("Discourses", "\u092A\u094D\u0930\u0935\u091A\u0928", Icons.Default.Book)
-    data object BhawnaYog : TvScreen("Bhawna Yog", "\u092D\u093E\u0935\u0928\u093E \u092F\u094B\u0917", Icons.Default.Favorite)
-    data object QnA : TvScreen("Q&A", "\u0936\u0902\u0915\u093E \u0938\u092E\u093E\u0927\u093E\u0928", Icons.Default.QuestionAnswer)
-    data object Kids : TvScreen("Pathshala", "\u092A\u093E\u0920\u0936\u093E\u0932\u093E", Icons.Default.ChildCare)
-    data object Search : TvScreen("Search", "\u0916\u094B\u091C\u0947\u0902", Icons.Default.Search)
-    data object Settings : TvScreen("Settings", "\u0938\u0947\u091F\u093F\u0902\u0917\u094D\u0938", Icons.Default.Settings)
-}
+    data object Home : TvNavItem("Home", "होम", Icons.Default.Home)
+    data class SectionItem(
+        val section: Section
+    ) : TvNavItem(section.label, section.labelHi, Icons.Default.ViewList)
+    data object Search : TvNavItem("Search", "खोजें", Icons.Default.Search)
+    data object Settings : TvNavItem("Settings", "सेटिंग्स", Icons.Default.Settings)
 
-private val navItems = listOf(
-    TvScreen.Home,
-    TvScreen.Discourses,
-    TvScreen.BhawnaYog,
-    TvScreen.QnA,
-    TvScreen.Kids,
-    TvScreen.Search,
-    TvScreen.Settings
-)
+    fun getTitle(isHindi: Boolean): String = if (isHindi && titleHi.isNotBlank()) titleHi else titleEn
+}
 
 @OptIn(ExperimentalTvMaterial3Api::class)
 @Composable
@@ -96,8 +88,27 @@ fun TvApp(
     val isHindi = language == LanguageManager.HINDI
     var selectedIndex by rememberSaveable { mutableIntStateOf(0) }
 
+    val uiState by homeViewModel.uiState.collectAsState()
+
+    // Build navigation items dynamically from loaded sections
+    val navItems = remember(uiState.sections) {
+        buildList {
+            add(TvNavItem.Home)
+            uiState.sections.forEach { sectionData ->
+                add(TvNavItem.SectionItem(sectionData.section))
+            }
+            add(TvNavItem.Search)
+            add(TvNavItem.Settings)
+        }
+    }
+
+    // Clamp selectedIndex if sections changed
+    val safeIndex = selectedIndex.coerceIn(0, (navItems.size - 1).coerceAtLeast(0))
+    if (safeIndex != selectedIndex) {
+        selectedIndex = safeIndex
+    }
+
     PramanikTvTheme {
-        // Full-screen gradient background
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -110,6 +121,7 @@ fun TvApp(
             Row(modifier = Modifier.fillMaxSize()) {
                 // Sidebar
                 TvSidebar(
+                    navItems = navItems,
                     selectedIndex = selectedIndex,
                     isHindi = isHindi,
                     onItemSelected = { index -> selectedIndex = index }
@@ -129,47 +141,26 @@ fun TvApp(
                         .weight(1f)
                         .fillMaxHeight()
                 ) {
-                    when (navItems[selectedIndex]) {
-                        TvScreen.Home -> TvHomeScreen(
+                    when (val item = navItems[selectedIndex]) {
+                        TvNavItem.Home -> TvHomeScreen(
                             homeViewModel = homeViewModel,
                             isHindi = isHindi,
-                            onCategoryClick = { slug ->
+                            onSectionClick = { sectionId ->
                                 val idx = navItems.indexOfFirst {
-                                    when (it) {
-                                        TvScreen.Discourses -> slug == "discourse"
-                                        TvScreen.BhawnaYog -> slug == "bhawna-yog"
-                                        TvScreen.QnA -> slug == "shanka-clips" || slug == "shanka-full"
-                                        TvScreen.Kids -> slug == "kids"
-                                        else -> false
-                                    }
+                                    it is TvNavItem.SectionItem && it.section.id == sectionId
                                 }
                                 if (idx >= 0) selectedIndex = idx
                             }
                         )
-                        TvScreen.Discourses -> TvCategoryScreen(
-                            categorySlug = "discourse",
+                        is TvNavItem.SectionItem -> TvCategoryScreen(
+                            sectionId = item.section.id,
                             homeViewModel = homeViewModel,
                             isHindi = isHindi
                         )
-                        TvScreen.BhawnaYog -> TvCategoryScreen(
-                            categorySlug = "bhawna-yog",
-                            homeViewModel = homeViewModel,
-                            isHindi = isHindi
-                        )
-                        TvScreen.QnA -> TvCategoryScreen(
-                            categorySlug = "shanka-clips",
-                            homeViewModel = homeViewModel,
-                            isHindi = isHindi
-                        )
-                        TvScreen.Kids -> TvCategoryScreen(
-                            categorySlug = "kids",
-                            homeViewModel = homeViewModel,
-                            isHindi = isHindi
-                        )
-                        TvScreen.Search -> TvSearchScreen(
+                        TvNavItem.Search -> TvSearchScreen(
                             searchViewModel = searchViewModel
                         )
-                        TvScreen.Settings -> TvSettingsScreen(
+                        TvNavItem.Settings -> TvSettingsScreen(
                             isHindi = isHindi,
                             onLanguageChange = { lang -> languageManager.setLanguage(lang) }
                         )
@@ -183,6 +174,7 @@ fun TvApp(
 @OptIn(ExperimentalTvMaterial3Api::class)
 @Composable
 private fun TvSidebar(
+    navItems: List<TvNavItem>,
     selectedIndex: Int,
     isHindi: Boolean,
     onItemSelected: (Int) -> Unit
@@ -214,6 +206,7 @@ private fun TvSidebar(
             )
             .padding(vertical = 20.dp)
             .selectableGroup()
+            .verticalScroll(rememberScrollState())
     ) {
         // App logo / name
         Box(
@@ -224,7 +217,7 @@ private fun TvSidebar(
         ) {
             if (isSidebarFocused) {
                 Text(
-                    text = "\u092A\u094D\u0930\u093E\u092E\u093E\u0923\u093F\u0915",
+                    text = "प्रामाणिक",
                     style = PramanikTvTheme.typography.headlineLarge.copy(
                         color = Saffron,
                         fontSize = 24.sp
@@ -232,9 +225,8 @@ private fun TvSidebar(
                     modifier = Modifier.padding(start = 4.dp)
                 )
             } else {
-                // Collapsed: show "P" initial in saffron
                 Text(
-                    text = "\u092A\u094D\u0930",
+                    text = "प्र",
                     style = PramanikTvTheme.typography.headlineLarge.copy(
                         color = Saffron,
                         fontSize = 22.sp
@@ -256,13 +248,13 @@ private fun TvSidebar(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // Navigation items (excluding Settings which goes to bottom)
+        // Main navigation items (exclude Settings which goes to bottom)
         val mainItems = navItems.dropLast(1)
         val settingsItem = navItems.last()
 
-        mainItems.forEachIndexed { index, screen ->
+        mainItems.forEachIndexed { index, item ->
             TvSidebarItem(
-                screen = screen,
+                item = item,
                 isSelected = selectedIndex == index,
                 isExpanded = isSidebarFocused,
                 textAlpha = textAlpha,
@@ -290,7 +282,7 @@ private fun TvSidebar(
 
         // Settings at bottom
         TvSidebarItem(
-            screen = settingsItem,
+            item = settingsItem,
             isSelected = selectedIndex == navItems.lastIndex,
             isExpanded = isSidebarFocused,
             textAlpha = textAlpha,
@@ -307,7 +299,7 @@ private fun TvSidebar(
 @OptIn(ExperimentalTvMaterial3Api::class)
 @Composable
 private fun TvSidebarItem(
-    screen: TvScreen,
+    item: TvNavItem,
     isSelected: Boolean,
     isExpanded: Boolean,
     textAlpha: Float,
@@ -371,8 +363,8 @@ private fun TvSidebarItem(
             contentAlignment = Alignment.Center
         ) {
             Icon(
-                imageVector = screen.icon,
-                contentDescription = screen.titleEn,
+                imageVector = item.icon,
+                contentDescription = item.titleEn,
                 tint = contentColor,
                 modifier = Modifier.size(22.dp)
             )
@@ -381,7 +373,7 @@ private fun TvSidebarItem(
         // Label (only when expanded)
         if (isExpanded) {
             Text(
-                text = if (isHindi) screen.titleHi else screen.titleEn,
+                text = item.getTitle(isHindi),
                 style = PramanikTvTheme.typography.labelLarge.copy(
                     color = contentColor,
                     fontSize = 14.sp

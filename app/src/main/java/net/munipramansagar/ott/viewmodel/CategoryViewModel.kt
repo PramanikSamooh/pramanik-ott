@@ -4,19 +4,25 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import net.munipramansagar.ott.data.model.Category
+import net.munipramansagar.ott.data.model.Playlist
+import net.munipramansagar.ott.data.model.Section
 import net.munipramansagar.ott.data.model.Video
 import net.munipramansagar.ott.data.repository.VideoRepository
 import javax.inject.Inject
 
 data class CategoryUiState(
     val isLoading: Boolean = true,
-    val videos: List<Video> = emptyList(),
-    val category: Category? = null,
+    val section: Section? = null,
+    val playlists: List<PlaylistWithVideos> = emptyList(),
+    // For playlist detail view
+    val selectedPlaylist: Playlist? = null,
+    val playlistVideos: List<Video> = emptyList(),
     val isLoadingMore: Boolean = false,
     val hasMore: Boolean = true,
     val error: String? = null
@@ -28,23 +34,61 @@ class CategoryViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
-    private val categorySlug: String = savedStateHandle["categorySlug"] ?: ""
+    private val sectionId: String = savedStateHandle["sectionId"] ?: savedStateHandle["categorySlug"] ?: ""
+    private val playlistId: String? = savedStateHandle["playlistId"]
+
     private val _uiState = MutableStateFlow(CategoryUiState())
     val uiState: StateFlow<CategoryUiState> = _uiState.asStateFlow()
 
     init {
-        _uiState.value = _uiState.value.copy(category = Category.fromSlug(categorySlug))
-        loadVideos()
+        if (playlistId != null) {
+            loadPlaylistVideos(playlistId)
+        } else {
+            loadSectionPlaylists()
+        }
     }
 
-    private fun loadVideos() {
+    private fun loadSectionPlaylists() {
         viewModelScope.launch {
             try {
                 _uiState.value = _uiState.value.copy(isLoading = true, error = null)
-                val videos = videoRepository.getVideosByCategory(categorySlug, limit = 24)
+
+                // Fetch playlists for this section
+                val playlists = videoRepository.getPlaylistsBySection(sectionId)
+
+                // For each playlist, fetch preview videos (first 6)
+                val playlistsWithVideos = playlists.map { playlist ->
+                    async {
+                        val videos = videoRepository.getPlaylistVideos(playlist.id, limit = 6)
+                        PlaylistWithVideos(playlist, videos)
+                    }
+                }.awaitAll()
+
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
-                    videos = videos,
+                    playlists = playlistsWithVideos
+                )
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    error = e.message ?: "Failed to load playlists"
+                )
+            }
+        }
+    }
+
+    private fun loadPlaylistVideos(pId: String) {
+        viewModelScope.launch {
+            try {
+                _uiState.value = _uiState.value.copy(isLoading = true, error = null)
+
+                val playlist = videoRepository.getPlaylistById(pId)
+                val videos = videoRepository.getPlaylistVideos(pId, limit = 24)
+
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    selectedPlaylist = playlist,
+                    playlistVideos = videos,
                     hasMore = videos.size >= 24
                 )
             } catch (e: Exception) {
@@ -59,19 +103,20 @@ class CategoryViewModel @Inject constructor(
     fun loadMore() {
         val state = _uiState.value
         if (state.isLoadingMore || !state.hasMore) return
+        val pId = playlistId ?: return
 
         viewModelScope.launch {
             try {
                 _uiState.value = state.copy(isLoadingMore = true)
-                val lastVideo = state.videos.lastOrNull()
-                val moreVideos = videoRepository.getVideosByCategory(
-                    categorySlug,
+                val lastVideo = state.playlistVideos.lastOrNull()
+                val moreVideos = videoRepository.getPlaylistVideos(
+                    pId,
                     limit = 24,
                     lastPublishedAt = lastVideo?.publishedAt
                 )
                 _uiState.value = _uiState.value.copy(
                     isLoadingMore = false,
-                    videos = state.videos + moreVideos,
+                    playlistVideos = state.playlistVideos + moreVideos,
                     hasMore = moreVideos.size >= 24
                 )
             } catch (e: Exception) {

@@ -26,9 +26,9 @@ enum class BottomNavItem(
     val icon: ImageVector
 ) {
     HOME("home", "Home", "होम", Icons.Default.Home),
-    DISCOURSES("category/discourse", "Discourses", "प्रवचन", Icons.Default.MenuBook),
-    QA("category/shanka-clips", "Q&A", "शंका", Icons.Default.QuestionAnswer),
-    KIDS("category/kids", "Kids", "बच्चे", Icons.Default.Star),
+    DISCOURSES("section/discourse", "Discourses", "प्रवचन", Icons.Default.MenuBook),
+    QA("section/shanka-clips", "Q&A", "शंका", Icons.Default.QuestionAnswer),
+    KIDS("section/kids", "Kids", "बच्चे", Icons.Default.Star),
     SEARCH("search", "Search", "खोजें", Icons.Default.Search);
 
     fun getLabel(isHindi: Boolean): String = if (isHindi) labelHi else label

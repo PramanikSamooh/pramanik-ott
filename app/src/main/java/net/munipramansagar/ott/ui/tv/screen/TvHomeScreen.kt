@@ -25,7 +25,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -46,14 +45,16 @@ import net.munipramansagar.ott.ui.tv.theme.Saffron
 import net.munipramansagar.ott.ui.tv.theme.SaffronLight
 import net.munipramansagar.ott.ui.tv.theme.TextGray
 import net.munipramansagar.ott.ui.tv.theme.TextWhite
+import net.munipramansagar.ott.viewmodel.HomeSectionData
 import net.munipramansagar.ott.viewmodel.HomeViewModel
+import net.munipramansagar.ott.viewmodel.PlaylistWithVideos
 
 @OptIn(ExperimentalTvMaterial3Api::class)
 @Composable
 fun TvHomeScreen(
     homeViewModel: HomeViewModel,
     isHindi: Boolean,
-    onCategoryClick: (String) -> Unit
+    onSectionClick: (String) -> Unit
 ) {
     val uiState by homeViewModel.uiState.collectAsState()
     val context = LocalContext.current
@@ -79,7 +80,7 @@ fun TvHomeScreen(
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(bottom = 48.dp)
             ) {
-                // Hero banner – full width
+                // Hero banner
                 if (uiState.heroBannerVideos.isNotEmpty()) {
                     item {
                         TvHeroBanner(
@@ -90,14 +91,14 @@ fun TvHomeScreen(
                     }
                 }
 
-                // Category rows
-                items(uiState.rows.size) { index ->
-                    val row = uiState.rows[index]
-                    TvCategoryRow(
-                        title = if (isHindi) row.labelHi else row.label,
-                        videos = row.videos,
+                // Section rows — each section has playlist sub-rows
+                items(uiState.sections.size) { index ->
+                    val sectionData = uiState.sections[index]
+                    TvSectionBlock(
+                        sectionData = sectionData,
+                        isHindi = isHindi,
                         onVideoClick = onVideoClick,
-                        onViewAllClick = { onCategoryClick(row.categorySlug) }
+                        onViewAllClick = { onSectionClick(sectionData.section.id) }
                     )
                     Spacer(modifier = Modifier.height(32.dp))
                 }
@@ -108,14 +109,14 @@ fun TvHomeScreen(
 
 @OptIn(ExperimentalTvMaterial3Api::class)
 @Composable
-private fun TvCategoryRow(
-    title: String,
-    videos: List<Video>,
+private fun TvSectionBlock(
+    sectionData: HomeSectionData,
+    isHindi: Boolean,
     onVideoClick: (Video) -> Unit,
     onViewAllClick: () -> Unit
 ) {
     Column(modifier = Modifier.fillMaxWidth()) {
-        // Row header: title + "View All >"
+        // Section header
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -124,15 +125,14 @@ private fun TvCategoryRow(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = title,
+                text = sectionData.section.getLabel(isHindi),
                 style = PramanikTvTheme.typography.titleLarge.copy(
                     fontWeight = FontWeight.Bold,
-                    fontSize = 20.sp
+                    fontSize = 22.sp
                 ),
                 color = TextWhite
             )
 
-            // "View All" link
             var viewAllFocused by remember { mutableStateOf(false) }
             Text(
                 text = "View All \u203A",
@@ -153,12 +153,41 @@ private fun TvCategoryRow(
             )
         }
 
+        // Playlist sub-rows
+        sectionData.playlists.forEach { playlistWithVideos ->
+            TvPlaylistRow(
+                playlistWithVideos = playlistWithVideos,
+                onVideoClick = onVideoClick
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+    }
+}
+
+@OptIn(ExperimentalTvMaterial3Api::class)
+@Composable
+private fun TvPlaylistRow(
+    playlistWithVideos: PlaylistWithVideos,
+    onVideoClick: (Video) -> Unit
+) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        // Playlist title
+        Text(
+            text = playlistWithVideos.playlist.title,
+            style = PramanikTvTheme.typography.titleMedium.copy(
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 16.sp
+            ),
+            color = TextGray,
+            modifier = Modifier.padding(horizontal = 48.dp, vertical = 4.dp)
+        )
+
         // Video cards row
         TvLazyRow(
             contentPadding = PaddingValues(horizontal = 48.dp),
             horizontalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            items(videos) { video ->
+            items(playlistWithVideos.videos) { video ->
                 TvVideoCard(
                     video = video,
                     onClick = { onVideoClick(video) }

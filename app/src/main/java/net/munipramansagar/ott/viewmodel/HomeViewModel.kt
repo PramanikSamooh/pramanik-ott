@@ -4,38 +4,42 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import net.munipramansagar.ott.data.model.Category
+import net.munipramansagar.ott.data.model.Announcement
 import net.munipramansagar.ott.data.model.LiveStatus
+import net.munipramansagar.ott.data.model.Playlist
+import net.munipramansagar.ott.data.model.Section
 import net.munipramansagar.ott.data.model.Video
-import net.munipramansagar.ott.data.repository.ChannelRepository
 import net.munipramansagar.ott.data.repository.LiveRepository
 import net.munipramansagar.ott.data.repository.VideoRepository
 import javax.inject.Inject
 
-data class HomeRowData(
-    val label: String,
-    val labelHi: String,
-    val categorySlug: String,
+data class PlaylistWithVideos(
+    val playlist: Playlist,
     val videos: List<Video>
+)
+
+data class HomeSectionData(
+    val section: Section,
+    val playlists: List<PlaylistWithVideos>
 )
 
 data class HomeUiState(
     val isLoading: Boolean = true,
+    val sections: List<HomeSectionData> = emptyList(),
     val heroBannerVideos: List<Video> = emptyList(),
-    val rows: List<HomeRowData> = emptyList(),
+    val announcements: List<Announcement> = emptyList(),
     val liveStatus: LiveStatus = LiveStatus(),
-    val liveVideos: List<Video> = emptyList(),
     val error: String? = null
 )
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val videoRepository: VideoRepository,
-    private val channelRepository: ChannelRepository,
     private val liveRepository: LiveRepository
 ) : ViewModel() {
 
@@ -52,32 +56,41 @@ class HomeViewModel @Inject constructor(
             try {
                 _uiState.value = _uiState.value.copy(isLoading = true, error = null)
 
-                // Load all category rows in parallel
-                val categoriesWithLabels = listOf(
-                    Triple(Category.DISCOURSE, "Latest Discourses", "नवीनतम प्रवचन"),
-                    Triple(Category.BHAWNA_YOG, "Bhawna Yog", "भावना योग"),
-                    Triple(Category.SHANKA_CLIPS, "Shanka Samadhan", "शंका समाधान"),
-                    Triple(Category.SWADHYAY, "Agam Swadhyay", "आगम स्वाध्याय"),
-                    Triple(Category.SHANKA_FULL, "Shanka Samadhan (Full)", "शंका समाधान (पूर्ण)"),
-                    Triple(Category.KIDS, "Jain Pathshala", "जैन पाठशाला")
-                )
+                // Fetch sections and announcements in parallel
+                val sectionsDeferred = async { videoRepository.getSections() }
+                val announcementsDeferred = async { videoRepository.getActiveAnnouncements() }
 
-                val deferredRows = categoriesWithLabels.map { (cat, label, labelHi) ->
+                val sections = sectionsDeferred.await()
+                val announcements = announcementsDeferred.await()
+
+                // For each section, fetch playlists (limit 5), then for each playlist fetch 10 videos
+                val sectionDataList = sections.map { section ->
                     async {
-                        val videos = videoRepository.getVideosByCategory(cat.slug, limit = 12)
-                        HomeRowData(label, labelHi, cat.slug, videos)
+                        val playlists = videoRepository.getPlaylistsBySection(section.id, limit = 5)
+                        val playlistsWithVideos = playlists.map { playlist ->
+                            async {
+                                val videos = videoRepository.getPlaylistVideos(playlist.id, limit = 10)
+                                PlaylistWithVideos(playlist, videos)
+                            }
+                        }.awaitAll()
+                        HomeSectionData(section, playlistsWithVideos.filter { it.videos.isNotEmpty() })
                     }
-                }
+                }.awaitAll().filter { it.playlists.isNotEmpty() }
 
-                val rows = deferredRows.map { it.await() }.filter { it.videos.isNotEmpty() }
-
-                // Hero banner = first 5 discourse videos
-                val heroBanner = rows.firstOrNull()?.videos?.take(5) ?: emptyList()
+                // Hero banner = first 5 videos from the first section's first playlist
+                val heroBanner = sectionDataList
+                    .firstOrNull()
+                    ?.playlists
+                    ?.firstOrNull()
+                    ?.videos
+                    ?.take(5)
+                    ?: emptyList()
 
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
+                    sections = sectionDataList,
                     heroBannerVideos = heroBanner,
-                    rows = rows
+                    announcements = announcements
                 )
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(

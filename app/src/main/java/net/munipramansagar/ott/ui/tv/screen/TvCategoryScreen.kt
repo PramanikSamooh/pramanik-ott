@@ -28,12 +28,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.tv.foundation.lazy.grid.TvGridCells
-import androidx.tv.foundation.lazy.grid.TvLazyVerticalGrid
-import androidx.tv.foundation.lazy.grid.items
+import androidx.tv.foundation.lazy.list.TvLazyColumn
+import androidx.tv.foundation.lazy.list.TvLazyRow
+import androidx.tv.foundation.lazy.list.items
 import androidx.tv.material3.ExperimentalTvMaterial3Api
 import androidx.tv.material3.Text
-import net.munipramansagar.ott.data.model.Category
 import net.munipramansagar.ott.data.model.Video
 import net.munipramansagar.ott.player.PlayerActivity
 import net.munipramansagar.ott.ui.tv.component.TvVideoCard
@@ -44,23 +43,27 @@ import net.munipramansagar.ott.ui.tv.theme.Saffron
 import net.munipramansagar.ott.ui.tv.theme.TextGray
 import net.munipramansagar.ott.ui.tv.theme.TextWhite
 import net.munipramansagar.ott.viewmodel.HomeViewModel
+import net.munipramansagar.ott.viewmodel.PlaylistWithVideos
 
 @OptIn(ExperimentalTvMaterial3Api::class)
 @Composable
 fun TvCategoryScreen(
-    categorySlug: String,
+    sectionId: String,
     homeViewModel: HomeViewModel,
     isHindi: Boolean
 ) {
     val uiState by homeViewModel.uiState.collectAsState()
     val context = LocalContext.current
 
-    val category = remember(categorySlug) { Category.fromSlug(categorySlug) }
-    val title = remember(category, isHindi) {
-        category?.getLabel(isHindi) ?: categorySlug
+    // Find the section data from home state
+    val sectionData = remember(uiState.sections, sectionId) {
+        uiState.sections.find { it.section.id == sectionId }
     }
-    val videos = remember(uiState.rows, categorySlug) {
-        uiState.rows.find { it.categorySlug == categorySlug }?.videos ?: emptyList()
+    val title = remember(sectionData, isHindi) {
+        sectionData?.section?.getLabel(isHindi) ?: sectionId
+    }
+    val playlists = remember(sectionData) {
+        sectionData?.playlists ?: emptyList()
     }
 
     val onVideoClick: (Video) -> Unit = { video ->
@@ -83,7 +86,6 @@ fun TvCategoryScreen(
                 .padding(horizontal = 48.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Large category title
             Text(
                 text = title,
                 style = PramanikTvTheme.typography.displayMedium.copy(
@@ -110,33 +112,75 @@ fun TvCategoryScreen(
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        if (videos.isEmpty()) {
+        if (playlists.isEmpty()) {
             Box(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
-                        text = if (isHindi) "\u0915\u094B\u0908 \u0935\u0940\u0921\u093F\u092F\u094B \u0928\u0939\u0940\u0902" else "No videos available",
+                        text = if (isHindi) "कोई प्लेलिस्ट नहीं" else "No playlists available",
                         style = PramanikTvTheme.typography.headlineMedium.copy(color = TextGray)
                     )
                 }
             }
         } else {
-            TvLazyVerticalGrid(
-                columns = TvGridCells.Fixed(4),
-                contentPadding = PaddingValues(horizontal = 48.dp, vertical = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy(20.dp),
+            // Show playlists with their videos
+            TvLazyColumn(
+                contentPadding = PaddingValues(bottom = 48.dp),
                 verticalArrangement = Arrangement.spacedBy(24.dp),
                 modifier = Modifier.fillMaxSize()
             ) {
-                items(videos) { video ->
-                    TvVideoCard(
-                        video = video,
-                        onClick = { onVideoClick(video) },
-                        cardWidth = 280
+                items(playlists.size) { index ->
+                    val playlistWithVideos = playlists[index]
+                    TvPlaylistSection(
+                        playlistWithVideos = playlistWithVideos,
+                        onVideoClick = onVideoClick
                     )
                 }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalTvMaterial3Api::class)
+@Composable
+private fun TvPlaylistSection(
+    playlistWithVideos: PlaylistWithVideos,
+    onVideoClick: (Video) -> Unit
+) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        // Playlist title
+        Text(
+            text = playlistWithVideos.playlist.title,
+            style = PramanikTvTheme.typography.titleLarge.copy(
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 18.sp
+            ),
+            color = TextWhite,
+            modifier = Modifier.padding(horizontal = 48.dp, vertical = 4.dp)
+        )
+
+        if (playlistWithVideos.playlist.videoCount > 0) {
+            Text(
+                text = "${playlistWithVideos.playlist.videoCount} videos",
+                style = PramanikTvTheme.typography.bodyMedium.copy(fontSize = 13.sp),
+                color = TextGray,
+                modifier = Modifier.padding(horizontal = 48.dp)
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+        }
+
+        // Video cards row
+        TvLazyRow(
+            contentPadding = PaddingValues(horizontal = 48.dp),
+            horizontalArrangement = Arrangement.spacedBy(20.dp)
+        ) {
+            items(playlistWithVideos.videos) { video ->
+                TvVideoCard(
+                    video = video,
+                    onClick = { onVideoClick(video) }
+                )
             }
         }
     }

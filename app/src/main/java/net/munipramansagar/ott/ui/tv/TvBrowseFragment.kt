@@ -19,6 +19,7 @@ import net.munipramansagar.ott.data.model.Video
 import net.munipramansagar.ott.player.PlayerActivity
 import net.munipramansagar.ott.ui.tv.presenter.VideoCardPresenter
 import net.munipramansagar.ott.util.LanguageManager
+import net.munipramansagar.ott.viewmodel.HomeSectionData
 import net.munipramansagar.ott.viewmodel.HomeViewModel
 import javax.inject.Inject
 
@@ -73,23 +74,27 @@ class TvBrowseFragment : BrowseSupportFragment() {
         lifecycleScope.launch {
             viewModel.uiState.collect { state ->
                 if (!state.isLoading && state.error == null) {
-                    buildRows(state.rows)
+                    buildRows(state.sections)
                 }
             }
         }
     }
 
-    private fun buildRows(rows: List<net.munipramansagar.ott.viewmodel.HomeRowData>) {
+    private fun buildRows(sections: List<HomeSectionData>) {
         rowsAdapter.clear()
         val isHindi = languageManager.isHindi()
         val cardPresenter = VideoCardPresenter()
 
-        rows.forEachIndexed { index, row ->
-            val label = if (isHindi) row.labelHi else row.label
-            val header = HeaderItem(index.toLong(), label)
-            val listRowAdapter = ArrayObjectAdapter(cardPresenter)
-            row.videos.forEach { listRowAdapter.add(it) }
-            rowsAdapter.add(ListRow(header, listRowAdapter))
+        var rowIndex = 0
+        sections.forEach { sectionData ->
+            sectionData.playlists.forEach { playlistWithVideos ->
+                val label = "${sectionData.section.getLabel(isHindi)} - ${playlistWithVideos.playlist.title}"
+                val header = HeaderItem(rowIndex.toLong(), label)
+                val listRowAdapter = ArrayObjectAdapter(cardPresenter)
+                playlistWithVideos.videos.forEach { listRowAdapter.add(it) }
+                rowsAdapter.add(ListRow(header, listRowAdapter))
+                rowIndex++
+            }
         }
     }
 }

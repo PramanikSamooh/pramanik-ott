@@ -9,16 +9,25 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import net.munipramansagar.ott.ui.mobile.screen.CategoryScreen
 import net.munipramansagar.ott.ui.mobile.screen.HomeScreen
+import net.munipramansagar.ott.ui.mobile.screen.PlaylistDetailScreen
 import net.munipramansagar.ott.ui.mobile.screen.SearchScreen
 import net.munipramansagar.ott.ui.mobile.screen.SettingsScreen
 
 object Routes {
     const val HOME = "home"
-    const val CATEGORY = "category/{categorySlug}"
+    const val SECTION = "section/{sectionId}"
+    const val PLAYLIST = "playlist/{playlistId}"
     const val SEARCH = "search"
     const val SETTINGS = "settings"
 
-    fun category(slug: String) = "category/$slug"
+    // Legacy alias
+    const val CATEGORY = "section/{sectionId}"
+
+    fun section(sectionId: String) = "section/$sectionId"
+    fun playlist(playlistId: String) = "playlist/$playlistId"
+
+    @Deprecated("Use section() instead")
+    fun category(slug: String) = "section/$slug"
 }
 
 @Composable
@@ -37,15 +46,28 @@ fun MobileNavGraph(
             HomeScreen(
                 isHindi = isHindi,
                 onVideoClick = { onPlayVideo(it) },
-                onViewAllClick = { navController.navigate(Routes.category(it)) }
+                onViewAllClick = { navController.navigate(Routes.section(it)) },
+                onPlaylistClick = { navController.navigate(Routes.playlist(it)) }
             )
         }
 
         composable(
-            route = Routes.CATEGORY,
-            arguments = listOf(navArgument("categorySlug") { type = NavType.StringType })
+            route = Routes.SECTION,
+            arguments = listOf(navArgument("sectionId") { type = NavType.StringType })
         ) {
             CategoryScreen(
+                isHindi = isHindi,
+                onVideoClick = { onPlayVideo(it) },
+                onPlaylistClick = { navController.navigate(Routes.playlist(it)) },
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(
+            route = Routes.PLAYLIST,
+            arguments = listOf(navArgument("playlistId") { type = NavType.StringType })
+        ) {
+            PlaylistDetailScreen(
                 isHindi = isHindi,
                 onVideoClick = { onPlayVideo(it) },
                 onBack = { navController.popBackStack() }
