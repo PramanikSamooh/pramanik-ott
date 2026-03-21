@@ -1,8 +1,13 @@
 package net.munipramansagar.ott.ui.tv.screen
 
+import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.focusable
@@ -19,6 +24,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -50,6 +56,7 @@ import androidx.tv.material3.Text
 import net.munipramansagar.ott.data.model.Section
 import net.munipramansagar.ott.ui.tv.theme.DarkBg
 import net.munipramansagar.ott.ui.tv.theme.DarkBg2
+import net.munipramansagar.ott.ui.tv.theme.Red
 import net.munipramansagar.ott.ui.tv.theme.GlassBorder
 import net.munipramansagar.ott.ui.tv.theme.GlassSurface
 import net.munipramansagar.ott.ui.tv.theme.PramanikTvTheme
@@ -124,6 +131,7 @@ fun TvApp(
                     navItems = navItems,
                     selectedIndex = selectedIndex,
                     isHindi = isHindi,
+                    isLive = uiState.liveStatus.isLive,
                     onItemSelected = { index -> selectedIndex = index }
                 )
 
@@ -177,6 +185,7 @@ private fun TvSidebar(
     navItems: List<TvNavItem>,
     selectedIndex: Int,
     isHindi: Boolean,
+    isLive: Boolean,
     onItemSelected: (Int) -> Unit
 ) {
     var isSidebarFocused by remember { mutableStateOf(false) }
@@ -259,6 +268,7 @@ private fun TvSidebar(
                 isExpanded = isSidebarFocused,
                 textAlpha = textAlpha,
                 isHindi = isHindi,
+                showLiveDot = isLive && item is TvNavItem.Home,
                 onFocusChange = { focused ->
                     if (focused) isSidebarFocused = true
                 },
@@ -304,6 +314,7 @@ private fun TvSidebarItem(
     isExpanded: Boolean,
     textAlpha: Float,
     isHindi: Boolean,
+    showLiveDot: Boolean = false,
     onFocusChange: (Boolean) -> Unit,
     onContentFocusLost: () -> Unit,
     onClick: () -> Unit
@@ -355,7 +366,7 @@ private fun TvSidebarItem(
             )
         }
 
-        // Icon
+        // Icon with optional live dot
         Box(
             modifier = Modifier
                 .width(if (isExpanded) 48.dp else 56.dp)
@@ -368,6 +379,26 @@ private fun TvSidebarItem(
                 tint = contentColor,
                 modifier = Modifier.size(22.dp)
             )
+            if (showLiveDot) {
+                val liveDotTransition = rememberInfiniteTransition(label = "sidebar_live")
+                val liveDotAlpha by liveDotTransition.animateFloat(
+                    initialValue = 1f,
+                    targetValue = 0.3f,
+                    animationSpec = infiniteRepeatable(
+                        animation = tween(800),
+                        repeatMode = RepeatMode.Reverse
+                    ),
+                    label = "sidebar_live_dot"
+                )
+                Box(
+                    modifier = Modifier
+                        .size(8.dp)
+                        .alpha(liveDotAlpha)
+                        .clip(CircleShape)
+                        .background(Red)
+                        .align(Alignment.TopEnd)
+                )
+            }
         }
 
         // Label (only when expanded)

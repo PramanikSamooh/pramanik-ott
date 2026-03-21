@@ -8,12 +8,14 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.collectAsState
@@ -49,20 +51,52 @@ class MobileActivity : ComponentActivity() {
                 val language by languageManager.language.collectAsState()
                 val isHindi = language == LanguageManager.HINDI
 
+                // Determine if current screen is a detail/inner screen that needs a back arrow
+                val isInnerScreen = currentRoute.startsWith("section/") ||
+                        currentRoute.startsWith("playlist/") ||
+                        currentRoute == Routes.SETTINGS
+
+                // Title for inner screens
+                val topBarTitle = when {
+                    currentRoute == Routes.HOME -> if (isHindi) "प्रामाणिक" else "Pramanik"
+                    currentRoute == Routes.SEARCH -> if (isHindi) "खोजें" else "Search"
+                    currentRoute == Routes.SETTINGS -> if (isHindi) "सेटिंग्स" else "Settings"
+                    currentRoute.startsWith("section/") -> ""  // Will be set by screen
+                    currentRoute.startsWith("playlist/") -> "" // Will be set by screen
+                    else -> ""
+                }
+
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
                     containerColor = MaterialTheme.colorScheme.background,
                     topBar = {
-                        if (currentRoute == Routes.HOME) {
-                            TopAppBar(
-                                title = {
-                                    androidx.compose.material3.Text(
-                                        text = if (isHindi) "प्रामाणिक" else "Pramanik",
-                                        style = MaterialTheme.typography.headlineMedium,
-                                        color = MaterialTheme.colorScheme.primary
-                                    )
-                                },
-                                actions = {
+                        TopAppBar(
+                            title = {
+                                Text(
+                                    text = topBarTitle,
+                                    style = if (currentRoute == Routes.HOME)
+                                        MaterialTheme.typography.headlineMedium
+                                    else
+                                        MaterialTheme.typography.headlineSmall,
+                                    color = if (currentRoute == Routes.HOME)
+                                        MaterialTheme.colorScheme.primary
+                                    else
+                                        MaterialTheme.colorScheme.onBackground
+                                )
+                            },
+                            navigationIcon = {
+                                if (isInnerScreen) {
+                                    IconButton(onClick = { navController.popBackStack() }) {
+                                        Icon(
+                                            Icons.AutoMirrored.Filled.ArrowBack,
+                                            contentDescription = "Back",
+                                            tint = MaterialTheme.colorScheme.onBackground
+                                        )
+                                    }
+                                }
+                            },
+                            actions = {
+                                if (currentRoute == Routes.HOME) {
                                     IconButton(onClick = {
                                         navController.navigate(Routes.SETTINGS)
                                     }) {
@@ -72,12 +106,12 @@ class MobileActivity : ComponentActivity() {
                                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                                         )
                                     }
-                                },
-                                colors = TopAppBarDefaults.topAppBarColors(
-                                    containerColor = MaterialTheme.colorScheme.background
-                                )
+                                }
+                            },
+                            colors = TopAppBarDefaults.topAppBarColors(
+                                containerColor = MaterialTheme.colorScheme.background
                             )
-                        }
+                        )
                     },
                     bottomBar = {
                         BottomNavBar(

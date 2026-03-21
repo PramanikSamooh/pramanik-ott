@@ -37,6 +37,7 @@ import androidx.tv.material3.Text
 import net.munipramansagar.ott.data.model.Video
 import net.munipramansagar.ott.player.PlayerActivity
 import net.munipramansagar.ott.ui.tv.component.TvHeroBanner
+import net.munipramansagar.ott.ui.tv.component.TvLiveStreamBanner
 import net.munipramansagar.ott.ui.tv.component.TvVideoCard
 import net.munipramansagar.ott.ui.tv.component.TvVideoCardShimmer
 import net.munipramansagar.ott.ui.tv.component.shimmerBrush
@@ -80,6 +81,17 @@ fun TvHomeScreen(
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(bottom = 48.dp)
             ) {
+                // Live stream banner — above hero when live
+                if (uiState.liveStatus.isLive && uiState.liveStatus.activeStreams.isNotEmpty()) {
+                    item {
+                        TvLiveStreamBanner(
+                            isLive = uiState.liveStatus.isLive,
+                            activeStreams = uiState.liveStatus.activeStreams
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                    }
+                }
+
                 // Hero banner
                 if (uiState.heroBannerVideos.isNotEmpty()) {
                     item {

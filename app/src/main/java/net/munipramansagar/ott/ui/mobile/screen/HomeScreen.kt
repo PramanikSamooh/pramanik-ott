@@ -38,6 +38,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import net.munipramansagar.ott.data.model.Announcement
 import net.munipramansagar.ott.ui.mobile.component.HeroBanner
+import net.munipramansagar.ott.ui.mobile.component.LiveStreamBanner
 import net.munipramansagar.ott.ui.mobile.component.ShimmerVideoRow
 import net.munipramansagar.ott.ui.mobile.component.VideoCard
 import net.munipramansagar.ott.viewmodel.HomeViewModel
@@ -88,6 +89,13 @@ fun HomeScreen(
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState())
             ) {
+                // Live Stream Banner — shown at top when live
+                LiveStreamBanner(
+                    isLive = state.liveStatus.isLive,
+                    activeStreams = state.liveStatus.activeStreams,
+                    onWatchClick = { videoId -> onVideoClick(videoId) }
+                )
+
                 // Announcements banner
                 if (state.announcements.isNotEmpty()) {
                     AnnouncementsBanner(
