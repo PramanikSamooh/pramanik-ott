@@ -23,11 +23,11 @@ class VideoRepository @Inject constructor(
 
     suspend fun getSections(): List<Section> {
         return sectionsCollection
-            .whereEqualTo("visible", true)
-            .orderBy("priority")
             .get()
             .await()
             .toObjects(Section::class.java)
+            .filter { it.visible }
+            .sortedBy { it.priority }
     }
 
     // ── Playlists ──
@@ -36,15 +36,19 @@ class VideoRepository @Inject constructor(
         sectionId: String,
         limit: Long = 20
     ): List<Playlist> {
-        return playlistsCollection
+        // Simple query: just filter by section, sort client-side
+        // Avoids complex composite index requirements
+        val playlists = playlistsCollection
             .whereEqualTo("section", sectionId)
-            .whereEqualTo("visible", true)
-            .orderBy("pinned", Query.Direction.DESCENDING)
-            .orderBy("displayOrder")
-            .limit(limit)
+            .limit(100)
             .get()
             .await()
             .toObjects(Playlist::class.java)
+
+        return playlists
+            .filter { it.visible }
+            .sortedWith(compareByDescending<Playlist> { it.pinned }.thenBy { it.displayOrder })
+            .take(limit.toInt())
     }
 
     suspend fun getPlaylistById(playlistId: String): Playlist? {
@@ -139,11 +143,11 @@ class VideoRepository @Inject constructor(
 
     suspend fun getActiveAnnouncements(): List<Announcement> {
         return announcementsCollection
-            .whereEqualTo("active", true)
-            .orderBy("priority")
             .get()
             .await()
             .toObjects(Announcement::class.java)
+            .filter { it.active }
+            .sortedBy { it.priority }
     }
 
     // ── Legacy methods (backward compat for search/other consumers) ──
