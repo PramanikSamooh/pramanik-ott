@@ -113,8 +113,12 @@ class HomeViewModel @Inject constructor(
 
     private fun observeLiveStatus() {
         viewModelScope.launch {
-            liveRepository.observeLiveStatus().collect { status ->
-                _uiState.value = _uiState.value.copy(liveStatus = status)
+            try {
+                liveRepository.observeLiveStatus().collect { status ->
+                    _uiState.value = _uiState.value.copy(liveStatus = status)
+                }
+            } catch (_: Exception) {
+                // Live status is non-critical — don't crash
             }
         }
     }
