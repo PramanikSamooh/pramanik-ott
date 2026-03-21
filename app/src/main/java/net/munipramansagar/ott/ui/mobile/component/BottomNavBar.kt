@@ -51,7 +51,7 @@ enum class BottomNavItem(
     val iconOutlined: ImageVector
 ) {
     HOME("home", "Home", "\u0939\u094B\u092E", Icons.Default.Home, Icons.Outlined.Home),
-    DISCOURSES("section/discourse", "Discourses", "\u092A\u094D\u0930\u0935\u091A\u0928", Icons.Default.MenuBook, Icons.Outlined.MenuBook),
+    DISCOURSES("section/pravachan", "Discourses", "\u092A\u094D\u0930\u0935\u091A\u0928", Icons.Default.MenuBook, Icons.Outlined.MenuBook),
     QA("section/shanka-clips", "Q&A", "\u0936\u0902\u0915\u093E", Icons.Default.QuestionAnswer, Icons.Outlined.QuestionAnswer),
     KIDS("section/kids", "Kids", "\u092C\u091A\u094D\u091A\u0947", Icons.Default.Star, Icons.Outlined.StarOutline),
     SEARCH("search", "Search", "\u0916\u094B\u091C\u0947\u0902", Icons.Default.Search, Icons.Outlined.Search);

@@ -130,7 +130,10 @@ class MobileActivity : ComponentActivity() {
                             isHindi = isHindi,
                             onNavigate = { route ->
                                 navController.navigate(route) {
-                                    popUpTo(Routes.HOME) { saveState = true }
+                                    // Pop everything back to home, then navigate
+                                    popUpTo(navController.graph.startDestinationId) {
+                                        saveState = true
+                                    }
                                     launchSingleTop = true
                                     restoreState = true
                                 }
