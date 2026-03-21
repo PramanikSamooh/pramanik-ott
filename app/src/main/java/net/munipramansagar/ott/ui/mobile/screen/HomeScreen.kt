@@ -1,6 +1,7 @@
 package net.munipramansagar.ott.ui.mobile.screen
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -19,11 +20,14 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ErrorOutline
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -34,6 +38,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import net.munipramansagar.ott.data.model.Announcement
@@ -41,6 +46,12 @@ import net.munipramansagar.ott.ui.mobile.component.HeroBanner
 import net.munipramansagar.ott.ui.mobile.component.LiveStreamBanner
 import net.munipramansagar.ott.ui.mobile.component.ShimmerVideoRow
 import net.munipramansagar.ott.ui.mobile.component.VideoCard
+import net.munipramansagar.ott.ui.mobile.theme.CardBg
+import net.munipramansagar.ott.ui.mobile.theme.CardBorder
+import net.munipramansagar.ott.ui.mobile.theme.Saffron
+import net.munipramansagar.ott.ui.mobile.theme.TextGray
+import net.munipramansagar.ott.ui.mobile.theme.TextMuted
+import net.munipramansagar.ott.ui.mobile.theme.TextWhite
 import net.munipramansagar.ott.viewmodel.HomeViewModel
 import net.munipramansagar.ott.viewmodel.PlaylistWithVideos
 
@@ -61,6 +72,13 @@ fun HomeScreen(
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState())
             ) {
+                // Shimmer hero placeholder
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(240.dp)
+                        .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
+                )
                 repeat(4) { ShimmerVideoRow() }
             }
         }
@@ -70,14 +88,36 @@ fun HomeScreen(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.ErrorOutline,
+                        contentDescription = null,
+                        tint = TextMuted,
+                        modifier = Modifier.size(48.dp)
+                    )
                     Text(
                         text = state.error ?: "",
                         style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = TextGray
                     )
-                    TextButton(onClick = { viewModel.refresh() }) {
-                        Text("Retry", color = MaterialTheme.colorScheme.primary)
+                    Button(
+                        onClick = { viewModel.refresh() },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Saffron,
+                            contentColor = TextWhite
+                        ),
+                        shape = RoundedCornerShape(24.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.Refresh,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("Retry", fontWeight = FontWeight.SemiBold)
                     }
                 }
             }
@@ -89,7 +129,7 @@ fun HomeScreen(
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState())
             ) {
-                // Live Stream Banner — shown at top when live
+                // Live Stream Banner -- shown at top when live
                 LiveStreamBanner(
                     isLive = state.liveStatus.isLive,
                     activeStreams = state.liveStatus.activeStreams,
@@ -104,7 +144,7 @@ fun HomeScreen(
                     )
                 }
 
-                // Hero Banner
+                // Hero Banner -- cinematic edge-to-edge
                 if (state.heroBannerVideos.isNotEmpty()) {
                     HeroBanner(
                         videos = state.heroBannerVideos,
@@ -112,26 +152,32 @@ fun HomeScreen(
                     )
                 }
 
-                // Section rows — each section contains playlists as sub-rows
+                // Section rows -- each section contains playlists as sub-rows
                 state.sections.forEach { sectionData ->
                     // Section header
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 12.dp),
+                            .padding(horizontal = 16.dp)
+                            .padding(top = 24.dp, bottom = 4.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
                             text = sectionData.section.getLabel(isHindi),
-                            style = MaterialTheme.typography.headlineSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onBackground
+                            style = MaterialTheme.typography.headlineSmall.copy(
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 18.sp
+                            ),
+                            color = TextWhite
                         )
                         Text(
-                            text = if (isHindi) "सभी देखें" else "View All",
-                            style = MaterialTheme.typography.labelLarge,
-                            color = MaterialTheme.colorScheme.primary,
+                            text = if (isHindi) "\u0938\u092D\u0940 \u0926\u0947\u0916\u0947\u0902 >" else "View All >",
+                            style = MaterialTheme.typography.labelLarge.copy(
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.SemiBold
+                            ),
+                            color = Saffron,
                             modifier = Modifier.clickable {
                                 onViewAllClick(sectionData.section.id)
                             }
@@ -148,8 +194,8 @@ fun HomeScreen(
                     }
                 }
 
-                // Bottom padding
-                Box(modifier = Modifier.padding(bottom = 80.dp))
+                // Bottom padding for nav bar
+                Spacer(modifier = Modifier.height(80.dp))
             }
         }
     }
@@ -161,7 +207,7 @@ private fun PlaylistRow(
     onVideoClick: (String) -> Unit,
     onPlaylistClick: (String) -> Unit
 ) {
-    Column(modifier = Modifier.padding(top = 8.dp)) {
+    Column(modifier = Modifier.padding(top = 12.dp)) {
         // Playlist header
         Row(
             modifier = Modifier
@@ -172,16 +218,20 @@ private fun PlaylistRow(
         ) {
             Text(
                 text = playlistWithVideos.playlist.title,
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onBackground,
+                style = MaterialTheme.typography.titleMedium.copy(
+                    fontWeight = FontWeight.SemiBold
+                ),
+                color = TextWhite.copy(alpha = 0.9f),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.weight(1f)
             )
             Text(
-                text = "View All",
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.primary,
+                text = "View All >",
+                style = MaterialTheme.typography.labelMedium.copy(
+                    fontWeight = FontWeight.Medium
+                ),
+                color = Saffron.copy(alpha = 0.8f),
                 modifier = Modifier.clickable {
                     onPlaylistClick(playlistWithVideos.playlist.id)
                 }
@@ -209,44 +259,41 @@ private fun AnnouncementsBanner(
     isHindi: Boolean
 ) {
     LazyRow(
-        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 10.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         items(announcements, key = { it.id }) { announcement ->
-            Card(
+            val cardShape = RoundedCornerShape(12.dp)
+            Row(
                 modifier = Modifier
-                    .width(300.dp)
-                    .height(80.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer
-                ),
-                shape = RoundedCornerShape(12.dp)
+                    .width(280.dp)
+                    .height(76.dp)
+                    .clip(cardShape)
+                    .background(CardBg)
+                    .border(1.dp, CardBorder, cardShape)
+                    .padding(12.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(12.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    if (announcement.imageUrl.isNotBlank()) {
-                        AsyncImage(
-                            model = announcement.imageUrl,
-                            contentDescription = null,
-                            modifier = Modifier
-                                .size(56.dp)
-                                .clip(RoundedCornerShape(8.dp)),
-                            contentScale = ContentScale.Crop
-                        )
-                        Spacer(modifier = Modifier.width(12.dp))
-                    }
-                    Text(
-                        text = announcement.getTitle(isHindi),
-                        style = MaterialTheme.typography.titleSmall,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis
+                if (announcement.imageUrl.isNotBlank()) {
+                    AsyncImage(
+                        model = announcement.imageUrl,
+                        contentDescription = null,
+                        modifier = Modifier
+                            .size(52.dp)
+                            .clip(RoundedCornerShape(8.dp)),
+                        contentScale = ContentScale.Crop
                     )
+                    Spacer(modifier = Modifier.width(12.dp))
                 }
+                Text(
+                    text = announcement.getTitle(isHindi),
+                    style = MaterialTheme.typography.titleSmall.copy(
+                        fontWeight = FontWeight.Medium
+                    ),
+                    color = TextWhite,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
             }
         }
     }

@@ -7,6 +7,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Settings
@@ -21,6 +22,9 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import dagger.hilt.android.AndroidEntryPoint
@@ -28,7 +32,11 @@ import net.munipramansagar.ott.player.PlayerActivity
 import net.munipramansagar.ott.ui.mobile.component.BottomNavBar
 import net.munipramansagar.ott.ui.mobile.navigation.MobileNavGraph
 import net.munipramansagar.ott.ui.mobile.navigation.Routes
+import net.munipramansagar.ott.ui.mobile.theme.Background
 import net.munipramansagar.ott.ui.mobile.theme.PramanikTheme
+import net.munipramansagar.ott.ui.mobile.theme.Saffron
+import net.munipramansagar.ott.ui.mobile.theme.TextGray
+import net.munipramansagar.ott.ui.mobile.theme.TextWhite
 import net.munipramansagar.ott.util.LanguageManager
 import javax.inject.Inject
 
@@ -51,37 +59,38 @@ class MobileActivity : ComponentActivity() {
                 val language by languageManager.language.collectAsState()
                 val isHindi = language == LanguageManager.HINDI
 
-                // Determine if current screen is a detail/inner screen that needs a back arrow
+                // Determine if current screen is a detail/inner screen
                 val isInnerScreen = currentRoute.startsWith("section/") ||
                         currentRoute.startsWith("playlist/") ||
                         currentRoute == Routes.SETTINGS
 
                 // Title for inner screens
                 val topBarTitle = when {
-                    currentRoute == Routes.HOME -> if (isHindi) "प्रामाणिक" else "Pramanik"
-                    currentRoute == Routes.SEARCH -> if (isHindi) "खोजें" else "Search"
-                    currentRoute == Routes.SETTINGS -> if (isHindi) "सेटिंग्स" else "Settings"
-                    currentRoute.startsWith("section/") -> ""  // Will be set by screen
-                    currentRoute.startsWith("playlist/") -> "" // Will be set by screen
+                    currentRoute == Routes.HOME -> if (isHindi) "\u092A\u094D\u0930\u093E\u092E\u093E\u0923\u093F\u0915" else "Pramanik"
+                    currentRoute == Routes.SEARCH -> if (isHindi) "\u0916\u094B\u091C\u0947\u0902" else "Search"
+                    currentRoute == Routes.SETTINGS -> if (isHindi) "\u0938\u0947\u091F\u093F\u0902\u0917\u094D\u0938" else "Settings"
+                    currentRoute.startsWith("section/") -> ""
+                    currentRoute.startsWith("playlist/") -> ""
                     else -> ""
                 }
 
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
-                    containerColor = MaterialTheme.colorScheme.background,
+                    containerColor = Background,
                     topBar = {
                         TopAppBar(
                             title = {
                                 Text(
                                     text = topBarTitle,
                                     style = if (currentRoute == Routes.HOME)
-                                        MaterialTheme.typography.headlineMedium
+                                        MaterialTheme.typography.headlineMedium.copy(
+                                            fontWeight = FontWeight.Bold
+                                        )
                                     else
-                                        MaterialTheme.typography.headlineSmall,
-                                    color = if (currentRoute == Routes.HOME)
-                                        MaterialTheme.colorScheme.primary
-                                    else
-                                        MaterialTheme.colorScheme.onBackground
+                                        MaterialTheme.typography.headlineSmall.copy(
+                                            fontWeight = FontWeight.SemiBold
+                                        ),
+                                    color = if (currentRoute == Routes.HOME) Saffron else TextWhite
                                 )
                             },
                             navigationIcon = {
@@ -90,7 +99,7 @@ class MobileActivity : ComponentActivity() {
                                         Icon(
                                             Icons.AutoMirrored.Filled.ArrowBack,
                                             contentDescription = "Back",
-                                            tint = MaterialTheme.colorScheme.onBackground
+                                            tint = TextWhite
                                         )
                                     }
                                 }
@@ -103,13 +112,15 @@ class MobileActivity : ComponentActivity() {
                                         Icon(
                                             Icons.Default.Settings,
                                             contentDescription = "Settings",
-                                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                            tint = TextGray,
+                                            modifier = Modifier.size(22.dp)
                                         )
                                     }
                                 }
                             },
                             colors = TopAppBarDefaults.topAppBarColors(
-                                containerColor = MaterialTheme.colorScheme.background
+                                containerColor = Color.Transparent,
+                                scrolledContainerColor = Background.copy(alpha = 0.9f)
                             )
                         )
                     },
