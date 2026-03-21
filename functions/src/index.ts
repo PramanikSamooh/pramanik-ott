@@ -257,7 +257,7 @@ export const fetchPlaylists = onSchedule(
 // ══════════════════════════════════════════════════════════════
 export const fetchPlaylistVideos = onSchedule(
   {
-    schedule: "every 2 hours",
+    schedule: "every 6 hours",
     timeZone: "Asia/Kolkata",
     secrets: ALL_SECRETS,
     memory: "1GiB",
@@ -310,7 +310,7 @@ export const fetchPlaylistVideos = onSchedule(
 // ══════════════════════════════════════════════════════════════
 export const fetchYouTubeVideos = onSchedule(
   {
-    schedule: "every 2 hours",
+    schedule: "every 12 hours",
     timeZone: "Asia/Kolkata",
     secrets: ALL_SECRETS,
     memory: "512MiB",
@@ -395,48 +395,72 @@ export const fetchYouTubeVideos = onSchedule(
 );
 
 // ══════════════════════════════════════════════════════════════
-// ── Scheduled: Check live status every 5 min (7AM-7PM IST) ──
-// ══════════════════════════════════════════════════════════════
+// ── Scheduled: Check live status every 30 min during broadcast hours ──
+// Uses search.list (100 units each) — with 2 channels checked:
+// 30 min interval × 12 hours × 2 channels = 48 calls = 4,800 units/day
+// ══════════════════════════════════════════════════════════════════════
 export const checkLiveStatus = onSchedule(
   {
-    schedule: "every 5 minutes",
+    schedule: "every 30 minutes",
     timeZone: "Asia/Kolkata",
-    secrets: [youtubeApiKey, youtubeChannelPramansagarji],
+    secrets: [youtubeApiKey, youtubeChannelPramansagarji, youtubeChannelJainpathshala],
     memory: "256MiB",
     timeoutSeconds: 60,
   },
   async () => {
     const now = new Date();
     const istHour = (now.getUTCHours() + 5.5) % 24;
-    if (istHour < 7 || istHour > 19) {
+
+    // Only check during 6AM-10PM IST (broadcast window)
+    if (istHour < 6 || istHour > 22) {
       await db.collection("live").doc("status").set({
         isLive: false,
-        currentVideoId: "",
-        upcomingVideos: [],
+        activeStreams: [],
         checkedAt: admin.firestore.FieldValue.serverTimestamp(),
       });
       return;
     }
 
     const apiKey = youtubeApiKey.value();
-    const channelId = youtubeChannelPramansagarji.value();
 
-    try {
-      const liveItems = await checkLiveStreams(channelId, apiKey);
-      const isLive = liveItems.length > 0;
-      const currentVideoId = liveItems[0]?.id?.videoId || "";
+    // Check both channels for live streams
+    const channelsToCheck = [
+      { id: youtubeChannelPramansagarji.value(), key: "pramansagarji", name: "Muni Pramansagar Ji" },
+      { id: youtubeChannelJainpathshala.value(), key: "jainpathshala", name: "Jain Pathshala" },
+    ];
 
-      await db.collection("live").doc("status").set({
-        isLive,
-        currentVideoId,
-        upcomingVideos: [],
-        checkedAt: admin.firestore.FieldValue.serverTimestamp(),
-      });
+    const activeStreams: Array<{
+      videoId: string;
+      channelKey: string;
+      channelName: string;
+      title: string;
+    }> = [];
 
-      console.log(`Live check: ${isLive ? "LIVE - " + currentVideoId : "Not live"}`);
-    } catch (err) {
-      console.error("Live check error:", err);
+    for (const channel of channelsToCheck) {
+      try {
+        const liveItems = await checkLiveStreams(channel.id, apiKey);
+        for (const item of liveItems) {
+          activeStreams.push({
+            videoId: item.id?.videoId || "",
+            channelKey: channel.key,
+            channelName: channel.name,
+            title: item.snippet?.title || "",
+          });
+        }
+      } catch (err) {
+        console.error(`Live check error for ${channel.key}:`, err);
+      }
     }
+
+    await db.collection("live").doc("status").set({
+      isLive: activeStreams.length > 0,
+      currentVideoId: activeStreams[0]?.videoId || "",
+      activeStreams,
+      upcomingVideos: [],
+      checkedAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+
+    console.log(`Live check: ${activeStreams.length} active streams`);
   }
 );
 
