@@ -19,14 +19,14 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.MenuBook
+import androidx.compose.material.icons.filled.PlayCircle
 import androidx.compose.material.icons.filled.QuestionAnswer
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.MenuBook
+import androidx.compose.material.icons.outlined.PlayCircle
 import androidx.compose.material.icons.outlined.QuestionAnswer
 import androidx.compose.material.icons.outlined.Search
-import androidx.compose.material.icons.outlined.StarOutline
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -51,9 +51,9 @@ enum class BottomNavItem(
     val iconOutlined: ImageVector
 ) {
     HOME("home", "Home", "\u0939\u094B\u092E", Icons.Default.Home, Icons.Outlined.Home),
+    SHORTS("shorts", "Shorts", "\u0936\u0949\u0930\u094D\u091F\u094D\u0938", Icons.Default.PlayCircle, Icons.Outlined.PlayCircle),
     DISCOURSES("section/pravachan", "Discourses", "\u092A\u094D\u0930\u0935\u091A\u0928", Icons.Default.MenuBook, Icons.Outlined.MenuBook),
     QA("section/shanka-clips", "Q&A", "\u0936\u0902\u0915\u093E", Icons.Default.QuestionAnswer, Icons.Outlined.QuestionAnswer),
-    KIDS("section/kids", "Kids", "\u092C\u091A\u094D\u091A\u0947", Icons.Default.Star, Icons.Outlined.StarOutline),
     SEARCH("search", "Search", "\u0916\u094B\u091C\u0947\u0902", Icons.Default.Search, Icons.Outlined.Search);
 
     fun getLabel(isHindi: Boolean): String = if (isHindi) labelHi else label

@@ -21,6 +21,8 @@ data class Video(
     val viewCountFormatted: String = "",
     val isLive: Boolean = false,
     val isUpcoming: Boolean = false,
+    val isShort: Boolean = false,
+    val durationSec: Long = 0,
     val tags: List<String> = emptyList(),
     val youtubeUrl: String = ""
 )

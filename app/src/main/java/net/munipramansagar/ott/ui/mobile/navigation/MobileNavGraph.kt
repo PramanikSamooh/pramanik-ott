@@ -12,9 +12,11 @@ import net.munipramansagar.ott.ui.mobile.screen.HomeScreen
 import net.munipramansagar.ott.ui.mobile.screen.PlaylistDetailScreen
 import net.munipramansagar.ott.ui.mobile.screen.SearchScreen
 import net.munipramansagar.ott.ui.mobile.screen.SettingsScreen
+import net.munipramansagar.ott.ui.mobile.screen.ShortsScreen
 
 object Routes {
     const val HOME = "home"
+    const val SHORTS = "shorts"
     const val SECTION = "section/{sectionId}"
     const val PLAYLIST = "playlist/{playlistId}"
     const val SEARCH = "search"
@@ -49,6 +51,10 @@ fun MobileNavGraph(
                 onViewAllClick = { navController.navigate(Routes.section(it)) },
                 onPlaylistClick = { navController.navigate(Routes.playlist(it)) }
             )
+        }
+
+        composable(Routes.SHORTS) {
+            ShortsScreen()
         }
 
         composable(

@@ -63,10 +63,12 @@ class MobileActivity : ComponentActivity() {
                 val isInnerScreen = currentRoute.startsWith("section/") ||
                         currentRoute.startsWith("playlist/") ||
                         currentRoute == Routes.SETTINGS
+                val isShortsScreen = currentRoute == Routes.SHORTS
 
                 // Title for inner screens
                 val topBarTitle = when {
                     currentRoute == Routes.HOME -> if (isHindi) "\u092A\u094D\u0930\u093E\u092E\u093E\u0923\u093F\u0915" else "Pramanik"
+                    currentRoute == Routes.SHORTS -> if (isHindi) "\u0936\u0949\u0930\u094D\u091F\u094D\u0938" else "Shorts"
                     currentRoute == Routes.SEARCH -> if (isHindi) "\u0916\u094B\u091C\u0947\u0902" else "Search"
                     currentRoute == Routes.SETTINGS -> if (isHindi) "\u0938\u0947\u091F\u093F\u0902\u0917\u094D\u0938" else "Settings"
                     currentRoute.startsWith("section/") -> ""
@@ -76,9 +78,9 @@ class MobileActivity : ComponentActivity() {
 
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
-                    containerColor = Background,
+                    containerColor = if (isShortsScreen) Color.Black else Background,
                     topBar = {
-                        TopAppBar(
+                        if (!isShortsScreen) TopAppBar(
                             title = {
                                 Text(
                                     text = topBarTitle,

@@ -115,6 +115,8 @@ export interface VideoData {
   tags: string[];
   youtubeUrl: string;
   position: number;
+  isShort: boolean;
+  durationSec: number;
 }
 
 // ── YouTube API Functions ──

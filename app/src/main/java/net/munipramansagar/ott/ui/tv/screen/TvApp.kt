@@ -29,6 +29,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.PlayCircle
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.ViewList
@@ -75,6 +76,7 @@ sealed class TvNavItem(
     val icon: ImageVector
 ) {
     data object Home : TvNavItem("Home", "होम", Icons.Default.Home)
+    data object Shorts : TvNavItem("Shorts", "शॉर्ट्स", Icons.Default.PlayCircle)
     data class SectionItem(
         val section: Section
     ) : TvNavItem(section.label, section.labelHi, Icons.Default.ViewList)
@@ -101,6 +103,7 @@ fun TvApp(
     val navItems = remember(uiState.sections) {
         buildList {
             add(TvNavItem.Home)
+            add(TvNavItem.Shorts)
             uiState.sections.forEach { sectionData ->
                 add(TvNavItem.SectionItem(sectionData.section))
             }
@@ -159,6 +162,9 @@ fun TvApp(
                                 }
                                 if (idx >= 0) selectedIndex = idx
                             }
+                        )
+                        TvNavItem.Shorts -> TvShortsScreen(
+                            isHindi = isHindi
                         )
                         is TvNavItem.SectionItem -> TvCategoryScreen(
                             sectionId = item.section.id,

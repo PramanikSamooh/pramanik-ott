@@ -134,8 +134,7 @@ async function processPlaylistVideos(
 
   for (const item of details) {
     const durationSec = getDurationSeconds(item.contentDetails.duration);
-    // Skip shorts (<=60 seconds)
-    if (durationSec <= 60) continue;
+    const isShort = durationSec <= 60;
 
     const categorySlug = categoriseVideo(
       item.snippet.title,
@@ -174,6 +173,8 @@ async function processPlaylistVideos(
       tags: (item.snippet.tags || []).slice(0, 10).map((t) => t.toLowerCase()),
       youtubeUrl: `https://www.youtube.com/watch?v=${item.id}`,
       position,
+      isShort,
+      durationSec,
     };
 
     // Check if we need a new batch (each video = 2 writes: subcollection + top-level)
@@ -337,7 +338,7 @@ export const fetchYouTubeVideos = onSchedule(
 
         for (const item of details) {
           const durationSec = getDurationSeconds(item.contentDetails.duration);
-          if (durationSec <= 60) continue;
+          const isShort = durationSec <= 60;
 
           const categorySlug = categoriseVideo(
             item.snippet.title,
@@ -374,6 +375,8 @@ export const fetchYouTubeVideos = onSchedule(
             tags: (item.snippet.tags || []).slice(0, 10).map((t) => t.toLowerCase()),
             youtubeUrl: `https://www.youtube.com/watch?v=${item.id}`,
             position: 0,
+            isShort,
+            durationSec,
           };
 
           batch.set(db.collection("videos").doc(item.id), video, { merge: true });
@@ -654,7 +657,7 @@ export const triggerFetch = onRequest(
 
       for (const item of details) {
         const durationSec = getDurationSeconds(item.contentDetails.duration);
-        if (durationSec <= 60) continue;
+        const isShort = durationSec <= 60;
 
         const categorySlug = categoriseVideo(
           item.snippet.title,
@@ -690,6 +693,8 @@ export const triggerFetch = onRequest(
             tags: (item.snippet.tags || []).slice(0, 10).map((t) => t.toLowerCase()),
             youtubeUrl: `https://www.youtube.com/watch?v=${item.id}`,
             position: 0,
+            isShort,
+            durationSec,
           },
           { merge: true }
         );
