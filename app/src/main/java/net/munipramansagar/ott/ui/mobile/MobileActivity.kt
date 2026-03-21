@@ -62,7 +62,8 @@ class MobileActivity : ComponentActivity() {
                 // Determine if current screen is a detail/inner screen
                 val isInnerScreen = currentRoute.startsWith("section/") ||
                         currentRoute.startsWith("playlist/") ||
-                        currentRoute == Routes.SETTINGS
+                        currentRoute == Routes.SETTINGS ||
+                        currentRoute == Routes.PATHSHALA
                 val isShortsScreen = currentRoute == Routes.SHORTS
 
                 // Title for inner screens
@@ -70,6 +71,7 @@ class MobileActivity : ComponentActivity() {
                     currentRoute == Routes.HOME -> if (isHindi) "\u092A\u094D\u0930\u093E\u092E\u093E\u0923\u093F\u0915" else "Pramanik"
                     currentRoute == Routes.SHORTS -> if (isHindi) "\u0936\u0949\u0930\u094D\u091F\u094D\u0938" else "Shorts"
                     currentRoute == Routes.SEARCH -> if (isHindi) "\u0916\u094B\u091C\u0947\u0902" else "Search"
+                    currentRoute == Routes.PATHSHALA -> if (isHindi) "\u092A\u093E\u0920\u0936\u093E\u0932\u093E" else "Pathshala"
                     currentRoute == Routes.SETTINGS -> if (isHindi) "\u0938\u0947\u091F\u093F\u0902\u0917\u094D\u0938" else "Settings"
                     currentRoute.startsWith("section/") -> ""
                     currentRoute.startsWith("playlist/") -> ""

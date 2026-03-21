@@ -30,6 +30,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.PlayCircle
+import androidx.compose.material.icons.filled.School
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.ViewList
@@ -67,6 +68,7 @@ import net.munipramansagar.ott.ui.tv.theme.TextGray
 import net.munipramansagar.ott.ui.tv.theme.TextWhite
 import net.munipramansagar.ott.util.LanguageManager
 import net.munipramansagar.ott.viewmodel.HomeViewModel
+import net.munipramansagar.ott.viewmodel.PathshalaViewModel
 import net.munipramansagar.ott.viewmodel.SearchViewModel
 
 // Navigation items: Home, dynamic sections from Firestore, Search, Settings
@@ -75,8 +77,9 @@ sealed class TvNavItem(
     val titleHi: String,
     val icon: ImageVector
 ) {
-    data object Home : TvNavItem("Home", "होम", Icons.Default.Home)
-    data object Shorts : TvNavItem("Shorts", "शॉर्ट्स", Icons.Default.PlayCircle)
+    data object Home : TvNavItem("Home", "\u0939\u094B\u092E", Icons.Default.Home)
+    data object Shorts : TvNavItem("Shorts", "\u0936\u0949\u0930\u094D\u091F\u094D\u0938", Icons.Default.PlayCircle)
+    data object Pathshala : TvNavItem("Pathshala", "\u092A\u093E\u0920\u0936\u093E\u0932\u093E", Icons.Default.School)
     data class SectionItem(
         val section: Section
     ) : TvNavItem(section.label, section.labelHi, Icons.Default.ViewList)
@@ -91,6 +94,7 @@ sealed class TvNavItem(
 fun TvApp(
     homeViewModel: HomeViewModel,
     searchViewModel: SearchViewModel,
+    pathshalaViewModel: PathshalaViewModel,
     languageManager: LanguageManager
 ) {
     val language by languageManager.language.collectAsState()
@@ -104,6 +108,7 @@ fun TvApp(
         buildList {
             add(TvNavItem.Home)
             add(TvNavItem.Shorts)
+            add(TvNavItem.Pathshala)
             uiState.sections.forEach { sectionData ->
                 add(TvNavItem.SectionItem(sectionData.section))
             }
@@ -161,9 +166,18 @@ fun TvApp(
                                     it is TvNavItem.SectionItem && it.section.id == sectionId
                                 }
                                 if (idx >= 0) selectedIndex = idx
+                            },
+                            pathshalaViewModel = pathshalaViewModel,
+                            onPathshalaClick = {
+                                val idx = navItems.indexOfFirst { it is TvNavItem.Pathshala }
+                                if (idx >= 0) selectedIndex = idx
                             }
                         )
                         TvNavItem.Shorts -> TvShortsScreen(
+                            isHindi = isHindi
+                        )
+                        TvNavItem.Pathshala -> TvPathshalaScreen(
+                            pathshalaViewModel = pathshalaViewModel,
                             isHindi = isHindi
                         )
                         is TvNavItem.SectionItem -> TvCategoryScreen(

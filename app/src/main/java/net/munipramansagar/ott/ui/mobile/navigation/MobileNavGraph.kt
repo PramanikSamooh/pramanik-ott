@@ -9,6 +9,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import net.munipramansagar.ott.ui.mobile.screen.CategoryScreen
 import net.munipramansagar.ott.ui.mobile.screen.HomeScreen
+import net.munipramansagar.ott.ui.mobile.screen.PathshalaScreen
 import net.munipramansagar.ott.ui.mobile.screen.PlaylistDetailScreen
 import net.munipramansagar.ott.ui.mobile.screen.SearchScreen
 import net.munipramansagar.ott.ui.mobile.screen.SettingsScreen
@@ -17,6 +18,7 @@ import net.munipramansagar.ott.ui.mobile.screen.ShortsScreen
 object Routes {
     const val HOME = "home"
     const val SHORTS = "shorts"
+    const val PATHSHALA = "pathshala"
     const val SECTION = "section/{sectionId}"
     const val PLAYLIST = "playlist/{playlistId}"
     const val SEARCH = "search"
@@ -49,7 +51,8 @@ fun MobileNavGraph(
                 isHindi = isHindi,
                 onVideoClick = { onPlayVideo(it) },
                 onViewAllClick = { navController.navigate(Routes.section(it)) },
-                onPlaylistClick = { navController.navigate(Routes.playlist(it)) }
+                onPlaylistClick = { navController.navigate(Routes.playlist(it)) },
+                onPathshalaClick = { navController.navigate(Routes.PATHSHALA) }
             )
         }
 
@@ -83,6 +86,13 @@ fun MobileNavGraph(
         composable(Routes.SEARCH) {
             SearchScreen(
                 onVideoClick = { onPlayVideo(it) }
+            )
+        }
+
+        composable(Routes.PATHSHALA) {
+            PathshalaScreen(
+                isHindi = isHindi,
+                onBack = { navController.popBackStack() }
             )
         }
 

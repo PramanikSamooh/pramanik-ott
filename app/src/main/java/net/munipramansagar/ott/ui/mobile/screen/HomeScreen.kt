@@ -53,6 +53,7 @@ import net.munipramansagar.ott.ui.mobile.theme.TextGray
 import net.munipramansagar.ott.ui.mobile.theme.TextMuted
 import net.munipramansagar.ott.ui.mobile.theme.TextWhite
 import net.munipramansagar.ott.viewmodel.HomeViewModel
+import net.munipramansagar.ott.viewmodel.PathshalaViewModel
 import net.munipramansagar.ott.viewmodel.PlaylistWithVideos
 
 @Composable
@@ -61,9 +62,12 @@ fun HomeScreen(
     onVideoClick: (String) -> Unit,
     onViewAllClick: (String) -> Unit,
     onPlaylistClick: (String) -> Unit = {},
-    viewModel: HomeViewModel = hiltViewModel()
+    onPathshalaClick: () -> Unit = {},
+    viewModel: HomeViewModel = hiltViewModel(),
+    pathshalaViewModel: PathshalaViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsState()
+    val pathshalaState by pathshalaViewModel.uiState.collectAsState()
 
     when {
         state.isLoading -> {
@@ -135,6 +139,15 @@ fun HomeScreen(
                     activeStreams = state.liveStatus.activeStreams,
                     onWatchClick = { videoId -> onVideoClick(videoId) }
                 )
+
+                // Pathshala Today card
+                if (pathshalaState.todaysClasses.isNotEmpty()) {
+                    PathshalaTodayCard(
+                        todaysClasses = pathshalaState.todaysClasses,
+                        isHindi = isHindi,
+                        onViewPathshala = onPathshalaClick
+                    )
+                }
 
                 // Announcements banner
                 if (state.announcements.isNotEmpty()) {

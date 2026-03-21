@@ -48,6 +48,7 @@ import net.munipramansagar.ott.ui.tv.theme.TextGray
 import net.munipramansagar.ott.ui.tv.theme.TextWhite
 import net.munipramansagar.ott.viewmodel.HomeSectionData
 import net.munipramansagar.ott.viewmodel.HomeViewModel
+import net.munipramansagar.ott.viewmodel.PathshalaViewModel
 import net.munipramansagar.ott.viewmodel.PlaylistWithVideos
 
 @OptIn(ExperimentalTvMaterial3Api::class)
@@ -55,9 +56,12 @@ import net.munipramansagar.ott.viewmodel.PlaylistWithVideos
 fun TvHomeScreen(
     homeViewModel: HomeViewModel,
     isHindi: Boolean,
-    onSectionClick: (String) -> Unit
+    onSectionClick: (String) -> Unit,
+    pathshalaViewModel: PathshalaViewModel? = null,
+    onPathshalaClick: () -> Unit = {}
 ) {
     val uiState by homeViewModel.uiState.collectAsState()
+    val pathshalaState = pathshalaViewModel?.uiState?.collectAsState()
     val context = LocalContext.current
 
     val onVideoClick: (Video) -> Unit = { video ->
@@ -87,6 +91,19 @@ fun TvHomeScreen(
                         TvLiveStreamBanner(
                             isLive = uiState.liveStatus.isLive,
                             activeStreams = uiState.liveStatus.activeStreams
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                    }
+                }
+
+                // Pathshala Today card
+                val todaysPathshalaClasses = pathshalaState?.value?.todaysClasses
+                if (todaysPathshalaClasses != null && todaysPathshalaClasses.isNotEmpty()) {
+                    item {
+                        TvPathshalaTodayCard(
+                            todaysClasses = todaysPathshalaClasses,
+                            isHindi = isHindi,
+                            onViewPathshala = onPathshalaClick
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                     }
