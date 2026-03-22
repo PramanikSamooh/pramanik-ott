@@ -52,7 +52,14 @@ fun MobileNavGraph(
                 onVideoClick = { onPlayVideo(it) },
                 onViewAllClick = { navController.navigate(Routes.section(it)) },
                 onPlaylistClick = { navController.navigate(Routes.playlist(it)) },
-                onPathshalaClick = { navController.navigate(Routes.PATHSHALA) }
+                onPathshalaClick = { navController.navigate(Routes.PATHSHALA) },
+                onNavigate = { route ->
+                    navController.navigate(route) {
+                        popUpTo(Routes.HOME) { saveState = true }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                }
             )
         }
 

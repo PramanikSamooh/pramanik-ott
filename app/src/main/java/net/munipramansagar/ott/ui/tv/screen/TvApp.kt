@@ -82,7 +82,7 @@ sealed class TvNavItem(
     val isSubItem: Boolean = false
 ) {
     data object Home : TvNavItem("Home", "होम", Icons.Default.Home)
-    data object Shorts : TvNavItem("Shorts", "शॉर्ट्स", Icons.Default.PlayCircle)
+    data object Shorts : TvNavItem("Shorts", "शॉर्ट्स", Icons.Default.PlayCircle, isSubItem = true)
 
     // Parent group headers (not selectable themselves)
     data object VideosGroup : TvNavItem("Videos", "वीडियो", Icons.Default.PlayCircle)
@@ -158,10 +158,10 @@ fun TvApp(
         buildList {
             // Home
             add(SidebarEntry(TvNavItem.Home, navIndex = navItems.indexOf(TvNavItem.Home)))
-            add(SidebarEntry(TvNavItem.Shorts, navIndex = navItems.indexOf(TvNavItem.Shorts)))
 
-            // Videos group
+            // Videos group (includes Shorts)
             add(SidebarEntry(TvNavItem.VideosGroup, isGroupHeader = true))
+            add(SidebarEntry(TvNavItem.Shorts, navIndex = navItems.indexOf(TvNavItem.Shorts)))
             navItems.filterIsInstance<TvNavItem.SectionItem>().forEach { section ->
                 add(SidebarEntry(section, navIndex = navItems.indexOf(section)))
             }

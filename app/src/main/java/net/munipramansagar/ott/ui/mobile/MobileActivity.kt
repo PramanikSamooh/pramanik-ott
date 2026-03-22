@@ -129,28 +129,7 @@ class MobileActivity : ComponentActivity() {
                         )
                     },
                     bottomBar = {
-                        if (!isShortsScreen) BottomNavBar(
-                            currentRoute = currentRoute,
-                            isHindi = isHindi,
-                            onNavigate = { route ->
-                                if (route == Routes.HOME) {
-                                    // Home: clear entire back stack
-                                    navController.navigate(Routes.HOME) {
-                                        popUpTo(0) { inclusive = true }
-                                        launchSingleTop = true
-                                    }
-                                } else {
-                                    navController.navigate(route) {
-                                        // Pop back to home first, keep home in stack
-                                        popUpTo(Routes.HOME) {
-                                            saveState = true
-                                        }
-                                        launchSingleTop = true
-                                        restoreState = true
-                                    }
-                                }
-                            }
-                        )
+                        // No bottom nav — Home hub IS the navigation
                     }
                 ) { innerPadding ->
                     MobileNavGraph(
