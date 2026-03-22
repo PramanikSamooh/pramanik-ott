@@ -22,7 +22,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.focus.onFocusChanged
@@ -59,14 +58,9 @@ fun TvVideoCard(
     var isFocused by remember { mutableStateOf(false) }
 
     val scale by animateFloatAsState(
-        targetValue = if (isFocused) 1.08f else 1f,
+        targetValue = if (isFocused) 1.06f else 1f,
         animationSpec = spring(dampingRatio = 0.8f, stiffness = 400f),
         label = "cardScale"
-    )
-    val contentAlpha by animateFloatAsState(
-        targetValue = if (isFocused) 1f else 0.85f,
-        animationSpec = spring(dampingRatio = 0.9f, stiffness = 300f),
-        label = "cardAlpha"
     )
     val borderWidth by animateDpAsState(
         targetValue = if (isFocused) 2.dp else 0.dp,
@@ -80,16 +74,7 @@ fun TvVideoCard(
         modifier = modifier
             .width(cardWidth.dp)
             .scale(scale)
-            .alpha(contentAlpha)
     ) {
-        // Saffron accent line at top when focused
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(if (isFocused) 2.dp else 0.dp)
-                .background(if (isFocused) Saffron else Color.Transparent)
-        )
-
         Card(
             onClick = onClick,
             modifier = Modifier
@@ -98,7 +83,7 @@ fun TvVideoCard(
                 .then(
                     if (isFocused) {
                         Modifier.border(
-                            BorderStroke(borderWidth, Saffron),
+                            BorderStroke(borderWidth, Color.White.copy(alpha = 0.8f)),
                             cardShape
                         )
                     } else {
@@ -110,7 +95,7 @@ fun TvVideoCard(
                 ),
             colors = CardDefaults.colors(
                 containerColor = GlassCard,
-                focusedContainerColor = GlassHighlight
+                focusedContainerColor = GlassCard
             ),
             shape = CardDefaults.shape(shape = cardShape)
         ) {
