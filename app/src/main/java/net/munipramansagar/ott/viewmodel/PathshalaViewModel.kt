@@ -60,12 +60,17 @@ class PathshalaViewModel @Inject constructor(
                 )
 
                 val todaysClasses = classes
-                    .filter { it.dayOfWeek == currentDay }
+                    .filter { currentDay in it.dayOfWeek }
                     .sortedBy { it.time }
 
-                val classesByDay = classes
-                    .groupBy { it.dayOfWeek }
-                    .toSortedMap()
+                // Group by each day the class runs on
+                val classesByDay = mutableMapOf<Int, MutableList<PathshalaClass>>()
+                for (cls in classes) {
+                    for (day in cls.dayOfWeek) {
+                        classesByDay.getOrPut(day) { mutableListOf() }.add(cls)
+                    }
+                }
+                val sortedByDay = classesByDay.toSortedMap()
                     .mapValues { (_, v) -> v.sortedBy { it.time } }
 
                 _uiState.value = _uiState.value.copy(
@@ -73,7 +78,7 @@ class PathshalaViewModel @Inject constructor(
                     allClasses = classes,
                     todaysClasses = todaysClasses,
                     teachers = teachersMap,
-                    classesByDay = classesByDay,
+                    classesByDay = sortedByDay,
                     currentDayOfWeek = currentDay,
                     currentTime = currentTime
                 )
@@ -96,7 +101,7 @@ class PathshalaViewModel @Inject constructor(
 
     fun isClassLive(pathshalaClass: PathshalaClass): Boolean {
         val state = _uiState.value
-        if (pathshalaClass.dayOfWeek != state.currentDayOfWeek) return false
+        if (state.currentDayOfWeek !in pathshalaClass.dayOfWeek) return false
         val classMinutes = timeToMinutes(pathshalaClass.time)
         val currentMinutes = timeToMinutes(state.currentTime)
         return (currentMinutes - classMinutes) in -15..15
@@ -104,7 +109,7 @@ class PathshalaViewModel @Inject constructor(
 
     fun isClassUpcoming(pathshalaClass: PathshalaClass): Boolean {
         val state = _uiState.value
-        if (pathshalaClass.dayOfWeek != state.currentDayOfWeek) return false
+        if (state.currentDayOfWeek !in pathshalaClass.dayOfWeek) return false
         val classMinutes = timeToMinutes(pathshalaClass.time)
         val currentMinutes = timeToMinutes(state.currentTime)
         return classMinutes > currentMinutes
@@ -123,10 +128,13 @@ class PathshalaViewModel @Inject constructor(
         } else {
             state.allClasses
         }
-        return filtered
-            .groupBy { it.dayOfWeek }
-            .toSortedMap()
-            .mapValues { (_, v) -> v.sortedBy { it.time } }
+        val byDay = mutableMapOf<Int, MutableList<PathshalaClass>>()
+        for (cls in filtered) {
+            for (day in cls.dayOfWeek) {
+                byDay.getOrPut(day) { mutableListOf() }.add(cls)
+            }
+        }
+        return byDay.toSortedMap().mapValues { (_, v) -> v.sortedBy { it.time } }
     }
 
     fun getFilteredTodaysClasses(): List<PathshalaClass> {

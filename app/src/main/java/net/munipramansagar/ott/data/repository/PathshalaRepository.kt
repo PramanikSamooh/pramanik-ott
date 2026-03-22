@@ -47,7 +47,7 @@ class PathshalaRepository @Inject constructor(
 
     suspend fun getTodaysClasses(): List<PathshalaClass> {
         val today = getCurrentDayOfWeek()
-        return getActiveClasses().filter { it.dayOfWeek == today }
+        return getActiveClasses().filter { today in it.dayOfWeek }
             .sortedBy { it.time }
     }
 
@@ -55,7 +55,7 @@ class PathshalaRepository @Inject constructor(
         val today = getCurrentDayOfWeek()
         val currentTime = getCurrentTimeHHmm()
         return getActiveClasses()
-            .filter { it.dayOfWeek == today && it.time >= currentTime }
+            .filter { today in it.dayOfWeek && it.time >= currentTime }
             .sortedBy { it.time }
     }
 

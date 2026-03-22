@@ -10,7 +10,7 @@ data class PathshalaClass(
     val teacherId: String = "",
     val teacherName: String = "",
     val language: String = "hindi",
-    val dayOfWeek: Int = 0, // 0=Sunday, 6=Saturday
+    val dayOfWeek: List<Int> = listOf(0), // 0=Sunday, 6=Saturday
     val time: String = "10:00", // HH:mm format
     val timezone: String = "IST",
     val youtubeLink: String = "",
