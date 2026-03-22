@@ -398,13 +398,13 @@ export const fetchYouTubeVideos = onSchedule(
 );
 
 // ══════════════════════════════════════════════════════════════
-// ── Scheduled: Check live status every 30 min during broadcast hours ──
-// Uses search.list (100 units each) — with 2 channels checked:
-// 30 min interval × 12 hours × 2 channels = 48 calls = 4,800 units/day
+// ── Scheduled: Check live status every 15 min during broadcast hours ──
+// Uses RSS feed (0 quota) + videos.list (1 unit per batch of 50)
+// Cost: ~4-6 units/day total instead of 4,800 units/day with search.list
 // ══════════════════════════════════════════════════════════════════════
 export const checkLiveStatus = onSchedule(
   {
-    schedule: "every 30 minutes",
+    schedule: "every 15 minutes",
     timeZone: "Asia/Kolkata",
     secrets: [youtubeApiKey, youtubeChannelPramansagarji, youtubeChannelJainpathshala],
     memory: "256MiB",
@@ -414,8 +414,8 @@ export const checkLiveStatus = onSchedule(
     const now = new Date();
     const istHour = (now.getUTCHours() + 5.5) % 24;
 
-    // Only check during 6AM-10PM IST (broadcast window)
-    if (istHour < 6 || istHour > 22) {
+    // Only check during 5AM-11PM IST (broadcast window)
+    if (istHour < 5 || istHour > 23) {
       await db.collection("live").doc("status").set({
         isLive: false,
         activeStreams: [],
@@ -426,12 +426,37 @@ export const checkLiveStatus = onSchedule(
 
     const apiKey = youtubeApiKey.value();
 
-    // Check both channels for live streams
+    // Check both channels using RSS feed (FREE — no API quota)
     const channelsToCheck = [
       { id: youtubeChannelPramansagarji.value(), key: "pramansagarji", name: "Muni Pramansagar Ji" },
       { id: youtubeChannelJainpathshala.value(), key: "jainpathshala", name: "Jain Pathshala" },
     ];
 
+    const recentVideoIds: Array<{ videoId: string; channelKey: string; channelName: string }> = [];
+
+    for (const channel of channelsToCheck) {
+      try {
+        // RSS feed returns latest 15 videos — FREE, no API quota
+        const rssUrl = `https://www.youtube.com/feeds/videos.xml?channel_id=${channel.id}`;
+        const rssRes = await fetch(rssUrl);
+        const rssText = await rssRes.text();
+
+        // Extract video IDs from RSS XML using regex
+        const videoIdMatches = rssText.matchAll(/<yt:videoId>([^<]+)<\/yt:videoId>/g);
+        for (const match of videoIdMatches) {
+          recentVideoIds.push({
+            videoId: match[1],
+            channelKey: channel.key,
+            channelName: channel.name,
+          });
+        }
+      } catch (err) {
+        console.error(`RSS fetch error for ${channel.key}:`, err);
+      }
+    }
+
+    // Now check if any of these recent videos are currently live
+    // videos.list costs only 1 unit per 50 videos (vs 100 units for search.list)
     const activeStreams: Array<{
       videoId: string;
       channelKey: string;
@@ -439,19 +464,30 @@ export const checkLiveStatus = onSchedule(
       title: string;
     }> = [];
 
-    for (const channel of channelsToCheck) {
+    if (recentVideoIds.length > 0) {
       try {
-        const liveItems = await checkLiveStreams(channel.id, apiKey);
-        for (const item of liveItems) {
-          activeStreams.push({
-            videoId: item.id?.videoId || "",
-            channelKey: channel.key,
-            channelName: channel.name,
-            title: item.snippet?.title || "",
-          });
+        const ids = recentVideoIds.map((v) => v.videoId);
+        const details = await fetchVideoDetails(ids, apiKey);
+
+        for (const item of details) {
+          const liveDetails = item.liveStreamingDetails;
+          if (
+            liveDetails &&
+            liveDetails.actualStartTime &&
+            !liveDetails.actualEndTime
+          ) {
+            // This video is currently live!
+            const channelInfo = recentVideoIds.find((v) => v.videoId === item.id);
+            activeStreams.push({
+              videoId: item.id,
+              channelKey: channelInfo?.channelKey || "",
+              channelName: channelInfo?.channelName || "",
+              title: item.snippet.title,
+            });
+          }
         }
       } catch (err) {
-        console.error(`Live check error for ${channel.key}:`, err);
+        console.error("Error checking video live status:", err);
       }
     }
 
@@ -463,7 +499,7 @@ export const checkLiveStatus = onSchedule(
       checkedAt: admin.firestore.FieldValue.serverTimestamp(),
     });
 
-    console.log(`Live check: ${activeStreams.length} active streams`);
+    console.log(`Live check: ${activeStreams.length} active streams (checked ${recentVideoIds.length} recent videos)`);
   }
 );
 
