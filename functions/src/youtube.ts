@@ -61,6 +61,7 @@ interface YouTubeVideoDetailsResponse {
     statistics: { viewCount?: string };
     liveStreamingDetails?: {
       actualStartTime?: string;
+      actualEndTime?: string;
       scheduledStartTime?: string;
     };
   }>;
