@@ -52,6 +52,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import androidx.tv.material3.ExperimentalTvMaterial3Api
 import androidx.tv.material3.Text
@@ -71,23 +72,41 @@ import net.munipramansagar.ott.viewmodel.HomeViewModel
 import net.munipramansagar.ott.viewmodel.PathshalaViewModel
 import net.munipramansagar.ott.viewmodel.SearchViewModel
 
-// Navigation items: Home, dynamic sections from Firestore, Search, Settings
+// Navigation items with grouping support
 sealed class TvNavItem(
     val titleEn: String,
     val titleHi: String,
-    val icon: ImageVector
+    val icon: ImageVector,
+    val isSubItem: Boolean = false
 ) {
-    data object Home : TvNavItem("Home", "\u0939\u094B\u092E", Icons.Default.Home)
-    data object Shorts : TvNavItem("Shorts", "\u0936\u0949\u0930\u094D\u091F\u094D\u0938", Icons.Default.PlayCircle)
-    data object Pathshala : TvNavItem("Pathshala", "\u092A\u093E\u0920\u0936\u093E\u0932\u093E", Icons.Default.School)
+    data object Home : TvNavItem("Home", "होम", Icons.Default.Home)
+    data object Shorts : TvNavItem("Shorts", "शॉर्ट्स", Icons.Default.PlayCircle)
+
+    // Parent group headers (not selectable themselves)
+    data object VideosGroup : TvNavItem("Videos", "वीडियो", Icons.Default.PlayCircle)
+    data object PathshalaGroup : TvNavItem("Pathshala", "पाठशाला", Icons.Default.School)
+
+    // Sub-items under Videos group
     data class SectionItem(
         val section: Section
-    ) : TvNavItem(section.label, section.labelHi, Icons.Default.ViewList)
+    ) : TvNavItem(section.label, section.labelHi, Icons.Default.ViewList, isSubItem = true)
+
+    // Sub-items under Pathshala group
+    data object KidsVideos : TvNavItem("Kids Videos", "बच्चों के वीडियो", Icons.Default.PlayCircle, isSubItem = true)
+    data object UpcomingClasses : TvNavItem("Classes", "कक्षाएँ", Icons.Default.School, isSubItem = true)
+
     data object Search : TvNavItem("Search", "खोजें", Icons.Default.Search)
     data object Settings : TvNavItem("Settings", "सेटिंग्स", Icons.Default.Settings)
 
     fun getTitle(isHindi: Boolean): String = if (isHindi && titleHi.isNotBlank()) titleHi else titleEn
 }
+
+// A menu entry can be a group header or a selectable item
+data class SidebarEntry(
+    val item: TvNavItem,
+    val isGroupHeader: Boolean = false,
+    val navIndex: Int = -1 // index into navItems for selection
+)
 
 @OptIn(ExperimentalTvMaterial3Api::class)
 @Composable
@@ -108,12 +127,39 @@ fun TvApp(
         buildList {
             add(TvNavItem.Home)
             add(TvNavItem.Shorts)
-            add(TvNavItem.Pathshala)
+            // Video sections from Firestore
             uiState.sections.forEach { sectionData ->
                 add(TvNavItem.SectionItem(sectionData.section))
             }
+            // Pathshala sub-items
+            add(TvNavItem.KidsVideos)
+            add(TvNavItem.UpcomingClasses)
             add(TvNavItem.Search)
             add(TvNavItem.Settings)
+        }
+    }
+
+    // Build sidebar entries with group headers (for display only)
+    val sidebarEntries = remember(navItems) {
+        buildList {
+            // Home
+            add(SidebarEntry(TvNavItem.Home, navIndex = navItems.indexOf(TvNavItem.Home)))
+            add(SidebarEntry(TvNavItem.Shorts, navIndex = navItems.indexOf(TvNavItem.Shorts)))
+
+            // Videos group
+            add(SidebarEntry(TvNavItem.VideosGroup, isGroupHeader = true))
+            navItems.filterIsInstance<TvNavItem.SectionItem>().forEach { section ->
+                add(SidebarEntry(section, navIndex = navItems.indexOf(section)))
+            }
+
+            // Pathshala group
+            add(SidebarEntry(TvNavItem.PathshalaGroup, isGroupHeader = true))
+            add(SidebarEntry(TvNavItem.KidsVideos, navIndex = navItems.indexOf(TvNavItem.KidsVideos)))
+            add(SidebarEntry(TvNavItem.UpcomingClasses, navIndex = navItems.indexOf(TvNavItem.UpcomingClasses)))
+
+            // Bottom items
+            add(SidebarEntry(TvNavItem.Search, navIndex = navItems.indexOf(TvNavItem.Search)))
+            add(SidebarEntry(TvNavItem.Settings, navIndex = navItems.indexOf(TvNavItem.Settings)))
         }
     }
 
@@ -151,14 +197,19 @@ fun TvApp(
                             },
                             pathshalaViewModel = pathshalaViewModel,
                             onPathshalaClick = {
-                                val idx = navItems.indexOfFirst { it is TvNavItem.Pathshala }
+                                val idx = navItems.indexOfFirst { it is TvNavItem.UpcomingClasses }
                                 if (idx >= 0) selectedIndex = idx
                             }
                         )
                         TvNavItem.Shorts -> TvShortsScreen(
                             isHindi = isHindi
                         )
-                        TvNavItem.Pathshala -> TvPathshalaScreen(
+                        TvNavItem.KidsVideos -> TvCategoryScreen(
+                            sectionId = "kids",
+                            homeViewModel = homeViewModel,
+                            isHindi = isHindi
+                        )
+                        TvNavItem.UpcomingClasses -> TvPathshalaScreen(
                             pathshalaViewModel = pathshalaViewModel,
                             isHindi = isHindi
                         )
@@ -174,12 +225,19 @@ fun TvApp(
                             isHindi = isHindi,
                             onLanguageChange = { lang -> languageManager.setLanguage(lang) }
                         )
+                        // Group headers are never selected — show home as fallback
+                        TvNavItem.VideosGroup, TvNavItem.PathshalaGroup -> TvHomeScreen(
+                            homeViewModel = homeViewModel,
+                            isHindi = isHindi,
+                            onSectionClick = {},
+                            onPathshalaClick = {}
+                        )
                     }
                 }
 
             // Sidebar overlays on top of content
             TvSidebar(
-                navItems = navItems,
+                entries = sidebarEntries,
                 selectedIndex = selectedIndex,
                 isHindi = isHindi,
                 isLive = uiState.liveStatus.isLive,
@@ -192,7 +250,7 @@ fun TvApp(
 @OptIn(ExperimentalTvMaterial3Api::class)
 @Composable
 private fun TvSidebar(
-    navItems: List<TvNavItem>,
+    entries: List<SidebarEntry>,
     selectedIndex: Int,
     isHindi: Boolean,
     isLive: Boolean,
@@ -211,7 +269,7 @@ private fun TvSidebar(
         label = "textAlpha"
     )
     val overlayAlpha by animateFloatAsState(
-        targetValue = if (isSidebarFocused) 0.85f else 0.6f,
+        targetValue = if (isSidebarFocused) 0.92f else 0.7f,
         animationSpec = tween(200),
         label = "overlayAlpha"
     )
@@ -220,10 +278,8 @@ private fun TvSidebar(
         modifier = Modifier
             .fillMaxHeight()
             .width(sidebarWidth)
-            .background(
-                Color(0xFF0D0D0D).copy(alpha = overlayAlpha)
-            )
-            .padding(vertical = 16.dp)
+            .background(Color(0xFF0A0A0A).copy(alpha = overlayAlpha))
+            .padding(vertical = 12.dp)
             .selectableGroup()
             .verticalScroll(rememberScrollState())
     ) {
@@ -231,7 +287,7 @@ private fun TvSidebar(
         if (isSidebarFocused) {
             Box(
                 modifier = Modifier
-                    .padding(horizontal = 20.dp, vertical = 14.dp)
+                    .padding(horizontal = 20.dp, vertical = 10.dp)
                     .fillMaxWidth(),
                 contentAlignment = Alignment.CenterStart
             ) {
@@ -239,72 +295,61 @@ private fun TvSidebar(
                     text = "प्रामाणिक",
                     style = PramanikTvTheme.typography.headlineLarge.copy(
                         color = Color.White,
-                        fontSize = 22.sp
+                        fontSize = 20.sp
                     ),
                     modifier = Modifier.alpha(textAlpha)
                 )
             }
-
-            // Separator
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
-                    .height(0.5.dp)
-                    .background(Color.White.copy(alpha = 0.12f))
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(4.dp))
         } else {
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(12.dp))
         }
 
-        // Main navigation items (exclude Settings which goes to bottom)
-        val mainItems = navItems.dropLast(1)
-        val settingsItem = navItems.last()
-
-        mainItems.forEachIndexed { index, item ->
-            TvSidebarItem(
-                item = item,
-                isSelected = selectedIndex == index,
-                isExpanded = isSidebarFocused,
-                textAlpha = textAlpha,
-                isHindi = isHindi,
-                showLiveDot = isLive && item is TvNavItem.Home,
-                onFocusChange = { focused ->
-                    if (focused) isSidebarFocused = true
-                },
-                onContentFocusLost = { isSidebarFocused = false },
-                onClick = { onItemSelected(index) }
-            )
+        // Render entries with group headers and sub-items
+        entries.forEach { entry ->
+            if (entry.isGroupHeader) {
+                // Group header — only visible when expanded
+                if (isSidebarFocused) {
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp)
+                            .height(0.5.dp)
+                            .background(Color.White.copy(alpha = 0.08f))
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = entry.item.getTitle(isHindi).uppercase(),
+                        style = PramanikTvTheme.typography.labelMedium.copy(
+                            color = Color.White.copy(alpha = 0.4f),
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = 1.5.sp
+                        ),
+                        modifier = Modifier
+                            .padding(horizontal = 20.dp, vertical = 4.dp)
+                            .alpha(textAlpha)
+                    )
+                }
+            } else {
+                // Selectable item
+                TvSidebarItem(
+                    item = entry.item,
+                    isSelected = selectedIndex == entry.navIndex,
+                    isExpanded = isSidebarFocused,
+                    textAlpha = textAlpha,
+                    isHindi = isHindi,
+                    isSubItem = entry.item.isSubItem,
+                    showLiveDot = isLive && entry.item is TvNavItem.Home,
+                    onFocusChange = { focused ->
+                        if (focused) isSidebarFocused = true
+                    },
+                    onContentFocusLost = { isSidebarFocused = false },
+                    onClick = { if (entry.navIndex >= 0) onItemSelected(entry.navIndex) }
+                )
+            }
         }
-
-        Spacer(modifier = Modifier.weight(1f))
-
-        // Thin separator before settings
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp)
-                .height(0.5.dp)
-                .background(Color.White.copy(alpha = 0.1f))
-        )
-
-        Spacer(modifier = Modifier.height(4.dp))
-
-        // Settings at bottom
-        TvSidebarItem(
-            item = settingsItem,
-            isSelected = selectedIndex == navItems.lastIndex,
-            isExpanded = isSidebarFocused,
-            textAlpha = textAlpha,
-            isHindi = isHindi,
-            onFocusChange = { focused ->
-                if (focused) isSidebarFocused = true
-            },
-            onContentFocusLost = { isSidebarFocused = false },
-            onClick = { onItemSelected(navItems.lastIndex) }
-        )
     }
 }
 
@@ -316,6 +361,7 @@ private fun TvSidebarItem(
     isExpanded: Boolean,
     textAlpha: Float,
     isHindi: Boolean,
+    isSubItem: Boolean = false,
     showLiveDot: Boolean = false,
     onFocusChange: (Boolean) -> Unit,
     onContentFocusLost: () -> Unit,
@@ -341,10 +387,11 @@ private fun TvSidebarItem(
 
     Row(
         modifier = Modifier
-            .padding(horizontal = 8.dp, vertical = 2.dp)
+            .padding(horizontal = 8.dp, vertical = 1.dp)
+            .padding(start = if (isSubItem && isExpanded) 12.dp else 0.dp)
             .fillMaxWidth()
-            .height(48.dp)
-            .clip(RoundedCornerShape(12.dp))
+            .height(if (isSubItem) 40.dp else 44.dp)
+            .clip(RoundedCornerShape(10.dp))
             .background(bgColor)
             .onFocusChanged {
                 isFocused = it.isFocused
@@ -379,7 +426,7 @@ private fun TvSidebarItem(
                 imageVector = item.icon,
                 contentDescription = item.titleEn,
                 tint = contentColor,
-                modifier = Modifier.size(22.dp)
+                modifier = Modifier.size(if (isSubItem) 18.dp else 22.dp)
             )
             if (showLiveDot) {
                 val liveDotTransition = rememberInfiniteTransition(label = "sidebar_live")
@@ -409,7 +456,7 @@ private fun TvSidebarItem(
                 text = item.getTitle(isHindi),
                 style = PramanikTvTheme.typography.labelLarge.copy(
                     color = contentColor,
-                    fontSize = 14.sp
+                    fontSize = if (isSubItem) 13.sp else 14.sp
                 ),
                 modifier = Modifier.alpha(textAlpha)
             )

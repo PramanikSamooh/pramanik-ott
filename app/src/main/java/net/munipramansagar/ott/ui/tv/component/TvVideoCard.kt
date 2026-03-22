@@ -62,11 +62,6 @@ fun TvVideoCard(
         animationSpec = spring(dampingRatio = 0.8f, stiffness = 400f),
         label = "cardScale"
     )
-    val borderWidth by animateDpAsState(
-        targetValue = if (isFocused) 2.dp else 0.dp,
-        animationSpec = spring(dampingRatio = 0.9f, stiffness = 400f),
-        label = "borderWidth"
-    )
 
     val cardShape = PramanikTvTheme.shapes.card
 
@@ -79,20 +74,7 @@ fun TvVideoCard(
             onClick = onClick,
             modifier = Modifier
                 .fillMaxWidth()
-                .onFocusChanged { isFocused = it.isFocused || it.hasFocus }
-                .then(
-                    if (isFocused) {
-                        Modifier.border(
-                            BorderStroke(borderWidth, Color.White.copy(alpha = 0.8f)),
-                            cardShape
-                        )
-                    } else {
-                        Modifier.border(
-                            BorderStroke(1.dp, GlassBorder),
-                            cardShape
-                        )
-                    }
-                ),
+                .onFocusChanged { isFocused = it.isFocused || it.hasFocus },
             colors = CardDefaults.colors(
                 containerColor = GlassCard,
                 focusedContainerColor = GlassCard
