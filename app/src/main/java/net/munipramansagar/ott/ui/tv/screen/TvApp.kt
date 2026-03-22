@@ -8,9 +8,11 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.focusable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -119,6 +121,18 @@ fun TvApp(
     val language by languageManager.language.collectAsState()
     val isHindi = language == LanguageManager.HINDI
     var selectedIndex by rememberSaveable { mutableIntStateOf(0) }
+    var isSidebarExpanded by remember { mutableStateOf(false) }
+
+    // Back button: collapse sidebar first, then if on home do nothing (let system handle)
+    // If not on home, go to home
+    BackHandler(enabled = true) {
+        if (isSidebarExpanded) {
+            isSidebarExpanded = false
+        } else if (selectedIndex != 0) {
+            selectedIndex = 0
+        }
+        // If already on home and sidebar collapsed, system handles back (exit app)
+    }
 
     val uiState by homeViewModel.uiState.collectAsState()
 
@@ -241,7 +255,12 @@ fun TvApp(
                 selectedIndex = selectedIndex,
                 isHindi = isHindi,
                 isLive = uiState.liveStatus.isLive,
-                onItemSelected = { index -> selectedIndex = index }
+                isExpanded = isSidebarExpanded,
+                onExpandChanged = { isSidebarExpanded = it },
+                onItemSelected = { index ->
+                    selectedIndex = index
+                    isSidebarExpanded = false // collapse after selection
+                }
             )
         }
     }
@@ -254,22 +273,22 @@ private fun TvSidebar(
     selectedIndex: Int,
     isHindi: Boolean,
     isLive: Boolean,
+    isExpanded: Boolean,
+    onExpandChanged: (Boolean) -> Unit,
     onItemSelected: (Int) -> Unit
 ) {
-    var isSidebarFocused by remember { mutableStateOf(false) }
-
     val sidebarWidth by animateDpAsState(
-        targetValue = if (isSidebarFocused) 260.dp else 56.dp,
+        targetValue = if (isExpanded) 260.dp else 56.dp,
         animationSpec = spring(dampingRatio = 0.8f, stiffness = 400f),
         label = "sidebarWidth"
     )
     val textAlpha by animateFloatAsState(
-        targetValue = if (isSidebarFocused) 1f else 0f,
+        targetValue = if (isExpanded) 1f else 0f,
         animationSpec = spring(dampingRatio = 0.9f, stiffness = 300f),
         label = "textAlpha"
     )
     val overlayAlpha by animateFloatAsState(
-        targetValue = if (isSidebarFocused) 0.92f else 0.7f,
+        targetValue = if (isExpanded) 0.92f else 0.7f,
         animationSpec = tween(200),
         label = "overlayAlpha"
     )
@@ -279,12 +298,12 @@ private fun TvSidebar(
             .fillMaxHeight()
             .width(sidebarWidth)
             .background(Color(0xFF0A0A0A).copy(alpha = overlayAlpha))
-            .padding(vertical = 12.dp)
             .selectableGroup()
-            .verticalScroll(rememberScrollState())
+            .verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.Center
     ) {
         // App logo — only when expanded
-        if (isSidebarFocused) {
+        if (isExpanded) {
             Box(
                 modifier = Modifier
                     .padding(horizontal = 20.dp, vertical = 10.dp)
@@ -301,14 +320,12 @@ private fun TvSidebar(
                 )
             }
             Spacer(modifier = Modifier.height(4.dp))
-        } else {
-            Spacer(modifier = Modifier.height(12.dp))
         }
 
         // Render entries with group headers and sub-items
         entries.forEach { entry ->
             if (entry.isGroupHeader) {
-                if (isSidebarFocused) {
+                if (isExpanded) {
                     // Show group header label when expanded
                     Spacer(modifier = Modifier.height(12.dp))
                     Box(
@@ -340,15 +357,15 @@ private fun TvSidebar(
                         textAlpha = 0f,
                         isHindi = isHindi,
                         onFocusChange = { focused ->
-                            if (focused) isSidebarFocused = true
+                            if (focused) onExpandChanged(true)
                         },
-                        onContentFocusLost = { isSidebarFocused = false },
-                        onClick = { isSidebarFocused = true }
+                        onContentFocusLost = {},
+                        onClick = { onExpandChanged(true) }
                     )
                 }
             } else if (entry.item.isSubItem) {
                 // Sub-items only visible when expanded
-                if (isSidebarFocused) {
+                if (isExpanded) {
                     TvSidebarItem(
                         item = entry.item,
                         isSelected = selectedIndex == entry.navIndex,
@@ -357,9 +374,9 @@ private fun TvSidebar(
                         isHindi = isHindi,
                         isSubItem = true,
                         onFocusChange = { focused ->
-                            if (focused) isSidebarFocused = true
+                            if (focused) onExpandChanged(true)
                         },
-                        onContentFocusLost = { isSidebarFocused = false },
+                        onContentFocusLost = { onExpandChanged(false) },
                         onClick = { if (entry.navIndex >= 0) onItemSelected(entry.navIndex) }
                     )
                 }
@@ -368,14 +385,14 @@ private fun TvSidebar(
                 TvSidebarItem(
                     item = entry.item,
                     isSelected = selectedIndex == entry.navIndex,
-                    isExpanded = isSidebarFocused,
+                    isExpanded = isExpanded,
                     textAlpha = textAlpha,
                     isHindi = isHindi,
                     showLiveDot = isLive && entry.item is TvNavItem.Home,
                     onFocusChange = { focused ->
-                        if (focused) isSidebarFocused = true
+                        if (focused) onExpandChanged(true)
                     },
-                    onContentFocusLost = { isSidebarFocused = false },
+                    onContentFocusLost = { onExpandChanged(false) },
                     onClick = { if (entry.navIndex >= 0) onItemSelected(entry.navIndex) }
                 )
             }
