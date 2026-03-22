@@ -10,7 +10,6 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -47,8 +46,6 @@ import coil.compose.AsyncImage
 import kotlinx.coroutines.delay
 import net.munipramansagar.ott.data.model.Video
 import net.munipramansagar.ott.ui.tv.theme.DarkBg
-import net.munipramansagar.ott.ui.tv.theme.GlassBorder
-import net.munipramansagar.ott.ui.tv.theme.GlassCard
 import net.munipramansagar.ott.ui.tv.theme.PramanikTvTheme
 import net.munipramansagar.ott.ui.tv.theme.Saffron
 import net.munipramansagar.ott.ui.tv.theme.SaffronLight
@@ -234,35 +231,6 @@ fun TvHeroBanner(
                     )
                 }
 
-                // Details button – glass outlined
-                Button(
-                    onClick = { onPlayClick(currentVideo) },
-                    colors = ButtonDefaults.colors(
-                        containerColor = GlassCard,
-                        contentColor = TextWhite,
-                        focusedContainerColor = GlassCard.copy(alpha = 0.2f),
-                        focusedContentColor = TextWhite
-                    ),
-                    border = ButtonDefaults.border(
-                        border = androidx.tv.material3.Border(
-                            border = BorderStroke(1.dp, GlassBorder)
-                        ),
-                        focusedBorder = androidx.tv.material3.Border(
-                            border = BorderStroke(1.5.dp, TextWhite.copy(alpha = 0.4f))
-                        )
-                    ),
-                    shape = ButtonDefaults.shape(
-                        shape = PramanikTvTheme.shapes.button
-                    )
-                ) {
-                    Text(
-                        text = "\u2139  Details",
-                        style = PramanikTvTheme.typography.labelLarge.copy(
-                            fontWeight = FontWeight.Medium,
-                            fontSize = 15.sp
-                        )
-                    )
-                }
             }
         }
 

@@ -133,30 +133,12 @@ fun TvApp(
                     )
                 )
         ) {
-            Row(modifier = Modifier.fillMaxSize()) {
-                // Sidebar
-                TvSidebar(
-                    navItems = navItems,
-                    selectedIndex = selectedIndex,
-                    isHindi = isHindi,
-                    isLive = uiState.liveStatus.isLive,
-                    onItemSelected = { index -> selectedIndex = index }
-                )
-
-                // Vertical separator
-                Box(
-                    modifier = Modifier
-                        .fillMaxHeight()
-                        .width(1.dp)
-                        .background(GlassBorder)
-                )
-
-                // Content area
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxHeight()
-                ) {
+            // Content area — full width, sidebar overlays on top
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(start = 56.dp) // Leave space for collapsed sidebar icons
+            ) {
                     when (val item = navItems[selectedIndex]) {
                         TvNavItem.Home -> TvHomeScreen(
                             homeViewModel = homeViewModel,
@@ -194,7 +176,15 @@ fun TvApp(
                         )
                     }
                 }
-            }
+
+            // Sidebar overlays on top of content
+            TvSidebar(
+                navItems = navItems,
+                selectedIndex = selectedIndex,
+                isHindi = isHindi,
+                isLive = uiState.liveStatus.isLive,
+                onItemSelected = { index -> selectedIndex = index }
+            )
         }
     }
 }
@@ -211,8 +201,8 @@ private fun TvSidebar(
     var isSidebarFocused by remember { mutableStateOf(false) }
 
     val sidebarWidth by animateDpAsState(
-        targetValue = if (isSidebarFocused) 240.dp else 72.dp,
-        animationSpec = spring(dampingRatio = 0.85f, stiffness = 350f),
+        targetValue = if (isSidebarFocused) 260.dp else 56.dp,
+        animationSpec = spring(dampingRatio = 0.8f, stiffness = 400f),
         label = "sidebarWidth"
     )
     val textAlpha by animateFloatAsState(
@@ -220,62 +210,54 @@ private fun TvSidebar(
         animationSpec = spring(dampingRatio = 0.9f, stiffness = 300f),
         label = "textAlpha"
     )
+    val overlayAlpha by animateFloatAsState(
+        targetValue = if (isSidebarFocused) 0.85f else 0.6f,
+        animationSpec = tween(200),
+        label = "overlayAlpha"
+    )
 
     Column(
         modifier = Modifier
             .fillMaxHeight()
             .width(sidebarWidth)
             .background(
-                Brush.horizontalGradient(
-                    colors = listOf(
-                        GlassSurface,
-                        Color.Transparent
-                    )
-                )
+                Color(0xFF0D0D0D).copy(alpha = overlayAlpha)
             )
-            .padding(vertical = 20.dp)
+            .padding(vertical = 16.dp)
             .selectableGroup()
             .verticalScroll(rememberScrollState())
     ) {
-        // App logo / name
-        Box(
-            modifier = Modifier
-                .padding(horizontal = 16.dp, vertical = 12.dp)
-                .fillMaxWidth(),
-            contentAlignment = if (isSidebarFocused) Alignment.CenterStart else Alignment.Center
-        ) {
-            if (isSidebarFocused) {
+        // App logo — only when expanded
+        if (isSidebarFocused) {
+            Box(
+                modifier = Modifier
+                    .padding(horizontal = 20.dp, vertical = 14.dp)
+                    .fillMaxWidth(),
+                contentAlignment = Alignment.CenterStart
+            ) {
                 Text(
                     text = "प्रामाणिक",
                     style = PramanikTvTheme.typography.headlineLarge.copy(
-                        color = Saffron,
-                        fontSize = 24.sp
-                    ),
-                    modifier = Modifier.padding(start = 4.dp)
-                )
-            } else {
-                Text(
-                    text = "प्र",
-                    style = PramanikTvTheme.typography.headlineLarge.copy(
-                        color = Saffron,
+                        color = Color.White,
                         fontSize = 22.sp
-                    )
+                    ),
+                    modifier = Modifier.alpha(textAlpha)
                 )
             }
+
+            // Separator
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+                    .height(0.5.dp)
+                    .background(Color.White.copy(alpha = 0.12f))
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+        } else {
+            Spacer(modifier = Modifier.height(16.dp))
         }
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        // Separator
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp)
-                .height(1.dp)
-                .background(GlassBorder)
-        )
-
-        Spacer(modifier = Modifier.height(12.dp))
 
         // Main navigation items (exclude Settings which goes to bottom)
         val mainItems = navItems.dropLast(1)
@@ -299,16 +281,16 @@ private fun TvSidebar(
 
         Spacer(modifier = Modifier.weight(1f))
 
-        // Separator before settings
+        // Thin separator before settings
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp)
-                .height(1.dp)
-                .background(GlassBorder)
+                .height(0.5.dp)
+                .background(Color.White.copy(alpha = 0.1f))
         )
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(4.dp))
 
         // Settings at bottom
         TvSidebarItem(
@@ -342,17 +324,17 @@ private fun TvSidebarItem(
     var isFocused by remember { mutableStateOf(false) }
 
     val bgColor = when {
-        isFocused -> SaffronDim
-        isSelected -> Color.White.copy(alpha = 0.06f)
+        isFocused -> Color.White.copy(alpha = 0.12f)
+        isSelected -> Color.White.copy(alpha = 0.05f)
         else -> Color.Transparent
     }
     val contentColor = when {
-        isFocused -> Saffron
-        isSelected -> Saffron
-        else -> TextGray
+        isFocused -> Color.White
+        isSelected -> Color.White
+        else -> Color.White.copy(alpha = 0.5f)
     }
     val accentWidth by animateDpAsState(
-        targetValue = if (isSelected) 4.dp else 0.dp,
+        targetValue = if (isSelected) 3.dp else 0.dp,
         animationSpec = spring(dampingRatio = 0.8f, stiffness = 400f),
         label = "accentWidth"
     )
@@ -380,9 +362,9 @@ private fun TvSidebarItem(
             Box(
                 modifier = Modifier
                     .width(accentWidth)
-                    .height(28.dp)
-                    .clip(RoundedCornerShape(topEnd = 4.dp, bottomEnd = 4.dp))
-                    .background(Saffron)
+                    .height(24.dp)
+                    .clip(RoundedCornerShape(topEnd = 3.dp, bottomEnd = 3.dp))
+                    .background(Color.White)
             )
         }
 

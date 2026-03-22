@@ -92,33 +92,39 @@ class VideoRepository @Inject constructor(
             .toObjects(Video::class.java)
     }
 
+    // Cache all videos for client-side search (works better for Hindi text)
+    private var allVideosCache: List<Video>? = null
+
     suspend fun searchVideos(query: String, limit: Long = 30): List<Video> {
         if (query.isBlank()) return emptyList()
         val queryLower = query.lowercase().trim()
 
-        val titleResults = videosCollection
-            .orderBy("title")
-            .startAt(queryLower)
-            .endAt(queryLower + "\uf8ff")
-            .limit(limit)
-            .get()
-            .await()
-            .toObjects(Video::class.java)
-
-        val tagResults = if (titleResults.size < limit) {
-            videosCollection
-                .whereArrayContains("tags", queryLower)
-                .limit(limit)
+        // Load all videos once and cache them
+        if (allVideosCache == null) {
+            allVideosCache = videosCollection
                 .get()
                 .await()
                 .toObjects(Video::class.java)
-        } else {
-            emptyList()
         }
 
-        val seen = mutableSetOf<String>()
-        return (titleResults + tagResults)
-            .filter { seen.add(it.id) }
+        val videos = allVideosCache ?: return emptyList()
+
+        // Client-side contains search — works for Hindi, partial matches, etc.
+        return videos
+            .filter { video ->
+                video.title.lowercase().contains(queryLower) ||
+                video.description.lowercase().contains(queryLower) ||
+                video.playlistTitle.lowercase().contains(queryLower) ||
+                video.tags.any { tag -> tag.lowercase().contains(queryLower) }
+            }
+            .sortedByDescending { video ->
+                // Prioritize title matches
+                when {
+                    video.title.lowercase().startsWith(queryLower) -> 3
+                    video.title.lowercase().contains(queryLower) -> 2
+                    else -> 1
+                }
+            }
             .take(limit.toInt())
     }
 
