@@ -1,7 +1,6 @@
 package net.munipramansagar.ott.ui.mobile.screen
 
 import android.content.Intent
-import android.net.Uri
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
@@ -154,8 +153,13 @@ fun PathshalaScreen(
                             isUpcoming = viewModel.isClassUpcoming(pathshalaClass),
                             onJoinClick = {
                                 if (pathshalaClass.youtubeLink.isNotBlank()) {
-                                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(pathshalaClass.youtubeLink))
-                                    context.startActivity(intent)
+                                    val videoId = extractVideoId(pathshalaClass.youtubeLink)
+                                    if (videoId != null) {
+                                        val intent = Intent(context, net.munipramansagar.ott.player.PlayerActivity::class.java).apply {
+                                            putExtra("videoId", videoId)
+                                        }
+                                        context.startActivity(intent)
+                                    }
                                 }
                             }
                         )
@@ -192,8 +196,13 @@ fun PathshalaScreen(
                                     isUpcoming = viewModel.isClassUpcoming(pathshalaClass),
                                     onJoinClick = {
                                         if (pathshalaClass.youtubeLink.isNotBlank()) {
-                                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(pathshalaClass.youtubeLink))
-                                            context.startActivity(intent)
+                                            val videoId = extractVideoId(pathshalaClass.youtubeLink)
+                                            if (videoId != null) {
+                                                val intent = Intent(context, net.munipramansagar.ott.player.PlayerActivity::class.java).apply {
+                                                    putExtra("videoId", videoId)
+                                                }
+                                                context.startActivity(intent)
+                                            }
                                         }
                                     }
                                 )
@@ -578,6 +587,20 @@ fun PathshalaTodayCard(
             )
         }
     }
+}
+
+private fun extractVideoId(url: String): String? {
+    val patterns = listOf(
+        Regex("v=([a-zA-Z0-9_-]{11})"),
+        Regex("youtu\\.be/([a-zA-Z0-9_-]{11})"),
+        Regex("/embed/([a-zA-Z0-9_-]{11})"),
+        Regex("/live/([a-zA-Z0-9_-]{11})")
+    )
+    for (p in patterns) {
+        val match = p.find(url)
+        if (match != null) return match.groupValues[1]
+    }
+    return null
 }
 
 private fun formatTime12Hour(time: String): String {

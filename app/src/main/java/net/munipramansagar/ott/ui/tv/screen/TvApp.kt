@@ -308,8 +308,8 @@ private fun TvSidebar(
         // Render entries with group headers and sub-items
         entries.forEach { entry ->
             if (entry.isGroupHeader) {
-                // Group header — only visible when expanded
                 if (isSidebarFocused) {
+                    // Show group header label when expanded
                     Spacer(modifier = Modifier.height(12.dp))
                     Box(
                         modifier = Modifier
@@ -331,16 +331,46 @@ private fun TvSidebar(
                             .padding(horizontal = 20.dp, vertical = 4.dp)
                             .alpha(textAlpha)
                     )
+                } else {
+                    // Show group icon when collapsed
+                    TvSidebarItem(
+                        item = entry.item,
+                        isSelected = false,
+                        isExpanded = false,
+                        textAlpha = 0f,
+                        isHindi = isHindi,
+                        onFocusChange = { focused ->
+                            if (focused) isSidebarFocused = true
+                        },
+                        onContentFocusLost = { isSidebarFocused = false },
+                        onClick = { isSidebarFocused = true }
+                    )
+                }
+            } else if (entry.item.isSubItem) {
+                // Sub-items only visible when expanded
+                if (isSidebarFocused) {
+                    TvSidebarItem(
+                        item = entry.item,
+                        isSelected = selectedIndex == entry.navIndex,
+                        isExpanded = true,
+                        textAlpha = textAlpha,
+                        isHindi = isHindi,
+                        isSubItem = true,
+                        onFocusChange = { focused ->
+                            if (focused) isSidebarFocused = true
+                        },
+                        onContentFocusLost = { isSidebarFocused = false },
+                        onClick = { if (entry.navIndex >= 0) onItemSelected(entry.navIndex) }
+                    )
                 }
             } else {
-                // Selectable item
+                // Top-level items — always visible
                 TvSidebarItem(
                     item = entry.item,
                     isSelected = selectedIndex == entry.navIndex,
                     isExpanded = isSidebarFocused,
                     textAlpha = textAlpha,
                     isHindi = isHindi,
-                    isSubItem = entry.item.isSubItem,
                     showLiveDot = isLive && entry.item is TvNavItem.Home,
                     onFocusChange = { focused ->
                         if (focused) isSidebarFocused = true
