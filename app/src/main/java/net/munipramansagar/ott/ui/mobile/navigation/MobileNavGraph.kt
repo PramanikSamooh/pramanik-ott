@@ -24,14 +24,8 @@ object Routes {
     const val SEARCH = "search"
     const val SETTINGS = "settings"
 
-    // Legacy alias
-    const val CATEGORY = "section/{sectionId}"
-
     fun section(sectionId: String) = "section/$sectionId"
     fun playlist(playlistId: String) = "playlist/$playlistId"
-
-    @Deprecated("Use section() instead")
-    fun category(slug: String) = "section/$slug"
 }
 
 @Composable

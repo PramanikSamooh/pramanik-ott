@@ -29,7 +29,6 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import dagger.hilt.android.AndroidEntryPoint
 import net.munipramansagar.ott.player.PlayerActivity
-import net.munipramansagar.ott.ui.mobile.component.BottomNavBar
 import net.munipramansagar.ott.ui.mobile.navigation.MobileNavGraph
 import net.munipramansagar.ott.ui.mobile.navigation.Routes
 import net.munipramansagar.ott.ui.mobile.theme.Background

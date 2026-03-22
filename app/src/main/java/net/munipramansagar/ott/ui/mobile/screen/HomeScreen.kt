@@ -21,7 +21,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -61,7 +60,6 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import net.munipramansagar.ott.ui.mobile.component.LiveStreamBanner
-import net.munipramansagar.ott.ui.mobile.component.ShimmerVideoRow
 import net.munipramansagar.ott.ui.mobile.component.VideoCard
 import net.munipramansagar.ott.ui.mobile.theme.Background
 import net.munipramansagar.ott.ui.mobile.theme.CardBg
@@ -129,8 +127,8 @@ fun HomeScreen(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Hub Menu Grid
-        HubMenuGrid(
+        // Bento Grid Hub
+        BentoGrid(
             items = hubMenuItems,
             isHindi = isHindi,
             isLive = state.liveStatus.isLive,
@@ -227,38 +225,71 @@ fun HomeScreen(
 }
 
 @Composable
-private fun HubMenuGrid(
+private fun BentoGrid(
     items: List<HubMenuItem>,
     isHindi: Boolean,
     isLive: Boolean,
     onItemClick: (HubMenuItem) -> Unit
 ) {
-    // 3 columns grid
-    val rows = items.chunked(3)
+    val itemMap = items.associateBy { it.id }
+    val gap = 10.dp
 
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 24.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+            .padding(horizontal = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(gap)
     ) {
-        rows.forEach { rowItems ->
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                rowItems.forEach { item ->
-                    HubMenuCircle(
-                        item = item,
-                        isHindi = isHindi,
-                        isLive = isLive && item.id == "live",
-                        onClick = { onItemClick(item) },
-                        modifier = Modifier.weight(1f)
+        // Row 1: Hero (Pravachan 2x2) + Shanka (1x2)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(gap)
+        ) {
+            itemMap["pravachan"]?.let {
+                BentoCard(
+                    item = it, isHindi = isHindi, isLive = false,
+                    onClick = { onItemClick(it) },
+                    modifier = Modifier.weight(2f).aspectRatio(1f)
+                )
+            }
+            itemMap["shanka"]?.let {
+                BentoCard(
+                    item = it, isHindi = isHindi, isLive = false,
+                    onClick = { onItemClick(it) },
+                    modifier = Modifier.weight(1f).aspectRatio(0.5f)
+                )
+            }
+        }
+
+        // Row 2: Bhawna + Swadhyay + Pathshala (equal)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(gap)
+        ) {
+            listOf("bhawna", "swadhyay", "pathshala").forEach { id ->
+                itemMap[id]?.let {
+                    BentoCard(
+                        item = it, isHindi = isHindi, isLive = false,
+                        onClick = { onItemClick(it) },
+                        modifier = Modifier.weight(1f).height(90.dp)
                     )
                 }
-                // Fill remaining space if row has < 3 items
-                repeat(3 - rowItems.size) {
-                    Spacer(modifier = Modifier.weight(1f))
+            }
+        }
+
+        // Row 3: Shorts + Live + Search (equal small)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(gap)
+        ) {
+            listOf("shorts", "live", "search").forEach { id ->
+                itemMap[id]?.let {
+                    BentoCard(
+                        item = it, isHindi = isHindi,
+                        isLive = isLive && id == "live",
+                        onClick = { onItemClick(it) },
+                        modifier = Modifier.weight(1f).height(76.dp)
+                    )
                 }
             }
         }
@@ -266,7 +297,7 @@ private fun HubMenuGrid(
 }
 
 @Composable
-private fun HubMenuCircle(
+private fun BentoCard(
     item: HubMenuItem,
     isHindi: Boolean,
     isLive: Boolean,
@@ -276,7 +307,7 @@ private fun HubMenuCircle(
     val livePulse = if (isLive) {
         val transition = rememberInfiniteTransition(label = "live_pulse")
         val alpha by transition.animateFloat(
-            initialValue = 0.5f,
+            initialValue = 0.4f,
             targetValue = 1f,
             animationSpec = infiniteRepeatable(
                 animation = tween(800),
@@ -287,53 +318,62 @@ private fun HubMenuCircle(
         alpha
     } else 1f
 
-    Column(
-        modifier = modifier,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        // Circle icon
-        Box(
-            modifier = Modifier
-                .size(72.dp)
-                .clip(CircleShape)
-                .background(
-                    Brush.radialGradient(
-                        colors = listOf(
-                            item.color.copy(alpha = 0.25f),
-                            item.color.copy(alpha = 0.08f)
-                        )
+    val cardShape = RoundedCornerShape(20.dp)
+
+    Box(
+        modifier = modifier
+            .clip(cardShape)
+            .background(
+                Brush.linearGradient(
+                    colors = listOf(
+                        item.color.copy(alpha = 0.2f),
+                        item.color.copy(alpha = 0.05f)
                     )
                 )
-                .border(
-                    1.5.dp,
-                    item.color.copy(alpha = if (isLive) livePulse * 0.8f else 0.4f),
-                    CircleShape
-                )
-                .clickable { onClick() },
-            contentAlignment = Alignment.Center
+            )
+            .border(
+                1.dp,
+                item.color.copy(alpha = if (isLive) livePulse * 0.6f else 0.2f),
+                cardShape
+            )
+            .clickable { onClick() },
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
             Icon(
                 imageVector = item.icon,
                 contentDescription = item.labelEn,
-                tint = item.color,
-                modifier = Modifier.size(32.dp)
+                tint = item.color.copy(alpha = 0.9f),
+                modifier = Modifier.size(28.dp)
+            )
+            Spacer(modifier = Modifier.height(6.dp))
+            Text(
+                text = item.getLabel(isHindi),
+                style = MaterialTheme.typography.labelMedium.copy(
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    lineHeight = 15.sp
+                ),
+                color = TextWhite.copy(alpha = 0.9f),
+                textAlign = TextAlign.Center,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
             )
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // Label
-        Text(
-            text = item.getLabel(isHindi),
-            style = MaterialTheme.typography.labelMedium.copy(
-                fontSize = 11.sp,
-                fontWeight = FontWeight.Medium,
-                lineHeight = 14.sp
-            ),
-            color = TextWhite.copy(alpha = 0.85f),
-            textAlign = TextAlign.Center,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis
-        )
+        // Live pulsing dot
+        if (isLive) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(8.dp)
+                    .size(8.dp)
+                    .clip(CircleShape)
+                    .background(LiveRed.copy(alpha = livePulse))
+            )
+        }
     }
 }

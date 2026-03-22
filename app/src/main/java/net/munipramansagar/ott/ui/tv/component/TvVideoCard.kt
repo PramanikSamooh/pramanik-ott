@@ -1,6 +1,5 @@
 package net.munipramansagar.ott.ui.tv.component
 
-import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.BorderStroke
@@ -41,7 +40,6 @@ import net.munipramansagar.ott.data.model.Video
 import net.munipramansagar.ott.ui.tv.theme.DarkBg
 import net.munipramansagar.ott.ui.tv.theme.GlassBorder
 import net.munipramansagar.ott.ui.tv.theme.GlassCard
-import net.munipramansagar.ott.ui.tv.theme.GlassHighlight
 import net.munipramansagar.ott.ui.tv.theme.PramanikTvTheme
 import net.munipramansagar.ott.ui.tv.theme.Saffron
 import net.munipramansagar.ott.ui.tv.theme.TextGray
