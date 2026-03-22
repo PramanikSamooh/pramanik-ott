@@ -85,7 +85,12 @@ fun BottomNavBar(
             verticalAlignment = Alignment.CenterVertically
         ) {
             BottomNavItem.entries.forEach { item ->
-                val isSelected = currentRoute.startsWith(item.route)
+                val isSelected = when (item) {
+                    BottomNavItem.HOME -> currentRoute == "home"
+                    BottomNavItem.SHORTS -> currentRoute == "shorts"
+                    BottomNavItem.SEARCH -> currentRoute == "search"
+                    else -> currentRoute == item.route || currentRoute.startsWith(item.route.substringBefore("{"))
+                }
                 NavBarItem(
                     item = item,
                     isSelected = isSelected,

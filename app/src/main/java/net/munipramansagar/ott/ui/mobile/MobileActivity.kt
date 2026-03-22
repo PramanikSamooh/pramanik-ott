@@ -129,17 +129,25 @@ class MobileActivity : ComponentActivity() {
                         )
                     },
                     bottomBar = {
-                        BottomNavBar(
+                        if (!isShortsScreen) BottomNavBar(
                             currentRoute = currentRoute,
                             isHindi = isHindi,
                             onNavigate = { route ->
-                                navController.navigate(route) {
-                                    // Pop everything back to home, then navigate
-                                    popUpTo(navController.graph.startDestinationId) {
-                                        saveState = true
+                                if (route == Routes.HOME) {
+                                    // Home: clear entire back stack
+                                    navController.navigate(Routes.HOME) {
+                                        popUpTo(0) { inclusive = true }
+                                        launchSingleTop = true
                                     }
-                                    launchSingleTop = true
-                                    restoreState = true
+                                } else {
+                                    navController.navigate(route) {
+                                        // Pop back to home first, keep home in stack
+                                        popUpTo(Routes.HOME) {
+                                            saveState = true
+                                        }
+                                        launchSingleTop = true
+                                        restoreState = true
+                                    }
                                 }
                             }
                         )
