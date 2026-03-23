@@ -59,6 +59,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
+import androidx.compose.foundation.layout.width
 import net.munipramansagar.ott.ui.mobile.component.LiveStreamBanner
 import net.munipramansagar.ott.ui.mobile.component.VideoCard
 import net.munipramansagar.ott.ui.mobile.theme.Background
@@ -145,7 +146,16 @@ fun HomeScreen(
             }
         )
 
-        Spacer(modifier = Modifier.height(24.dp))
+        // Announcements — events, quotes, WhatsApp
+        if (state.announcements.isNotEmpty()) {
+            Spacer(modifier = Modifier.height(16.dp))
+            AnnouncementCards(
+                announcements = state.announcements,
+                isHindi = isHindi
+            )
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
 
         // Recent Videos section
         if (state.heroBannerVideos.isNotEmpty()) {
@@ -374,6 +384,105 @@ private fun BentoCard(
                     .clip(CircleShape)
                     .background(LiveRed.copy(alpha = livePulse))
             )
+        }
+    }
+}
+
+@Composable
+private fun AnnouncementCards(
+    announcements: List<net.munipramansagar.ott.data.model.Announcement>,
+    isHindi: Boolean
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        announcements.forEach { announcement ->
+            val context = androidx.compose.ui.platform.LocalContext.current
+            val cardShape = RoundedCornerShape(16.dp)
+            val bgColor = when (announcement.type) {
+                "event" -> Saffron.copy(alpha = 0.12f)
+                "quote" -> Gold.copy(alpha = 0.08f)
+                "whatsapp" -> Color(0xFF25D366).copy(alpha = 0.1f)
+                else -> CardBg
+            }
+            val borderColor = when (announcement.type) {
+                "event" -> Saffron.copy(alpha = 0.3f)
+                "quote" -> Gold.copy(alpha = 0.2f)
+                "whatsapp" -> Color(0xFF25D366).copy(alpha = 0.3f)
+                else -> CardBorder
+            }
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(cardShape)
+                    .background(bgColor)
+                    .border(1.dp, borderColor, cardShape)
+                    .clickable {
+                        if (announcement.actionUrl.isNotBlank()) {
+                            val intent = android.content.Intent(
+                                android.content.Intent.ACTION_VIEW,
+                                android.net.Uri.parse(announcement.actionUrl)
+                            )
+                            context.startActivity(intent)
+                        }
+                    }
+                    .padding(14.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Image if available
+                if (announcement.imageUrl.isNotBlank()) {
+                    AsyncImage(
+                        model = announcement.imageUrl,
+                        contentDescription = null,
+                        modifier = Modifier
+                            .size(56.dp)
+                            .clip(RoundedCornerShape(10.dp)),
+                        contentScale = ContentScale.Crop
+                    )
+                    Spacer(modifier = Modifier.width(14.dp))
+                }
+
+                // Text content
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = announcement.getTitle(isHindi),
+                        style = MaterialTheme.typography.titleSmall.copy(
+                            fontWeight = FontWeight.SemiBold
+                        ),
+                        color = TextWhite,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    if (announcement.getBody(isHindi).isNotBlank()) {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = announcement.getBody(isHindi),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = TextGray,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                    if (announcement.getActionLabel(isHindi).isNotBlank()) {
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Text(
+                            text = announcement.getActionLabel(isHindi),
+                            style = MaterialTheme.typography.labelMedium.copy(
+                                fontWeight = FontWeight.Bold
+                            ),
+                            color = when (announcement.type) {
+                                "event" -> Saffron
+                                "whatsapp" -> Color(0xFF25D366)
+                                else -> SaffronLight
+                            }
+                        )
+                    }
+                }
+            }
         }
     }
 }

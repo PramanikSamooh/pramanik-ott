@@ -669,6 +669,79 @@ export const seedData = onRequest(
 );
 
 // ══════════════════════════════════════════════════════════════
+// ── HTTP: Seed sample announcements ──
+// ══════════════════════════════════════════════════════════════
+export const seedAnnouncements = onRequest({}, async (req, res) => {
+  const batch = db.batch();
+
+  const announcements = [
+    {
+      id: "event1",
+      title: "Siddh Chakra Maha Mandal Vidhan 2025",
+      titleHi: "श्री सिद्धचक्र महामंडल विधान 2025",
+      body: "Register now for this grand spiritual event",
+      bodyHi: "इस भव्य आध्यात्मिक कार्यक्रम के लिए अभी पंजीकरण करें",
+      type: "event",
+      imageUrl: "",
+      actionUrl: "https://www.munipramansagar.net/siddhchakra-mandal-vidhan-2025/",
+      actionLabel: "Register Now →",
+      actionLabelHi: "अभी पंजीकरण करें →",
+      priority: 1,
+      active: true,
+    },
+    {
+      id: "quote1",
+      title: "आज का विचार",
+      titleHi: "आज का विचार",
+      body: "जो अपने आत्मा को जानता है, वह सब कुछ जानता है।",
+      bodyHi: "जो अपने आत्मा को जानता है, वह सब कुछ जानता है।",
+      type: "quote",
+      imageUrl: "",
+      actionUrl: "",
+      actionLabel: "",
+      actionLabelHi: "",
+      priority: 2,
+      active: true,
+    },
+    {
+      id: "whatsapp1",
+      title: "Join WhatsApp Channel",
+      titleHi: "WhatsApp चैनल से जुड़ें",
+      body: "Get daily updates on discourses and events",
+      bodyHi: "प्रवचन और कार्यक्रमों की दैनिक अपडेट पाएं",
+      type: "whatsapp",
+      imageUrl: "",
+      actionUrl: "https://whatsapp.com/channel/0029VaAVh4jCBtxHGKm1g21U",
+      actionLabel: "Follow →",
+      actionLabelHi: "फॉलो करें →",
+      priority: 3,
+      active: true,
+    },
+    {
+      id: "book1",
+      title: "भावना योग - फील टू हील",
+      titleHi: "भावना योग - फील टू हील",
+      body: "New book available — Order now",
+      bodyHi: "नई पुस्तक उपलब्ध — अभी ऑर्डर करें",
+      type: "notification",
+      imageUrl: "",
+      actionUrl: "https://www.munipramansagar.net/book-store/",
+      actionLabel: "Order Book →",
+      actionLabelHi: "पुस्तक ऑर्डर करें →",
+      priority: 4,
+      active: true,
+    },
+  ];
+
+  for (const a of announcements) {
+    batch.set(db.collection("announcements").doc(a.id), a);
+  }
+
+  await batch.commit();
+  res.json({ success: true, message: `Seeded ${announcements.length} announcements` });
+});
+
+// ══════════════════════════════════════════════════════════════
 // ── HTTP: Seed sample pathshala data ──
 // ══════════════════════════════════════════════════════════════
 export const seedPathshala = onRequest({}, async (req, res) => {
