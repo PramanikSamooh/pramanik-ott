@@ -60,10 +60,15 @@ class CategoryViewModel @Inject constructor(
                 // Fetch playlists for this section
                 val playlists = videoRepository.getPlaylistsBySection(sectionId, limit = 50)
 
-                // For each playlist, fetch preview videos (first 10)
+                // Swadhyay and series playlists should be in ascending order
+                val useAscending = sectionId in listOf("swadhyay", "granth", "poojan")
+
+                // For each playlist, fetch videos
                 val playlistsWithVideos = playlists.map { playlist ->
                     async {
-                        val videos = videoRepository.getPlaylistVideos(playlist.id, limit = 10)
+                        val videos = videoRepository.getPlaylistVideos(
+                            playlist.id, limit = 50, ascending = useAscending
+                        )
                         PlaylistWithVideos(playlist, videos)
                     }
                 }.awaitAll().filter { it.videos.isNotEmpty() }

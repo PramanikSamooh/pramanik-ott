@@ -86,7 +86,7 @@ sealed class TvNavItem(
     data object Home : TvNavItem("Home", "होम", Icons.Default.Home)
 
     // Group headers
-    data object MuniGroup : TvNavItem("Muni Pramansagar Ji", "मुनि प्रमाणसागर जी", Icons.Default.Home)
+    data object MuniGroup : TvNavItem("Muni Pramansagar Ji", "मुनि प्रमाणसागर जी", Icons.Default.PlayCircle)
     data object PathshalaGroup : TvNavItem("Jain Pathshala", "जैन पाठशाला", Icons.Default.School)
     data object PoojanGroup : TvNavItem("Poojan & Path", "पूजन और पाठ", Icons.Default.Favorite)
     data object EventsGroup : TvNavItem("Events", "कार्यक्रम", Icons.Default.Star)

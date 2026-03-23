@@ -61,12 +61,14 @@ class VideoRepository @Inject constructor(
     suspend fun getPlaylistVideos(
         playlistId: String,
         limit: Long = 10,
-        lastPublishedAt: String? = null
+        lastPublishedAt: String? = null,
+        ascending: Boolean = false
     ): List<Video> {
+        val direction = if (ascending) Query.Direction.ASCENDING else Query.Direction.DESCENDING
         var query = playlistsCollection
             .document(playlistId)
             .collection("videos")
-            .orderBy("publishedAt", Query.Direction.DESCENDING)
+            .orderBy("publishedAt", direction)
             .limit(limit)
 
         if (lastPublishedAt != null) {
