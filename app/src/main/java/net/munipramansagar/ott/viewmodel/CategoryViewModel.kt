@@ -22,8 +22,9 @@ data class CategoryUiState(
     val playlists: List<PlaylistWithVideos> = emptyList(),
     // Grouped playlists for the new layout
     val featuredPlaylists: List<PlaylistWithVideos> = emptyList(), // pinned by admin
-    val latestPlaylists: List<PlaylistWithVideos> = emptyList(),   // current month
-    val archivePlaylists: List<PlaylistWithVideos> = emptyList(),  // older months
+    val latestPlaylists: List<PlaylistWithVideos> = emptyList(),   // current/recent monthly
+    val seriesPlaylists: List<PlaylistWithVideos> = emptyList(),   // special series (non-monthly)
+    val archivePlaylists: List<PlaylistWithVideos> = emptyList(),  // older monthly
     // For playlist detail view
     val selectedPlaylist: Playlist? = null,
     val playlistVideos: List<Video> = emptyList(),
@@ -73,30 +74,30 @@ class CategoryViewModel @Inject constructor(
                     }
                 }.awaitAll().filter { it.videos.isNotEmpty() }
 
-                // Group into featured (pinned), latest (current month), archive
+                // Separate: featured (pinned), monthly playlists, special series
                 val featured = playlistsWithVideos.filter { it.playlist.pinned }
                 val nonFeatured = playlistsWithVideos.filter { !it.playlist.pinned }
 
-                // Current month playlists (published in the last 35 days)
-                val cutoffMs = System.currentTimeMillis() - (35L * 24 * 60 * 60 * 1000)
-                val latest = nonFeatured.filter { pw ->
-                    try {
-                        val pubDate = pw.videos.firstOrNull()?.publishedAt ?: ""
-                        if (pubDate.isNotBlank()) {
-                            java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US)
-                                .parse(pubDate.take(10))?.time?.let { it > cutoffMs } ?: false
-                        } else false
-                    } catch (_: Exception) { false }
-                }
+                // Monthly playlists have titles like "2026-03", "2025-12"
+                val monthlyPattern = Regex("^\\d{4}-\\d{2}$")
+                val monthly = nonFeatured
+                    .filter { monthlyPattern.matches(it.playlist.title.trim()) }
+                    .sortedByDescending { it.playlist.title } // newest month first
 
-                val latestIds = latest.map { it.playlist.id }.toSet()
-                val archive = nonFeatured.filter { it.playlist.id !in latestIds }
+                val series = nonFeatured
+                    .filter { !monthlyPattern.matches(it.playlist.title.trim()) }
+                    .sortedBy { it.playlist.displayOrder }
+
+                // Latest = first 3 monthly playlists, archive = rest
+                val latest = monthly.take(3)
+                val archive = monthly.drop(3)
 
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
                     playlists = playlistsWithVideos,
                     featuredPlaylists = featured,
                     latestPlaylists = latest,
+                    seriesPlaylists = series,
                     archivePlaylists = archive
                 )
             } catch (e: Exception) {

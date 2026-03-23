@@ -58,25 +58,20 @@ fun TvCategoryScreen(
         sectionData?.playlists ?: emptyList()
     }
 
-    // Group playlists: pinned → latest → archive
+    // Group playlists: featured, monthly (latest+archive), series
+    val monthlyPattern = remember { Regex("^\\d{4}-\\d{2}$") }
     val featured = remember(playlists) { playlists.filter { it.playlist.pinned } }
     val nonFeatured = remember(playlists) { playlists.filter { !it.playlist.pinned } }
-    val cutoffMs = remember { System.currentTimeMillis() - (35L * 24 * 60 * 60 * 1000) }
-    val latest = remember(nonFeatured) {
-        nonFeatured.filter { pw ->
-            try {
-                val pubDate = pw.videos.firstOrNull()?.publishedAt ?: ""
-                if (pubDate.length >= 10) {
-                    java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US)
-                        .parse(pubDate.take(10))?.time?.let { it > cutoffMs } ?: false
-                } else false
-            } catch (_: Exception) { false }
-        }
+    val monthly = remember(nonFeatured) {
+        nonFeatured.filter { monthlyPattern.matches(it.playlist.title.trim()) }
+            .sortedByDescending { it.playlist.title }
     }
-    val latestIds = remember(latest) { latest.map { it.playlist.id }.toSet() }
-    val archive = remember(nonFeatured, latestIds) {
-        nonFeatured.filter { it.playlist.id !in latestIds }
+    val series = remember(nonFeatured) {
+        nonFeatured.filter { !monthlyPattern.matches(it.playlist.title.trim()) }
+            .sortedBy { it.playlist.displayOrder }
     }
+    val latest = remember(monthly) { monthly.take(3) }
+    val archive = remember(monthly) { monthly.drop(3) }
 
     val onVideoClick: (Video) -> Unit = { video ->
         val intent = Intent(context, PlayerActivity::class.java).apply {
@@ -130,57 +125,30 @@ fun TvCategoryScreen(
             ) {
                 // Featured section
                 if (featured.isNotEmpty()) {
-                    item {
-                        Text(
-                            text = if (isHindi) "विशेष" else "FEATURED",
-                            style = PramanikTvTheme.typography.labelMedium.copy(
-                                color = Saffron.copy(alpha = 0.7f),
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 12.sp,
-                                letterSpacing = 1.5.sp
-                            ),
-                            modifier = Modifier.padding(horizontal = 48.dp)
-                        )
-                    }
+                    item { TvSectionLabel(if (isHindi) "विशेष" else "FEATURED", Saffron.copy(alpha = 0.7f)) }
                     items(featured.size) { i -> TvPlaylistSection(featured[i], onVideoClick) }
                 }
 
-                // Latest section
+                // Latest monthly
                 if (latest.isNotEmpty()) {
-                    item {
-                        Text(
-                            text = if (isHindi) "नवीनतम" else "LATEST",
-                            style = PramanikTvTheme.typography.labelMedium.copy(
-                                color = TextWhite.copy(alpha = 0.6f),
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 12.sp,
-                                letterSpacing = 1.5.sp
-                            ),
-                            modifier = Modifier.padding(horizontal = 48.dp)
-                        )
-                    }
+                    item { TvSectionLabel(if (isHindi) "नवीनतम" else "LATEST", TextWhite.copy(alpha = 0.6f)) }
                     items(latest.size) { i -> TvPlaylistSection(latest[i], onVideoClick) }
                 }
 
-                // Archive section
+                // Special Series
+                if (series.isNotEmpty()) {
+                    item { TvSectionLabel(if (isHindi) "विशेष श्रृंखला" else "SPECIAL SERIES", Saffron.copy(alpha = 0.7f)) }
+                    items(series.size) { i -> TvPlaylistSection(series[i], onVideoClick) }
+                }
+
+                // Monthly Archive
                 if (archive.isNotEmpty()) {
-                    item {
-                        Text(
-                            text = if (isHindi) "संग्रह" else "ARCHIVE",
-                            style = PramanikTvTheme.typography.labelMedium.copy(
-                                color = TextGray.copy(alpha = 0.5f),
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 12.sp,
-                                letterSpacing = 1.5.sp
-                            ),
-                            modifier = Modifier.padding(horizontal = 48.dp)
-                        )
-                    }
+                    item { TvSectionLabel(if (isHindi) "मासिक संग्रह" else "MONTHLY ARCHIVE", TextGray.copy(alpha = 0.5f)) }
                     items(archive.size) { i -> TvPlaylistSection(archive[i], onVideoClick) }
                 }
 
-                // Fallback if no grouping matched
-                if (featured.isEmpty() && latest.isEmpty() && archive.isEmpty()) {
+                // Fallback
+                if (featured.isEmpty() && latest.isEmpty() && series.isEmpty() && archive.isEmpty()) {
                     items(playlists.size) { i -> TvPlaylistSection(playlists[i], onVideoClick) }
                 }
             }
@@ -229,5 +197,20 @@ private fun TvPlaylistSection(
             }
         }
     }
+}
+
+@OptIn(ExperimentalTvMaterial3Api::class)
+@Composable
+private fun TvSectionLabel(text: String, color: androidx.compose.ui.graphics.Color) {
+    Text(
+        text = text,
+        style = PramanikTvTheme.typography.labelMedium.copy(
+            color = color,
+            fontWeight = FontWeight.Bold,
+            fontSize = 12.sp,
+            letterSpacing = 1.5.sp
+        ),
+        modifier = Modifier.padding(horizontal = 48.dp)
+    )
 }
 

@@ -126,50 +126,34 @@ fun CategoryScreen(
                     contentPadding = PaddingValues(bottom = 80.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    // Featured / Pinned playlists — highlighted at top
+                    // Featured / Pinned playlists
                     if (state.featuredPlaylists.isNotEmpty()) {
-                        item {
-                            SectionLabel(
-                                text = if (isHindi) "विशेष" else "Featured",
-                                color = Saffron
-                            )
-                        }
-                        items(state.featuredPlaylists) { pw ->
-                            PlaylistSection(pw, onVideoClick, onPlaylistClick)
-                        }
+                        item { SectionLabel(text = if (isHindi) "विशेष" else "Featured", color = Saffron) }
+                        items(state.featuredPlaylists) { pw -> PlaylistSection(pw, onVideoClick, onPlaylistClick) }
                     }
 
-                    // Latest — current month
+                    // Latest monthly
                     if (state.latestPlaylists.isNotEmpty()) {
-                        item {
-                            SectionLabel(
-                                text = if (isHindi) "नवीनतम" else "Latest",
-                                color = TextWhite
-                            )
-                        }
-                        items(state.latestPlaylists) { pw ->
-                            PlaylistSection(pw, onVideoClick, onPlaylistClick)
-                        }
+                        item { SectionLabel(text = if (isHindi) "नवीनतम" else "Latest", color = TextWhite) }
+                        items(state.latestPlaylists) { pw -> PlaylistSection(pw, onVideoClick, onPlaylistClick) }
                     }
 
-                    // Archive — older playlists
+                    // Special Series
+                    if (state.seriesPlaylists.isNotEmpty()) {
+                        item { SectionLabel(text = if (isHindi) "विशेष श्रृंखला" else "Special Series", color = Saffron) }
+                        items(state.seriesPlaylists) { pw -> PlaylistSection(pw, onVideoClick, onPlaylistClick) }
+                    }
+
+                    // Monthly Archive
                     if (state.archivePlaylists.isNotEmpty()) {
-                        item {
-                            SectionLabel(
-                                text = if (isHindi) "संग्रह" else "Archive",
-                                color = TextGray
-                            )
-                        }
-                        items(state.archivePlaylists) { pw ->
-                            PlaylistSection(pw, onVideoClick, onPlaylistClick)
-                        }
+                        item { SectionLabel(text = if (isHindi) "मासिक संग्रह" else "Monthly Archive", color = TextGray) }
+                        items(state.archivePlaylists) { pw -> PlaylistSection(pw, onVideoClick, onPlaylistClick) }
                     }
 
-                    // Fallback: show all if no grouping
-                    if (state.featuredPlaylists.isEmpty() && state.latestPlaylists.isEmpty() && state.archivePlaylists.isEmpty()) {
-                        items(state.playlists) { pw ->
-                            PlaylistSection(pw, onVideoClick, onPlaylistClick)
-                        }
+                    // Fallback
+                    if (state.featuredPlaylists.isEmpty() && state.latestPlaylists.isEmpty()
+                        && state.seriesPlaylists.isEmpty() && state.archivePlaylists.isEmpty()) {
+                        items(state.playlists) { pw -> PlaylistSection(pw, onVideoClick, onPlaylistClick) }
                     }
                 }
             }
