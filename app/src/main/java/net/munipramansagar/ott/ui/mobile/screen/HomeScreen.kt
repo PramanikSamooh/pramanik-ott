@@ -2,7 +2,6 @@ package net.munipramansagar.ott.ui.mobile.screen
 
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
@@ -77,7 +76,7 @@ import net.munipramansagar.ott.ui.mobile.theme.TextWhite
 import net.munipramansagar.ott.viewmodel.HomeViewModel
 import net.munipramansagar.ott.viewmodel.PathshalaViewModel
 
-// Hub menu items
+// Hub menu data
 data class HubMenuItem(
     val id: String,
     val labelEn: String,
@@ -89,16 +88,42 @@ data class HubMenuItem(
     fun getLabel(isHindi: Boolean) = if (isHindi) labelHi else labelEn
 }
 
-val hubMenuItems = listOf(
-    HubMenuItem("bhawna", "Bhawna Yog", "भावना योग", Icons.Default.SelfImprovement, Color(0xFF4CAF50), "section/bhawna-yog"),
-    HubMenuItem("pravachan", "Pravachan", "प्रवचन", Icons.Default.MenuBook, Saffron, "section/pravachan"),
-    HubMenuItem("shanka", "Shanka\nSamadhan", "शंका\nसमाधान", Icons.Default.QuestionAnswer, Gold, "section/shanka-clips"),
-    HubMenuItem("swadhyay", "Swadhyay", "स्वाध्याय", Icons.Default.Spa, Color(0xFF9C27B0), "section/swadhyay"),
-    HubMenuItem("pathshala", "Pathshala", "पाठशाला", Icons.Default.School, KidsBlue, "pathshala"),
-    HubMenuItem("poojan", "Poojan\n& Path", "पूजन\nव पाठ", Icons.Default.Spa, Color(0xFFFF9800), "section/poojan"),
-    HubMenuItem("events", "Events", "कार्यक्रम", Icons.Default.Stars, Color(0xFFE91E63), "section/events"),
-    HubMenuItem("donate", "Swa Par\nKalyan", "स्व पर\nकल्याण", Icons.Default.Stars, Color(0xFF00BCD4), "donate"),
+data class HubMenuGroup(
+    val labelEn: String,
+    val labelHi: String,
+    val icon: ImageVector,
+    val color: Color,
+    val items: List<HubMenuItem>
+) {
+    fun getLabel(isHindi: Boolean) = if (isHindi) labelHi else labelEn
+}
+
+val hubMenuGroups = listOf(
+    HubMenuGroup("Muni Pramansagar Ji", "मुनि प्रमाणसागर जी", Icons.Default.PlayCircle, Saffron, listOf(
+        HubMenuItem("bhawna", "Bhawna Yog", "भावना योग", Icons.Default.SelfImprovement, Color(0xFF4CAF50), "section/bhawna-yog"),
+        HubMenuItem("pravachan", "Pravachan", "प्रवचन", Icons.Default.MenuBook, Saffron, "section/pravachan"),
+        HubMenuItem("shanka", "Shanka Samadhan", "शंका समाधान", Icons.Default.QuestionAnswer, Gold, "section/shanka-clips"),
+        HubMenuItem("swadhyay", "Swadhyay", "स्वाध्याय", Icons.Default.Spa, Color(0xFF9C27B0), "section/swadhyay"),
+    )),
+    HubMenuGroup("Jain Pathshala", "जैन पाठशाला", Icons.Default.School, KidsBlue, listOf(
+        HubMenuItem("animated", "Animated Videos", "एनिमेटेड वीडियो", Icons.Default.PlayCircle, KidsBlue, "section/kids"),
+        HubMenuItem("liveclasses", "Live Classes", "लाइव कक्षाएँ", Icons.Default.School, KidsBlue, "pathshala"),
+    )),
+    HubMenuGroup("Poojan & Path", "पूजन व पाठ", Icons.Default.Spa, Color(0xFFFF9800), listOf(
+        HubMenuItem("poojan", "Nitya Poojan", "नित्य पूजन", Icons.Default.Spa, Color(0xFFFF9800), "section/poojan"),
+        HubMenuItem("granth", "Granth Vachan", "ग्रंथ वाचन", Icons.Default.MenuBook, Color(0xFFFF9800), "section/granth"),
+    )),
+    HubMenuGroup("Events", "कार्यक्रम", Icons.Default.Stars, Color(0xFFE91E63), listOf(
+        HubMenuItem("events", "Programs", "कार्यक्रम", Icons.Default.Stars, Color(0xFFE91E63), "section/events"),
+    )),
+    HubMenuGroup("Swa Par Kalyan", "स्व पर कल्याण", Icons.Default.Stars, Color(0xFF00BCD4), listOf(
+        HubMenuItem("donate", "Donate", "दान", Icons.Default.Stars, Color(0xFF00BCD4), "donate"),
+    )),
+)
+
+val hubStandaloneItems = listOf(
     HubMenuItem("search", "Search", "खोजें", Icons.Default.Search, Color(0xFF607D8B), "search"),
+    HubMenuItem("settings", "Settings", "सेटिंग्स", Icons.Default.Settings, TextGray, "settings"),
 )
 
 @Composable
@@ -128,19 +153,14 @@ fun HomeScreen(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Bento Grid Hub
-        BentoGrid(
-            items = hubMenuItems,
+        // Grouped Menu
+        GroupedMenu(
+            groups = hubMenuGroups,
+            standaloneItems = hubStandaloneItems,
             isHindi = isHindi,
-            isLive = state.liveStatus.isLive,
             onItemClick = { item ->
                 when (item.id) {
-                    "pathshala" -> onPathshalaClick()
-                    "live" -> {
-                        if (state.liveStatus.isLive && state.liveStatus.activeStreams.isNotEmpty()) {
-                            onVideoClick(state.liveStatus.activeStreams.first().videoId)
-                        }
-                    }
+                    "liveclasses" -> onPathshalaClick()
                     else -> onNavigate(item.route)
                 }
             }
@@ -235,70 +255,56 @@ fun HomeScreen(
 }
 
 @Composable
-private fun BentoGrid(
-    items: List<HubMenuItem>,
+private fun GroupedMenu(
+    groups: List<HubMenuGroup>,
+    standaloneItems: List<HubMenuItem>,
     isHindi: Boolean,
-    isLive: Boolean,
     onItemClick: (HubMenuItem) -> Unit
 ) {
-    val itemMap = items.associateBy { it.id }
-    val gap = 10.dp
-
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(gap)
+        verticalArrangement = Arrangement.spacedBy(6.dp)
     ) {
-        // Row 1: Hero (Pravachan 2x2) + Shanka (1x2)
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(gap)
-        ) {
-            itemMap["pravachan"]?.let {
-                BentoCard(
-                    item = it, isHindi = isHindi, isLive = false,
-                    onClick = { onItemClick(it) },
-                    modifier = Modifier.weight(2f).aspectRatio(1f)
-                )
-            }
-            itemMap["shanka"]?.let {
-                BentoCard(
-                    item = it, isHindi = isHindi, isLive = false,
-                    onClick = { onItemClick(it) },
-                    modifier = Modifier.weight(1f).aspectRatio(0.5f)
-                )
-            }
+        groups.forEach { group ->
+            GroupCard(
+                group = group,
+                isHindi = isHindi,
+                onItemClick = onItemClick
+            )
         }
 
-        // Row 2: Bhawna + Swadhyay + Pathshala (equal)
+        // Standalone items (Search, Settings) in a row
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(gap)
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            listOf("bhawna", "swadhyay", "pathshala").forEach { id ->
-                itemMap[id]?.let {
-                    BentoCard(
-                        item = it, isHindi = isHindi, isLive = false,
-                        onClick = { onItemClick(it) },
-                        modifier = Modifier.weight(1f).height(90.dp)
+            standaloneItems.forEach { item ->
+                val cardShape = RoundedCornerShape(14.dp)
+                Row(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clip(cardShape)
+                        .background(CardBg)
+                        .border(1.dp, CardBorder, cardShape)
+                        .clickable { onItemClick(item) }
+                        .padding(horizontal = 14.dp, vertical = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = item.icon,
+                        contentDescription = null,
+                        tint = item.color,
+                        modifier = Modifier.size(18.dp)
                     )
-                }
-            }
-        }
-
-        // Row 3: Shorts + Live + Search (equal small)
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(gap)
-        ) {
-            listOf("shorts", "live", "search").forEach { id ->
-                itemMap[id]?.let {
-                    BentoCard(
-                        item = it, isHindi = isHindi,
-                        isLive = isLive && id == "live",
-                        onClick = { onItemClick(it) },
-                        modifier = Modifier.weight(1f).height(76.dp)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = item.getLabel(isHindi),
+                        style = MaterialTheme.typography.labelMedium.copy(
+                            fontWeight = FontWeight.Medium
+                        ),
+                        color = TextWhite.copy(alpha = 0.8f)
                     )
                 }
             }
@@ -307,83 +313,94 @@ private fun BentoGrid(
 }
 
 @Composable
-private fun BentoCard(
-    item: HubMenuItem,
+private fun GroupCard(
+    group: HubMenuGroup,
     isHindi: Boolean,
-    isLive: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    onItemClick: (HubMenuItem) -> Unit
 ) {
-    val livePulse = if (isLive) {
-        val transition = rememberInfiniteTransition(label = "live_pulse")
-        val alpha by transition.animateFloat(
-            initialValue = 0.4f,
-            targetValue = 1f,
-            animationSpec = infiniteRepeatable(
-                animation = tween(800),
-                repeatMode = RepeatMode.Reverse
-            ),
-            label = "live_alpha"
-        )
-        alpha
-    } else 1f
+    val cardShape = RoundedCornerShape(16.dp)
 
-    val cardShape = RoundedCornerShape(20.dp)
-
-    Box(
-        modifier = modifier
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
             .clip(cardShape)
             .background(
                 Brush.linearGradient(
                     colors = listOf(
-                        item.color.copy(alpha = 0.2f),
-                        item.color.copy(alpha = 0.05f)
+                        group.color.copy(alpha = 0.1f),
+                        group.color.copy(alpha = 0.03f)
                     )
                 )
             )
-            .border(
-                1.dp,
-                item.color.copy(alpha = if (isLive) livePulse * 0.6f else 0.2f),
-                cardShape
-            )
-            .clickable { onClick() },
-        contentAlignment = Alignment.Center
+            .border(1.dp, group.color.copy(alpha = 0.15f), cardShape)
+            .padding(14.dp)
     ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+        // Group header
+        Row(
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
-                imageVector = item.icon,
-                contentDescription = item.labelEn,
-                tint = item.color.copy(alpha = 0.9f),
-                modifier = Modifier.size(28.dp)
+                imageVector = group.icon,
+                contentDescription = null,
+                tint = group.color,
+                modifier = Modifier.size(20.dp)
             )
-            Spacer(modifier = Modifier.height(6.dp))
+            Spacer(modifier = Modifier.width(10.dp))
             Text(
-                text = item.getLabel(isHindi),
-                style = MaterialTheme.typography.labelMedium.copy(
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    lineHeight = 15.sp
+                text = group.getLabel(isHindi),
+                style = MaterialTheme.typography.titleSmall.copy(
+                    fontWeight = FontWeight.Bold
                 ),
-                color = TextWhite.copy(alpha = 0.9f),
-                textAlign = TextAlign.Center,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis
+                color = group.color
             )
         }
 
-        // Live pulsing dot
-        if (isLive) {
-            Box(
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(8.dp)
-                    .size(8.dp)
-                    .clip(CircleShape)
-                    .background(LiveRed.copy(alpha = livePulse))
-            )
+        Spacer(modifier = Modifier.height(10.dp))
+
+        // Sub-items as chips in a flow row
+        val rows = group.items.chunked(2)
+        rows.forEach { rowItems ->
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                rowItems.forEach { item ->
+                    Row(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(Color.White.copy(alpha = 0.06f))
+                            .clickable { onItemClick(item) }
+                            .padding(horizontal = 12.dp, vertical = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = item.icon,
+                            contentDescription = null,
+                            tint = item.color.copy(alpha = 0.8f),
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = item.getLabel(isHindi),
+                            style = MaterialTheme.typography.labelMedium.copy(
+                                fontWeight = FontWeight.Medium,
+                                fontSize = 12.sp
+                            ),
+                            color = TextWhite.copy(alpha = 0.85f),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                }
+                // Fill space if odd number
+                if (rowItems.size == 1) {
+                    Spacer(modifier = Modifier.weight(1f))
+                }
+            }
+            if (rows.indexOf(rowItems) < rows.size - 1) {
+                Spacer(modifier = Modifier.height(6.dp))
+            }
         }
     }
 }
