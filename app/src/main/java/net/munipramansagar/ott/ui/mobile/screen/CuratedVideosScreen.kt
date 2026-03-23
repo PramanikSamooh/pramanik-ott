@@ -61,8 +61,9 @@ fun CuratedVideosScreen(
                 .orderBy("priority", Query.Direction.ASCENDING)
                 .get()
                 .await()
-            videos = snapshot.toObjects(CuratedVideo::class.java)
-                .filter { it.active }
+            videos = snapshot.documents.mapNotNull { doc ->
+                doc.toObject(CuratedVideo::class.java)?.copy(id = doc.id)
+            }.filter { it.active }
         } catch (_: Exception) {}
         isLoading = false
     }
