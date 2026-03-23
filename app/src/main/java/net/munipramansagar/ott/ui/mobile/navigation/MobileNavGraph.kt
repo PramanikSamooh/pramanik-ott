@@ -15,12 +15,14 @@ import net.munipramansagar.ott.ui.mobile.screen.SearchScreen
 import net.munipramansagar.ott.ui.mobile.screen.SettingsScreen
 import net.munipramansagar.ott.ui.mobile.screen.CuratedVideosScreen
 import net.munipramansagar.ott.ui.mobile.screen.DonateScreen
+import net.munipramansagar.ott.ui.mobile.screen.MaharajScreen
 import net.munipramansagar.ott.ui.mobile.screen.ShortsScreen
 
 object Routes {
     const val HOME = "home"
     const val SHORTS = "shorts"
     const val PATHSHALA = "pathshala"
+    const val MAHARAJ = "maharaj"
     const val DONATE = "donate"
     const val CURATED = "curated/{collectionId}/{title}"
     const val SECTION = "section/{sectionId}"
@@ -114,6 +116,13 @@ fun MobileNavGraph(
                 collection = backStackEntry.arguments?.getString("collectionId") ?: "",
                 title = backStackEntry.arguments?.getString("title") ?: "",
                 isHindi = isHindi
+            )
+        }
+
+        composable(Routes.MAHARAJ) {
+            MaharajScreen(
+                isHindi = isHindi,
+                onBack = { navController.popBackStack() }
             )
         }
 
