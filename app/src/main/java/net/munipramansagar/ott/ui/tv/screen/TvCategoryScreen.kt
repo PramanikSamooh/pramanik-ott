@@ -2,8 +2,6 @@ package net.munipramansagar.ott.ui.tv.screen
 
 import android.content.Intent
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,16 +12,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -36,8 +30,6 @@ import androidx.tv.material3.Text
 import net.munipramansagar.ott.data.model.Video
 import net.munipramansagar.ott.player.PlayerActivity
 import net.munipramansagar.ott.ui.tv.component.TvVideoCard
-import net.munipramansagar.ott.ui.tv.theme.GlassBorder
-import net.munipramansagar.ott.ui.tv.theme.GlassCard
 import net.munipramansagar.ott.ui.tv.theme.PramanikTvTheme
 import net.munipramansagar.ott.ui.tv.theme.Saffron
 import net.munipramansagar.ott.ui.tv.theme.TextGray
@@ -118,19 +110,7 @@ fun TvCategoryScreen(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Filter chips row (placeholder for future)
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 48.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            FilterChip(label = "All", isActive = true)
-            FilterChip(label = "Latest", isActive = false)
-            FilterChip(label = "Popular", isActive = false)
-        }
-
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
         if (playlists.isEmpty()) {
             Box(
@@ -251,41 +231,3 @@ private fun TvPlaylistSection(
     }
 }
 
-@OptIn(ExperimentalTvMaterial3Api::class)
-@Composable
-private fun FilterChip(
-    label: String,
-    isActive: Boolean
-) {
-    var isFocused by remember { mutableStateOf(false) }
-
-    val bgColor = when {
-        isActive -> Saffron.copy(alpha = 0.2f)
-        isFocused -> GlassCard
-        else -> GlassCard.copy(alpha = 0.5f)
-    }
-    val borderColor = when {
-        isActive -> Saffron.copy(alpha = 0.5f)
-        isFocused -> GlassBorder.copy(alpha = 0.3f)
-        else -> GlassBorder
-    }
-    val textColor = when {
-        isActive -> Saffron
-        isFocused -> TextWhite
-        else -> TextGray
-    }
-
-    Text(
-        text = label,
-        style = PramanikTvTheme.typography.labelMedium.copy(
-            color = textColor,
-            fontWeight = if (isActive) FontWeight.SemiBold else FontWeight.Normal,
-            fontSize = 13.sp
-        ),
-        modifier = Modifier
-            .onFocusChanged { isFocused = it.isFocused }
-            .focusable()
-            .background(bgColor, PramanikTvTheme.shapes.pill)
-            .padding(horizontal = 20.dp, vertical = 8.dp)
-    )
-}
