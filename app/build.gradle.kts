@@ -21,10 +21,10 @@ android {
 
     signingConfigs {
         create("release") {
-            storeFile = file("${rootProject.projectDir}/../signature1.jks")
-            storePassword = "jainapp@123"
-            keyAlias = "pramanik"
-            keyPassword = "jainapp@123"
+            storeFile = file("${rootProject.projectDir}/../pramanik-ott-upload.jks")
+            storePassword = "pramanikott@123"
+            keyAlias = "pramanik-ott"
+            keyPassword = "pramanikott@123"
         }
     }
 
@@ -75,6 +75,7 @@ dependencies {
     // implementation("com.google.firebase:firebase-appcheck-playintegrity") // Enable for production
 
     // NewPipeExtractor (extract direct YouTube stream URLs)
+    // We provide a patched Utils.java (Android 9 compat) — R8 disabled to avoid duplicate class conflict
     implementation("com.github.TeamNewPipe:NewPipeExtractor:v0.26.0") {
         exclude(group = "com.google.protobuf", module = "protobuf-javalite")
     }
