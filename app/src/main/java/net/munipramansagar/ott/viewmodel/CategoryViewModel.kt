@@ -20,6 +20,10 @@ data class CategoryUiState(
     val isLoading: Boolean = true,
     val section: Section? = null,
     val playlists: List<PlaylistWithVideos> = emptyList(),
+    // Grouped playlists for the new layout
+    val featuredPlaylists: List<PlaylistWithVideos> = emptyList(), // pinned by admin
+    val latestPlaylists: List<PlaylistWithVideos> = emptyList(),   // current month
+    val archivePlaylists: List<PlaylistWithVideos> = emptyList(),  // older months
     // For playlist detail view
     val selectedPlaylist: Playlist? = null,
     val playlistVideos: List<Video> = emptyList(),
@@ -54,19 +58,41 @@ class CategoryViewModel @Inject constructor(
                 _uiState.value = _uiState.value.copy(isLoading = true, error = null)
 
                 // Fetch playlists for this section
-                val playlists = videoRepository.getPlaylistsBySection(sectionId)
+                val playlists = videoRepository.getPlaylistsBySection(sectionId, limit = 50)
 
-                // For each playlist, fetch preview videos (first 6)
+                // For each playlist, fetch preview videos (first 10)
                 val playlistsWithVideos = playlists.map { playlist ->
                     async {
-                        val videos = videoRepository.getPlaylistVideos(playlist.id, limit = 6)
+                        val videos = videoRepository.getPlaylistVideos(playlist.id, limit = 10)
                         PlaylistWithVideos(playlist, videos)
                     }
-                }.awaitAll()
+                }.awaitAll().filter { it.videos.isNotEmpty() }
+
+                // Group into featured (pinned), latest (current month), archive
+                val featured = playlistsWithVideos.filter { it.playlist.pinned }
+                val nonFeatured = playlistsWithVideos.filter { !it.playlist.pinned }
+
+                // Current month playlists (published in the last 35 days)
+                val cutoffMs = System.currentTimeMillis() - (35L * 24 * 60 * 60 * 1000)
+                val latest = nonFeatured.filter { pw ->
+                    try {
+                        val pubDate = pw.videos.firstOrNull()?.publishedAt ?: ""
+                        if (pubDate.isNotBlank()) {
+                            java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US)
+                                .parse(pubDate.take(10))?.time?.let { it > cutoffMs } ?: false
+                        } else false
+                    } catch (_: Exception) { false }
+                }
+
+                val latestIds = latest.map { it.playlist.id }.toSet()
+                val archive = nonFeatured.filter { it.playlist.id !in latestIds }
 
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
-                    playlists = playlistsWithVideos
+                    playlists = playlistsWithVideos,
+                    featuredPlaylists = featured,
+                    latestPlaylists = latest,
+                    archivePlaylists = archive
                 )
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(

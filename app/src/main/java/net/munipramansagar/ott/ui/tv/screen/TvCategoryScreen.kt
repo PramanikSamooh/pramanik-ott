@@ -60,10 +60,30 @@ fun TvCategoryScreen(
         uiState.sections.find { it.section.id == sectionId }
     }
     val title = remember(sectionData, isHindi) {
-        sectionData?.section?.getLabel(isHindi) ?: sectionId
+        sectionData?.section?.getLabel(isHindi) ?: sectionId.replaceFirstChar { it.uppercase() }
     }
     val playlists = remember(sectionData) {
         sectionData?.playlists ?: emptyList()
+    }
+
+    // Group playlists: pinned → latest → archive
+    val featured = remember(playlists) { playlists.filter { it.playlist.pinned } }
+    val nonFeatured = remember(playlists) { playlists.filter { !it.playlist.pinned } }
+    val cutoffMs = remember { System.currentTimeMillis() - (35L * 24 * 60 * 60 * 1000) }
+    val latest = remember(nonFeatured) {
+        nonFeatured.filter { pw ->
+            try {
+                val pubDate = pw.videos.firstOrNull()?.publishedAt ?: ""
+                if (pubDate.length >= 10) {
+                    java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US)
+                        .parse(pubDate.take(10))?.time?.let { it > cutoffMs } ?: false
+                } else false
+            } catch (_: Exception) { false }
+        }
+    }
+    val latestIds = remember(latest) { latest.map { it.playlist.id }.toSet() }
+    val archive = remember(nonFeatured, latestIds) {
+        nonFeatured.filter { it.playlist.id !in latestIds }
     }
 
     val onVideoClick: (Video) -> Unit = { video ->
@@ -117,26 +137,71 @@ fun TvCategoryScreen(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(
-                        text = if (isHindi) "कोई प्लेलिस्ट नहीं" else "No playlists available",
-                        style = PramanikTvTheme.typography.headlineMedium.copy(color = TextGray)
-                    )
-                }
+                Text(
+                    text = if (isHindi) "कोई प्लेलिस्ट नहीं" else "No content available yet",
+                    style = PramanikTvTheme.typography.headlineMedium.copy(color = TextGray)
+                )
             }
         } else {
-            // Show playlists with their videos
             TvLazyColumn(
                 contentPadding = PaddingValues(bottom = 48.dp),
                 verticalArrangement = Arrangement.spacedBy(24.dp),
                 modifier = Modifier.fillMaxSize()
             ) {
-                items(playlists.size) { index ->
-                    val playlistWithVideos = playlists[index]
-                    TvPlaylistSection(
-                        playlistWithVideos = playlistWithVideos,
-                        onVideoClick = onVideoClick
-                    )
+                // Featured section
+                if (featured.isNotEmpty()) {
+                    item {
+                        Text(
+                            text = if (isHindi) "विशेष" else "FEATURED",
+                            style = PramanikTvTheme.typography.labelMedium.copy(
+                                color = Saffron.copy(alpha = 0.7f),
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 12.sp,
+                                letterSpacing = 1.5.sp
+                            ),
+                            modifier = Modifier.padding(horizontal = 48.dp)
+                        )
+                    }
+                    items(featured.size) { i -> TvPlaylistSection(featured[i], onVideoClick) }
+                }
+
+                // Latest section
+                if (latest.isNotEmpty()) {
+                    item {
+                        Text(
+                            text = if (isHindi) "नवीनतम" else "LATEST",
+                            style = PramanikTvTheme.typography.labelMedium.copy(
+                                color = TextWhite.copy(alpha = 0.6f),
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 12.sp,
+                                letterSpacing = 1.5.sp
+                            ),
+                            modifier = Modifier.padding(horizontal = 48.dp)
+                        )
+                    }
+                    items(latest.size) { i -> TvPlaylistSection(latest[i], onVideoClick) }
+                }
+
+                // Archive section
+                if (archive.isNotEmpty()) {
+                    item {
+                        Text(
+                            text = if (isHindi) "संग्रह" else "ARCHIVE",
+                            style = PramanikTvTheme.typography.labelMedium.copy(
+                                color = TextGray.copy(alpha = 0.5f),
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 12.sp,
+                                letterSpacing = 1.5.sp
+                            ),
+                            modifier = Modifier.padding(horizontal = 48.dp)
+                        )
+                    }
+                    items(archive.size) { i -> TvPlaylistSection(archive[i], onVideoClick) }
+                }
+
+                // Fallback if no grouping matched
+                if (featured.isEmpty() && latest.isEmpty() && archive.isEmpty()) {
+                    items(playlists.size) { i -> TvPlaylistSection(playlists[i], onVideoClick) }
                 }
             }
         }

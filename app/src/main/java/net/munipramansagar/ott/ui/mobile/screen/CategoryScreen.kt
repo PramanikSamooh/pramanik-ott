@@ -122,22 +122,73 @@ fun CategoryScreen(
             }
 
             else -> {
-                // Playlists with preview videos
                 LazyColumn(
                     contentPadding = PaddingValues(bottom = 80.dp),
-                    verticalArrangement = Arrangement.spacedBy(20.dp)
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    items(state.playlists) { playlistWithVideos ->
-                        PlaylistSection(
-                            playlistWithVideos = playlistWithVideos,
-                            onVideoClick = onVideoClick,
-                            onPlaylistClick = onPlaylistClick
-                        )
+                    // Featured / Pinned playlists — highlighted at top
+                    if (state.featuredPlaylists.isNotEmpty()) {
+                        item {
+                            SectionLabel(
+                                text = if (isHindi) "विशेष" else "Featured",
+                                color = Saffron
+                            )
+                        }
+                        items(state.featuredPlaylists) { pw ->
+                            PlaylistSection(pw, onVideoClick, onPlaylistClick)
+                        }
+                    }
+
+                    // Latest — current month
+                    if (state.latestPlaylists.isNotEmpty()) {
+                        item {
+                            SectionLabel(
+                                text = if (isHindi) "नवीनतम" else "Latest",
+                                color = TextWhite
+                            )
+                        }
+                        items(state.latestPlaylists) { pw ->
+                            PlaylistSection(pw, onVideoClick, onPlaylistClick)
+                        }
+                    }
+
+                    // Archive — older playlists
+                    if (state.archivePlaylists.isNotEmpty()) {
+                        item {
+                            SectionLabel(
+                                text = if (isHindi) "संग्रह" else "Archive",
+                                color = TextGray
+                            )
+                        }
+                        items(state.archivePlaylists) { pw ->
+                            PlaylistSection(pw, onVideoClick, onPlaylistClick)
+                        }
+                    }
+
+                    // Fallback: show all if no grouping
+                    if (state.featuredPlaylists.isEmpty() && state.latestPlaylists.isEmpty() && state.archivePlaylists.isEmpty()) {
+                        items(state.playlists) { pw ->
+                            PlaylistSection(pw, onVideoClick, onPlaylistClick)
+                        }
                     }
                 }
             }
         }
     }
+}
+
+@Composable
+private fun SectionLabel(text: String, color: androidx.compose.ui.graphics.Color) {
+    Text(
+        text = text.uppercase(),
+        style = MaterialTheme.typography.labelMedium.copy(
+            fontWeight = FontWeight.Bold,
+            fontSize = 11.sp,
+            letterSpacing = 1.5.sp
+        ),
+        color = color.copy(alpha = 0.7f),
+        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+    )
 }
 
 @Composable
