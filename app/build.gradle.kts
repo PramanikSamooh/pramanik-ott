@@ -7,6 +7,36 @@ plugins {
     id("com.google.gms.google-services")
 }
 
+// Auto-patch NewPipeExtractor JAR for Android 9 compatibility
+// Replaces Utils.class with a version that uses URLDecoder.decode(String, String)
+// instead of URLDecoder.decode(String, Charset) which doesn't exist on API 28
+tasks.register("patchNewPipeExtractor") {
+    doLast {
+        val patchDir = file("${rootProject.projectDir}/../newpipe-patch")
+        val patchedClass = file("$patchDir/org/schabi/newpipe/extractor/utils/Utils.class")
+        if (!patchedClass.exists()) {
+            logger.warn("Patched Utils.class not found at $patchedClass — skipping patch")
+            return@doLast
+        }
+        // Find the NewPipeExtractor JAR in Gradle cache
+        configurations.getByName("debugRuntimeClasspath").resolvedConfiguration.resolvedArtifacts
+            .filter { it.name == "NewPipeExtractor" }
+            .forEach { artifact ->
+                val jarFile = artifact.file
+                logger.lifecycle("Patching NewPipeExtractor JAR: ${jarFile.absolutePath}")
+                exec {
+                    commandLine("jar", "uf", jarFile.absolutePath,
+                        "-C", patchDir.absolutePath,
+                        "org/schabi/newpipe/extractor/utils/Utils.class")
+                }
+            }
+    }
+}
+
+tasks.matching { it.name.startsWith("compile") && it.name.contains("Kotlin") }.configureEach {
+    dependsOn("patchNewPipeExtractor")
+}
+
 android {
     namespace = "net.munipramansagar.ott"
     compileSdk = 35
