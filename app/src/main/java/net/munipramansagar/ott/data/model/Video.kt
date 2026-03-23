@@ -6,6 +6,7 @@ import com.google.firebase.firestore.IgnoreExtraProperties
 data class Video(
     val id: String = "",
     val title: String = "",
+    val titleHi: String = "",
     val description: String = "",
     val thumbnailUrl: String = "",
     val thumbnailUrlHQ: String = "",

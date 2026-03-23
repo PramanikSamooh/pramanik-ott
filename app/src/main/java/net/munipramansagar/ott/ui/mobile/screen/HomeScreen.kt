@@ -110,8 +110,10 @@ val hubMenuGroups = listOf(
         HubMenuItem("liveclasses", "Live Classes", "लाइव कक्षाएँ", Icons.Default.School, KidsBlue, "pathshala"),
     )),
     HubMenuGroup("Poojan & Path", "पूजन व पाठ", Icons.Default.Spa, Color(0xFFFF9800), listOf(
-        HubMenuItem("poojan", "Nitya Poojan", "नित्य पूजन", Icons.Default.Spa, Color(0xFFFF9800), "section/poojan"),
-        HubMenuItem("granth", "Granth Vachan", "ग्रंथ वाचन", Icons.Default.MenuBook, Color(0xFFFF9800), "section/granth"),
+        HubMenuItem("poojan", "Nitya Poojan", "नित्य पूजन", Icons.Default.Spa, Color(0xFFFF9800), "curated/curated_nitya_poojan/Nitya Poojan"),
+        HubMenuItem("path", "Path", "पाठ", Icons.Default.MenuBook, Color(0xFFFF9800), "curated/curated_path/Path"),
+        HubMenuItem("stotra", "Stotra", "स्तोत्र", Icons.Default.MenuBook, Color(0xFFFF9800), "curated/curated_stotra/Stotra"),
+        HubMenuItem("granth", "Granth Vachan", "ग्रंथ वाचन", Icons.Default.MenuBook, Color(0xFFFF9800), "curated/curated_granth_vachan/Granth Vachan"),
     )),
     HubMenuGroup("Events", "कार्यक्रम", Icons.Default.Stars, Color(0xFFE91E63), listOf(
         HubMenuItem("events", "Programs", "कार्यक्रम", Icons.Default.Stars, Color(0xFFE91E63), "section/events"),

@@ -102,8 +102,10 @@ sealed class TvNavItem(
     data object AnimatedVideos : TvNavItem("Animated Videos", "एनिमेटेड वीडियो", Icons.Default.PlayCircle, true)
     data object LiveClasses : TvNavItem("Live Classes", "लाइव कक्षाएँ", Icons.Default.School, true)
 
-    // Sub-items under Poojan
+    // Sub-items under Poojan & Path
     data object NityaPoojan : TvNavItem("Nitya Poojan", "नित्य पूजन", Icons.Default.Favorite, true)
+    data object Path : TvNavItem("Path", "पाठ", Icons.Default.ViewList, true)
+    data object Stotra : TvNavItem("Stotra", "स्तोत्र", Icons.Default.ViewList, true)
     data object GranthVachan : TvNavItem("Granth Vachan", "ग्रंथ वाचन", Icons.Default.ViewList, true)
 
     // Sub-items under Events
@@ -159,19 +161,21 @@ fun TvApp(
     // Build flat navigation items list (for content switching)
     val navItems = remember(uiState.sections) {
         listOf(
-            TvNavItem.Home,
-            TvNavItem.BhawnaYog,
-            TvNavItem.Pravachan,
-            TvNavItem.ShankaSamadhan,
-            TvNavItem.Swadhyay,
-            TvNavItem.AnimatedVideos,
-            TvNavItem.LiveClasses,
-            TvNavItem.NityaPoojan,
-            TvNavItem.GranthVachan,
-            TvNavItem.Programs,
-            TvNavItem.Donate,
-            TvNavItem.Search,
-            TvNavItem.Settings
+            TvNavItem.Home,          // 0
+            TvNavItem.BhawnaYog,     // 1
+            TvNavItem.Pravachan,     // 2
+            TvNavItem.ShankaSamadhan,// 3
+            TvNavItem.Swadhyay,     // 4
+            TvNavItem.AnimatedVideos,// 5
+            TvNavItem.LiveClasses,  // 6
+            TvNavItem.NityaPoojan,  // 7
+            TvNavItem.Path,         // 8
+            TvNavItem.Stotra,       // 9
+            TvNavItem.GranthVachan, // 10
+            TvNavItem.Programs,     // 11
+            TvNavItem.Donate,       // 12
+            TvNavItem.Search,       // 13
+            TvNavItem.Settings      // 14
         )
     }
 
@@ -195,19 +199,21 @@ fun TvApp(
             // Poojan & Path group
             add(SidebarEntry(TvNavItem.PoojanGroup, isGroupHeader = true))
             add(SidebarEntry(TvNavItem.NityaPoojan, navIndex = 7))
-            add(SidebarEntry(TvNavItem.GranthVachan, navIndex = 8))
+            add(SidebarEntry(TvNavItem.Path, navIndex = 8))
+            add(SidebarEntry(TvNavItem.Stotra, navIndex = 9))
+            add(SidebarEntry(TvNavItem.GranthVachan, navIndex = 10))
 
             // Events group
             add(SidebarEntry(TvNavItem.EventsGroup, isGroupHeader = true))
-            add(SidebarEntry(TvNavItem.Programs, navIndex = 9))
+            add(SidebarEntry(TvNavItem.Programs, navIndex = 11))
 
             // Swa Par Kalyan group
             add(SidebarEntry(TvNavItem.KalyanGroup, isGroupHeader = true))
-            add(SidebarEntry(TvNavItem.Donate, navIndex = 10))
+            add(SidebarEntry(TvNavItem.Donate, navIndex = 12))
 
             // Bottom
-            add(SidebarEntry(TvNavItem.Search, navIndex = 11))
-            add(SidebarEntry(TvNavItem.Settings, navIndex = 12))
+            add(SidebarEntry(TvNavItem.Search, navIndex = 13))
+            add(SidebarEntry(TvNavItem.Settings, navIndex = 14))
         }
     }
 
@@ -287,14 +293,24 @@ fun TvApp(
                             isHindi = isHindi
                         )
                         // Poojan & Path (placeholder — will show relevant playlists)
-                        TvNavItem.NityaPoojan -> TvCategoryScreen(
-                            sectionId = "poojan",
-                            homeViewModel = homeViewModel,
+                        TvNavItem.NityaPoojan -> net.munipramansagar.ott.ui.mobile.screen.CuratedVideosScreen(
+                            collection = "curated_nitya_poojan",
+                            title = if (isHindi) "नित्य पूजन" else "Nitya Poojan",
                             isHindi = isHindi
                         )
-                        TvNavItem.GranthVachan -> TvCategoryScreen(
-                            sectionId = "granth",
-                            homeViewModel = homeViewModel,
+                        TvNavItem.Path -> net.munipramansagar.ott.ui.mobile.screen.CuratedVideosScreen(
+                            collection = "curated_path",
+                            title = if (isHindi) "पाठ" else "Path",
+                            isHindi = isHindi
+                        )
+                        TvNavItem.Stotra -> net.munipramansagar.ott.ui.mobile.screen.CuratedVideosScreen(
+                            collection = "curated_stotra",
+                            title = if (isHindi) "स्तोत्र" else "Stotra",
+                            isHindi = isHindi
+                        )
+                        TvNavItem.GranthVachan -> net.munipramansagar.ott.ui.mobile.screen.CuratedVideosScreen(
+                            collection = "curated_granth_vachan",
+                            title = if (isHindi) "ग्रंथ वाचन" else "Granth Vachan",
                             isHindi = isHindi
                         )
                         // Events

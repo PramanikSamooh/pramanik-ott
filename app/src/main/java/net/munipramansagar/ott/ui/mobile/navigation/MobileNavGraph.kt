@@ -13,6 +13,7 @@ import net.munipramansagar.ott.ui.mobile.screen.PathshalaScreen
 import net.munipramansagar.ott.ui.mobile.screen.PlaylistDetailScreen
 import net.munipramansagar.ott.ui.mobile.screen.SearchScreen
 import net.munipramansagar.ott.ui.mobile.screen.SettingsScreen
+import net.munipramansagar.ott.ui.mobile.screen.CuratedVideosScreen
 import net.munipramansagar.ott.ui.mobile.screen.DonateScreen
 import net.munipramansagar.ott.ui.mobile.screen.ShortsScreen
 
@@ -21,7 +22,10 @@ object Routes {
     const val SHORTS = "shorts"
     const val PATHSHALA = "pathshala"
     const val DONATE = "donate"
+    const val CURATED = "curated/{collectionId}/{title}"
     const val SECTION = "section/{sectionId}"
+
+    fun curated(collection: String, title: String) = "curated/$collection/$title"
     const val PLAYLIST = "playlist/{playlistId}"
     const val SEARCH = "search"
     const val SETTINGS = "settings"
@@ -96,6 +100,20 @@ fun MobileNavGraph(
             PathshalaScreen(
                 isHindi = isHindi,
                 onBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(
+            route = Routes.CURATED,
+            arguments = listOf(
+                navArgument("collectionId") { type = NavType.StringType },
+                navArgument("title") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            CuratedVideosScreen(
+                collection = backStackEntry.arguments?.getString("collectionId") ?: "",
+                title = backStackEntry.arguments?.getString("title") ?: "",
+                isHindi = isHindi
             )
         }
 
