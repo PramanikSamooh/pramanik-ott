@@ -109,6 +109,17 @@ fun TvHomeScreen(
                     }
                 }
 
+                // Announcements
+                if (uiState.announcements.isNotEmpty()) {
+                    item {
+                        TvAnnouncementRow(
+                            announcements = uiState.announcements,
+                            isHindi = isHindi
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                    }
+                }
+
                 // Hero banner
                 if (uiState.heroBannerVideos.isNotEmpty()) {
                     item {
@@ -297,6 +308,89 @@ private fun TvErrorState(
                     "Retry",
                     style = PramanikTvTheme.typography.labelLarge
                 )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalTvMaterial3Api::class)
+@Composable
+private fun TvAnnouncementRow(
+    announcements: List<net.munipramansagar.ott.data.model.Announcement>,
+    isHindi: Boolean
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 48.dp)
+    ) {
+        Text(
+            text = if (isHindi) "सूचनाएँ" else "Notifications",
+            style = PramanikTvTheme.typography.titleLarge.copy(
+                fontWeight = FontWeight.Bold,
+                fontSize = 20.sp
+            ),
+            color = TextWhite
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+
+        TvLazyRow(
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            items(announcements.size) { index ->
+                val a = announcements[index]
+                val bgColor = when (a.type) {
+                    "event" -> net.munipramansagar.ott.ui.tv.theme.Saffron.copy(alpha = 0.12f)
+                    "quote" -> net.munipramansagar.ott.ui.tv.theme.Gold.copy(alpha = 0.08f)
+                    "whatsapp" -> androidx.compose.ui.graphics.Color(0xFF25D366).copy(alpha = 0.1f)
+                    else -> net.munipramansagar.ott.ui.tv.theme.GlassCard
+                }
+                val borderColor = when (a.type) {
+                    "event" -> net.munipramansagar.ott.ui.tv.theme.Saffron.copy(alpha = 0.3f)
+                    "whatsapp" -> androidx.compose.ui.graphics.Color(0xFF25D366).copy(alpha = 0.3f)
+                    else -> net.munipramansagar.ott.ui.tv.theme.GlassBorder
+                }
+
+                Box(
+                    modifier = Modifier
+                        .width(320.dp)
+                        .background(bgColor, RoundedCornerShape(14.dp))
+                        .padding(16.dp)
+                ) {
+                    Column {
+                        Text(
+                            text = a.getTitle(isHindi),
+                            style = PramanikTvTheme.typography.titleMedium.copy(
+                                fontWeight = FontWeight.SemiBold
+                            ),
+                            color = TextWhite,
+                            maxLines = 2
+                        )
+                        if (a.getBody(isHindi).isNotBlank()) {
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = a.getBody(isHindi),
+                                style = PramanikTvTheme.typography.bodyMedium,
+                                color = TextGray,
+                                maxLines = 2
+                            )
+                        }
+                        if (a.getActionLabel(isHindi).isNotBlank()) {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = a.getActionLabel(isHindi),
+                                style = PramanikTvTheme.typography.labelMedium.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    color = when (a.type) {
+                                        "event" -> net.munipramansagar.ott.ui.tv.theme.Saffron
+                                        "whatsapp" -> androidx.compose.ui.graphics.Color(0xFF25D366)
+                                        else -> net.munipramansagar.ott.ui.tv.theme.SaffronLight
+                                    }
+                                )
+                            )
+                        }
+                    }
+                }
             }
         }
     }
