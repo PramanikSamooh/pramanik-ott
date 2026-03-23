@@ -2,6 +2,7 @@ package net.munipramansagar.ott.ui.mobile.screen
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -164,8 +165,9 @@ private fun DonationOrgCard(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // QR Code
+            // QR Code — tap to open UPI payment app
             if (org.qrCodeUrl.isNotBlank()) {
+                val context = androidx.compose.ui.platform.LocalContext.current
                 AsyncImage(
                     model = org.qrCodeUrl,
                     contentDescription = "QR Code for ${org.name}",
@@ -173,7 +175,20 @@ private fun DonationOrgCard(
                         .size(140.dp)
                         .clip(RoundedCornerShape(12.dp))
                         .background(Color.White)
-                        .padding(8.dp),
+                        .padding(8.dp)
+                        .clickable {
+                            if (org.upiAddress.isNotBlank()) {
+                                try {
+                                    val upiUri = android.net.Uri.parse(
+                                        "upi://pay?pa=${org.upiAddress}&pn=${org.name}&cu=INR"
+                                    )
+                                    val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, upiUri)
+                                    context.startActivity(intent)
+                                } catch (_: Exception) {
+                                    // No UPI app installed — ignore
+                                }
+                            }
+                        },
                     contentScale = ContentScale.Fit
                 )
             }
@@ -198,6 +213,37 @@ private fun DonationOrgCard(
                 if (org.bankName.isNotBlank()) {
                     DetailRow(label = if (isHindi) "बैंक" else "Bank", value = org.bankName)
                 }
+            }
+        }
+
+        // Pay via UPI button
+        if (org.upiAddress.isNotBlank()) {
+            val context = androidx.compose.ui.platform.LocalContext.current
+            Spacer(modifier = Modifier.height(12.dp))
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(Saffron.copy(alpha = 0.85f))
+                    .clickable {
+                        try {
+                            val upiUri = android.net.Uri.parse(
+                                "upi://pay?pa=${org.upiAddress}&pn=${org.name}&cu=INR"
+                            )
+                            val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, upiUri)
+                            context.startActivity(intent)
+                        } catch (_: Exception) { }
+                    }
+                    .padding(vertical = 12.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = if (isHindi) "UPI से भुगतान करें" else "Pay via UPI",
+                    style = MaterialTheme.typography.labelLarge.copy(
+                        fontWeight = FontWeight.Bold
+                    ),
+                    color = Color.White
+                )
             }
         }
     }
