@@ -35,6 +35,8 @@ import androidx.compose.material.icons.filled.PlayCircle
 import androidx.compose.material.icons.filled.School
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.ViewList
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
@@ -82,20 +84,38 @@ sealed class TvNavItem(
     val isSubItem: Boolean = false
 ) {
     data object Home : TvNavItem("Home", "होम", Icons.Default.Home)
-    data object Shorts : TvNavItem("Shorts", "शॉर्ट्स", Icons.Default.PlayCircle, isSubItem = true)
 
-    // Parent group headers (not selectable themselves)
-    data object VideosGroup : TvNavItem("Videos", "वीडियो", Icons.Default.PlayCircle)
-    data object PathshalaGroup : TvNavItem("Pathshala", "पाठशाला", Icons.Default.School)
+    // Group headers
+    data object MuniGroup : TvNavItem("Muni Pramansagar Ji", "मुनि प्रमाणसागर जी", Icons.Default.Home)
+    data object PathshalaGroup : TvNavItem("Jain Pathshala", "जैन पाठशाला", Icons.Default.School)
+    data object PoojanGroup : TvNavItem("Poojan & Path", "पूजन और पाठ", Icons.Default.Favorite)
+    data object EventsGroup : TvNavItem("Events", "कार्यक्रम", Icons.Default.Star)
+    data object KalyanGroup : TvNavItem("Swa Par Kalyan", "स्व पर कल्याण", Icons.Default.Favorite)
 
-    // Sub-items under Videos group
+    // Sub-items under Muni Pramansagar Ji
+    data object BhawnaYog : TvNavItem("Bhawna Yog", "भावना योग", Icons.Default.PlayCircle, true)
+    data object Pravachan : TvNavItem("Pravachan", "प्रवचन", Icons.Default.ViewList, true)
+    data object ShankaSamadhan : TvNavItem("Shanka Samadhan", "शंका समाधान", Icons.Default.ViewList, true)
+    data object Swadhyay : TvNavItem("Swadhyay", "स्वाध्याय", Icons.Default.ViewList, true)
+
+    // Sub-items under Pathshala
+    data object AnimatedVideos : TvNavItem("Animated Videos", "एनिमेटेड वीडियो", Icons.Default.PlayCircle, true)
+    data object LiveClasses : TvNavItem("Live Classes", "लाइव कक्षाएँ", Icons.Default.School, true)
+
+    // Sub-items under Poojan
+    data object NityaPoojan : TvNavItem("Nitya Poojan", "नित्य पूजन", Icons.Default.Favorite, true)
+    data object GranthVachan : TvNavItem("Granth Vachan", "ग्रंथ वाचन", Icons.Default.ViewList, true)
+
+    // Sub-items under Events
+    data object Programs : TvNavItem("Programs", "कार्यक्रम", Icons.Default.Star, true)
+
+    // Sub-items under Kalyan
+    data object Donate : TvNavItem("Donate", "दान", Icons.Default.Favorite, true)
+
+    // Legacy support for dynamic sections
     data class SectionItem(
         val section: Section
     ) : TvNavItem(section.label, section.labelHi, Icons.Default.ViewList, isSubItem = true)
-
-    // Sub-items under Pathshala group
-    data object KidsVideos : TvNavItem("Kids Videos", "बच्चों के वीडियो", Icons.Default.PlayCircle, isSubItem = true)
-    data object UpcomingClasses : TvNavItem("Classes", "कक्षाएँ", Icons.Default.School, isSubItem = true)
 
     data object Search : TvNavItem("Search", "खोजें", Icons.Default.Search)
     data object Settings : TvNavItem("Settings", "सेटिंग्स", Icons.Default.Settings)
@@ -136,44 +156,58 @@ fun TvApp(
 
     val uiState by homeViewModel.uiState.collectAsState()
 
-    // Build navigation items dynamically from loaded sections
+    // Build flat navigation items list (for content switching)
     val navItems = remember(uiState.sections) {
-        buildList {
-            add(TvNavItem.Home)
-            add(TvNavItem.Shorts)
-            // Video sections from Firestore
-            uiState.sections.forEach { sectionData ->
-                add(TvNavItem.SectionItem(sectionData.section))
-            }
-            // Pathshala sub-items
-            add(TvNavItem.KidsVideos)
-            add(TvNavItem.UpcomingClasses)
-            add(TvNavItem.Search)
-            add(TvNavItem.Settings)
-        }
+        listOf(
+            TvNavItem.Home,
+            TvNavItem.BhawnaYog,
+            TvNavItem.Pravachan,
+            TvNavItem.ShankaSamadhan,
+            TvNavItem.Swadhyay,
+            TvNavItem.AnimatedVideos,
+            TvNavItem.LiveClasses,
+            TvNavItem.NityaPoojan,
+            TvNavItem.GranthVachan,
+            TvNavItem.Programs,
+            TvNavItem.Donate,
+            TvNavItem.Search,
+            TvNavItem.Settings
+        )
     }
 
-    // Build sidebar entries with group headers (for display only)
+    // Build sidebar entries with group headers
     val sidebarEntries = remember(navItems) {
         buildList {
-            // Home
-            add(SidebarEntry(TvNavItem.Home, navIndex = navItems.indexOf(TvNavItem.Home)))
+            add(SidebarEntry(TvNavItem.Home, navIndex = 0))
 
-            // Videos group (includes Shorts)
-            add(SidebarEntry(TvNavItem.VideosGroup, isGroupHeader = true))
-            add(SidebarEntry(TvNavItem.Shorts, navIndex = navItems.indexOf(TvNavItem.Shorts)))
-            navItems.filterIsInstance<TvNavItem.SectionItem>().forEach { section ->
-                add(SidebarEntry(section, navIndex = navItems.indexOf(section)))
-            }
+            // Muni Pramansagar Ji group
+            add(SidebarEntry(TvNavItem.MuniGroup, isGroupHeader = true))
+            add(SidebarEntry(TvNavItem.BhawnaYog, navIndex = 1))
+            add(SidebarEntry(TvNavItem.Pravachan, navIndex = 2))
+            add(SidebarEntry(TvNavItem.ShankaSamadhan, navIndex = 3))
+            add(SidebarEntry(TvNavItem.Swadhyay, navIndex = 4))
 
-            // Pathshala group
+            // Jain Pathshala group
             add(SidebarEntry(TvNavItem.PathshalaGroup, isGroupHeader = true))
-            add(SidebarEntry(TvNavItem.KidsVideos, navIndex = navItems.indexOf(TvNavItem.KidsVideos)))
-            add(SidebarEntry(TvNavItem.UpcomingClasses, navIndex = navItems.indexOf(TvNavItem.UpcomingClasses)))
+            add(SidebarEntry(TvNavItem.AnimatedVideos, navIndex = 5))
+            add(SidebarEntry(TvNavItem.LiveClasses, navIndex = 6))
 
-            // Bottom items
-            add(SidebarEntry(TvNavItem.Search, navIndex = navItems.indexOf(TvNavItem.Search)))
-            add(SidebarEntry(TvNavItem.Settings, navIndex = navItems.indexOf(TvNavItem.Settings)))
+            // Poojan & Path group
+            add(SidebarEntry(TvNavItem.PoojanGroup, isGroupHeader = true))
+            add(SidebarEntry(TvNavItem.NityaPoojan, navIndex = 7))
+            add(SidebarEntry(TvNavItem.GranthVachan, navIndex = 8))
+
+            // Events group
+            add(SidebarEntry(TvNavItem.EventsGroup, isGroupHeader = true))
+            add(SidebarEntry(TvNavItem.Programs, navIndex = 9))
+
+            // Swa Par Kalyan group
+            add(SidebarEntry(TvNavItem.KalyanGroup, isGroupHeader = true))
+            add(SidebarEntry(TvNavItem.Donate, navIndex = 10))
+
+            // Bottom
+            add(SidebarEntry(TvNavItem.Search, navIndex = 11))
+            add(SidebarEntry(TvNavItem.Settings, navIndex = 12))
         }
     }
 
@@ -199,39 +233,82 @@ fun TvApp(
                     .fillMaxSize()
                     .padding(start = 56.dp) // Leave space for collapsed sidebar icons
             ) {
-                    when (val item = navItems[selectedIndex]) {
+                    when (navItems[selectedIndex]) {
                         TvNavItem.Home -> TvHomeScreen(
                             homeViewModel = homeViewModel,
                             isHindi = isHindi,
                             onSectionClick = { sectionId ->
-                                val idx = navItems.indexOfFirst {
-                                    it is TvNavItem.SectionItem && it.section.id == sectionId
+                                // Map section IDs to nav indices
+                                val idx = when (sectionId) {
+                                    "bhawna-yog" -> navItems.indexOf(TvNavItem.BhawnaYog)
+                                    "pravachan" -> navItems.indexOf(TvNavItem.Pravachan)
+                                    "shanka-clips", "shanka-full" -> navItems.indexOf(TvNavItem.ShankaSamadhan)
+                                    "swadhyay" -> navItems.indexOf(TvNavItem.Swadhyay)
+                                    "kids" -> navItems.indexOf(TvNavItem.AnimatedVideos)
+                                    "events" -> navItems.indexOf(TvNavItem.Programs)
+                                    else -> -1
                                 }
                                 if (idx >= 0) selectedIndex = idx
                             },
                             pathshalaViewModel = pathshalaViewModel,
                             onPathshalaClick = {
-                                val idx = navItems.indexOfFirst { it is TvNavItem.UpcomingClasses }
-                                if (idx >= 0) selectedIndex = idx
+                                selectedIndex = navItems.indexOf(TvNavItem.LiveClasses)
                             }
                         )
-                        TvNavItem.Shorts -> TvShortsScreen(
+                        // Muni Pramansagar Ji sections
+                        TvNavItem.BhawnaYog -> TvCategoryScreen(
+                            sectionId = "bhawna-yog",
+                            homeViewModel = homeViewModel,
                             isHindi = isHindi
                         )
-                        TvNavItem.KidsVideos -> TvCategoryScreen(
+                        TvNavItem.Pravachan -> TvCategoryScreen(
+                            sectionId = "pravachan",
+                            homeViewModel = homeViewModel,
+                            isHindi = isHindi
+                        )
+                        TvNavItem.ShankaSamadhan -> TvCategoryScreen(
+                            sectionId = "shanka-clips",
+                            homeViewModel = homeViewModel,
+                            isHindi = isHindi
+                        )
+                        TvNavItem.Swadhyay -> TvCategoryScreen(
+                            sectionId = "swadhyay",
+                            homeViewModel = homeViewModel,
+                            isHindi = isHindi
+                        )
+                        // Pathshala
+                        TvNavItem.AnimatedVideos -> TvCategoryScreen(
                             sectionId = "kids",
                             homeViewModel = homeViewModel,
                             isHindi = isHindi
                         )
-                        TvNavItem.UpcomingClasses -> TvPathshalaScreen(
+                        TvNavItem.LiveClasses -> TvPathshalaScreen(
                             pathshalaViewModel = pathshalaViewModel,
                             isHindi = isHindi
                         )
-                        is TvNavItem.SectionItem -> TvCategoryScreen(
-                            sectionId = item.section.id,
+                        // Poojan & Path (placeholder — will show relevant playlists)
+                        TvNavItem.NityaPoojan -> TvCategoryScreen(
+                            sectionId = "poojan",
                             homeViewModel = homeViewModel,
                             isHindi = isHindi
                         )
+                        TvNavItem.GranthVachan -> TvCategoryScreen(
+                            sectionId = "granth",
+                            homeViewModel = homeViewModel,
+                            isHindi = isHindi
+                        )
+                        // Events
+                        TvNavItem.Programs -> TvCategoryScreen(
+                            sectionId = "events",
+                            homeViewModel = homeViewModel,
+                            isHindi = isHindi
+                        )
+                        // Donate — placeholder screen
+                        TvNavItem.Donate -> TvSettingsScreen(
+                            isHindi = isHindi,
+                            onLanguageChange = {}
+                        )
+                        // Search & Settings
                         TvNavItem.Search -> TvSearchScreen(
                             searchViewModel = searchViewModel
                         )
@@ -239,8 +316,8 @@ fun TvApp(
                             isHindi = isHindi,
                             onLanguageChange = { lang -> languageManager.setLanguage(lang) }
                         )
-                        // Group headers are never selected — show home as fallback
-                        TvNavItem.VideosGroup, TvNavItem.PathshalaGroup -> TvHomeScreen(
+                        // Group headers + legacy — fallback to home
+                        else -> TvHomeScreen(
                             homeViewModel = homeViewModel,
                             isHindi = isHindi,
                             onSectionClick = {},

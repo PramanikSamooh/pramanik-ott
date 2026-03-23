@@ -90,15 +90,15 @@ data class HubMenuItem(
 }
 
 val hubMenuItems = listOf(
+    HubMenuItem("bhawna", "Bhawna Yog", "भावना योग", Icons.Default.SelfImprovement, Color(0xFF4CAF50), "section/bhawna-yog"),
     HubMenuItem("pravachan", "Pravachan", "प्रवचन", Icons.Default.MenuBook, Saffron, "section/pravachan"),
     HubMenuItem("shanka", "Shanka\nSamadhan", "शंका\nसमाधान", Icons.Default.QuestionAnswer, Gold, "section/shanka-clips"),
-    HubMenuItem("bhawna", "Bhawna\nYog", "भावना\nयोग", Icons.Default.SelfImprovement, Color(0xFF4CAF50), "section/bhawna-yog"),
     HubMenuItem("swadhyay", "Swadhyay", "स्वाध्याय", Icons.Default.Spa, Color(0xFF9C27B0), "section/swadhyay"),
     HubMenuItem("pathshala", "Pathshala", "पाठशाला", Icons.Default.School, KidsBlue, "pathshala"),
-    HubMenuItem("shorts", "Shorts", "शॉर्ट्स", Icons.Default.PlayCircle, Color(0xFFFF5722), "shorts"),
-    HubMenuItem("live", "Live", "लाइव", Icons.Default.LiveTv, LiveRed, "live"),
+    HubMenuItem("poojan", "Poojan\n& Path", "पूजन\nव पाठ", Icons.Default.Spa, Color(0xFFFF9800), "section/poojan"),
+    HubMenuItem("events", "Events", "कार्यक्रम", Icons.Default.Stars, Color(0xFFE91E63), "section/events"),
+    HubMenuItem("donate", "Swa Par\nKalyan", "स्व पर\nकल्याण", Icons.Default.Stars, Color(0xFF00BCD4), "donate"),
     HubMenuItem("search", "Search", "खोजें", Icons.Default.Search, Color(0xFF607D8B), "search"),
-    HubMenuItem("settings", "Settings", "सेटिंग्स", Icons.Default.Settings, TextGray, "settings"),
 )
 
 @Composable
