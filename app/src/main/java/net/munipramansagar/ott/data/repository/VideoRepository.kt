@@ -156,6 +156,17 @@ class VideoRepository @Inject constructor(
             .sortedBy { it.priority }
     }
 
+    // ── Donations ──
+
+    suspend fun getDonationOrgs(): List<net.munipramansagar.ott.data.model.DonationOrg> {
+        return firestore.collection("donations")
+            .get()
+            .await()
+            .toObjects(net.munipramansagar.ott.data.model.DonationOrg::class.java)
+            .filter { it.active }
+            .sortedBy { it.priority }
+    }
+
     // ── Legacy methods (backward compat for search/other consumers) ──
 
     @Deprecated("Use getPlaylistsBySection + getPlaylistVideos instead")

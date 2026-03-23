@@ -303,10 +303,9 @@ fun TvApp(
                             homeViewModel = homeViewModel,
                             isHindi = isHindi
                         )
-                        // Donate — placeholder screen
-                        TvNavItem.Donate -> TvSettingsScreen(
-                            isHindi = isHindi,
-                            onLanguageChange = {}
+                        // Donate
+                        TvNavItem.Donate -> net.munipramansagar.ott.ui.mobile.screen.DonateScreen(
+                            isHindi = isHindi
                         )
                         // Search & Settings
                         TvNavItem.Search -> TvSearchScreen(

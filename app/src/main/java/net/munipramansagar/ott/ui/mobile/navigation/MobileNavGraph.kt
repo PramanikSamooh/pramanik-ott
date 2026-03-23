@@ -13,12 +13,14 @@ import net.munipramansagar.ott.ui.mobile.screen.PathshalaScreen
 import net.munipramansagar.ott.ui.mobile.screen.PlaylistDetailScreen
 import net.munipramansagar.ott.ui.mobile.screen.SearchScreen
 import net.munipramansagar.ott.ui.mobile.screen.SettingsScreen
+import net.munipramansagar.ott.ui.mobile.screen.DonateScreen
 import net.munipramansagar.ott.ui.mobile.screen.ShortsScreen
 
 object Routes {
     const val HOME = "home"
     const val SHORTS = "shorts"
     const val PATHSHALA = "pathshala"
+    const val DONATE = "donate"
     const val SECTION = "section/{sectionId}"
     const val PLAYLIST = "playlist/{playlistId}"
     const val SEARCH = "search"
@@ -92,6 +94,13 @@ fun MobileNavGraph(
 
         composable(Routes.PATHSHALA) {
             PathshalaScreen(
+                isHindi = isHindi,
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(Routes.DONATE) {
+            DonateScreen(
                 isHindi = isHindi,
                 onBack = { navController.popBackStack() }
             )
