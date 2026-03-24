@@ -16,6 +16,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -40,6 +42,7 @@ import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.ViewList
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -393,6 +396,19 @@ private fun TvSidebar(
         label = "overlayAlpha"
     )
 
+    // Create focus requesters for each selectable entry
+    val focusRequesters = remember(entries) {
+        entries.filter { !it.isGroupHeader }.associateBy({ it.navIndex }, { FocusRequester() })
+    }
+
+    // When sidebar expands, request focus on the selected item
+    LaunchedEffect(isExpanded) {
+        if (isExpanded) {
+            kotlinx.coroutines.delay(100) // Wait for expansion animation
+            focusRequesters[selectedIndex]?.requestFocus()
+        }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxHeight()
@@ -473,6 +489,7 @@ private fun TvSidebar(
                         textAlpha = textAlpha,
                         isHindi = isHindi,
                         isSubItem = true,
+                        focusRequester = focusRequesters[entry.navIndex],
                         onFocusChange = { focused ->
                             if (focused) onExpandChanged(true)
                         },
@@ -489,6 +506,7 @@ private fun TvSidebar(
                     textAlpha = textAlpha,
                     isHindi = isHindi,
                     showLiveDot = isLive && entry.item is TvNavItem.Home,
+                    focusRequester = focusRequesters[entry.navIndex],
                     onFocusChange = { focused ->
                         if (focused) onExpandChanged(true)
                     },
@@ -510,6 +528,7 @@ private fun TvSidebarItem(
     isHindi: Boolean,
     isSubItem: Boolean = false,
     showLiveDot: Boolean = false,
+    focusRequester: FocusRequester? = null,
     onFocusChange: (Boolean) -> Unit,
     onContentFocusLost: () -> Unit,
     onClick: () -> Unit
@@ -540,6 +559,7 @@ private fun TvSidebarItem(
             .height(if (isSubItem) 40.dp else 44.dp)
             .clip(RoundedCornerShape(10.dp))
             .background(bgColor)
+            .then(if (focusRequester != null) Modifier.focusRequester(focusRequester) else Modifier)
             .onFocusChanged {
                 isFocused = it.isFocused
                 onFocusChange(it.isFocused)
