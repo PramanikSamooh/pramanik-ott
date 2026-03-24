@@ -7,6 +7,12 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import kotlinx.coroutines.launch
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -267,6 +273,50 @@ fun SettingsScreen(
             )
         }
 
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Link TV section
+        var showLinkTvDialog by remember { mutableStateOf(false) }
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(CardBg, RoundedCornerShape(16.dp))
+                .border(1.dp, CardBorder, RoundedCornerShape(16.dp))
+                .clickable { showLinkTvDialog = true }
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Icons.Default.Check,
+                    contentDescription = null,
+                    tint = Saffron,
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(12.dp))
+                Text(
+                    text = "Link TV",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = TextWhite
+                )
+            }
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                contentDescription = null,
+                tint = TextGray,
+                modifier = Modifier.size(24.dp)
+            )
+        }
+
+        // Link TV Dialog
+        if (showLinkTvDialog) {
+            LinkTvDialog(
+                isSignedIn = isSignedIn,
+                onDismiss = { showLinkTvDialog = false }
+            )
+        }
+
         Spacer(modifier = Modifier.height(32.dp))
 
         // About section
@@ -371,4 +421,95 @@ private fun LanguageOption(
             }
         }
     }
+}
+
+// ── Link TV Dialog ──
+@Composable
+private fun LinkTvDialog(
+    isSignedIn: Boolean,
+    onDismiss: () -> Unit
+) {
+    var codeInput by remember { mutableStateOf("") }
+    var isLinking by remember { mutableStateOf(false) }
+    var linkResult by remember { mutableStateOf<String?>(null) }
+    val firestore = com.google.firebase.firestore.FirebaseFirestore.getInstance()
+    val tvLinkRepo = remember { net.munipramansagar.ott.data.repository.TvLinkRepository(firestore) }
+    val auth = com.google.firebase.auth.FirebaseAuth.getInstance()
+    val scope = rememberCoroutineScope()
+
+    androidx.compose.material3.AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = CardBg,
+        title = {
+            Text("Link TV", color = TextWhite, fontWeight = FontWeight.Bold)
+        },
+        text = {
+            Column {
+                if (!isSignedIn) {
+                    Text(
+                        "Please sign in with Google first, then link your TV.",
+                        color = TextGray,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                } else {
+                    Text(
+                        "Enter the 6-digit code shown on your TV:",
+                        color = TextGray,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    androidx.compose.material3.OutlinedTextField(
+                        value = codeInput,
+                        onValueChange = { if (it.length <= 6) codeInput = it.filter { c -> c.isDigit() } },
+                        label = { Text("TV Code") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Saffron,
+                            unfocusedBorderColor = CardBorder,
+                            focusedLabelColor = Saffron,
+                            cursorColor = Saffron,
+                            focusedTextColor = TextWhite,
+                            unfocusedTextColor = TextWhite
+                        )
+                    )
+                    if (linkResult != null) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = linkResult!!,
+                            color = if (linkResult!!.startsWith("✅")) androidx.compose.ui.graphics.Color(0xFF4CAF50) else androidx.compose.ui.graphics.Color(0xFFFF5252),
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            if (isSignedIn) {
+                Button(
+                    onClick = {
+                        if (codeInput.length == 6) {
+                            isLinking = true
+                            scope.launch {
+                                val uid = auth.currentUser?.uid ?: ""
+                                val email = auth.currentUser?.email ?: ""
+                                val success = tvLinkRepo.linkSession(codeInput, uid, email)
+                                linkResult = if (success) "✅ TV linked successfully!" else "❌ Invalid or expired code"
+                                isLinking = false
+                            }
+                        }
+                    },
+                    enabled = codeInput.length == 6 && !isLinking,
+                    colors = ButtonDefaults.buttonColors(containerColor = Saffron)
+                ) {
+                    Text(if (isLinking) "Linking..." else "Link TV")
+                }
+            }
+        },
+        dismissButton = {
+            androidx.compose.material3.TextButton(onClick = onDismiss) {
+                Text("Cancel", color = TextGray)
+            }
+        }
+    )
 }

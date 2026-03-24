@@ -177,4 +177,8 @@ dependencies {
 
     // DataStore (preferences for simple settings)
     implementation("androidx.datastore:datastore-preferences:1.1.1")
+
+    // QR Code generation (for TV link)
+    implementation("com.journeyapps:zxing-android-embedded:4.3.0")
+    implementation("com.google.zxing:core:3.5.3")
 }
