@@ -149,15 +149,14 @@ fun TvApp(
     var selectedIndex by rememberSaveable { mutableIntStateOf(0) }
     var isSidebarExpanded by remember { mutableStateOf(false) }
 
-    // Back button: collapse sidebar first, then if on home do nothing (let system handle)
-    // If not on home, go to home
-    BackHandler(enabled = true) {
+    // Back button: collapse sidebar → go to home → let system exit
+    // Only handle back if sidebar is expanded OR not on home
+    BackHandler(enabled = isSidebarExpanded || selectedIndex != 0) {
         if (isSidebarExpanded) {
             isSidebarExpanded = false
         } else if (selectedIndex != 0) {
             selectedIndex = 0
         }
-        // If already on home and sidebar collapsed, system handles back (exit app)
     }
 
     val uiState by homeViewModel.uiState.collectAsState()
@@ -470,7 +469,12 @@ private fun TvSidebar(
                             .alpha(textAlpha)
                     )
                 } else {
-                    // Show group icon when collapsed
+                    // Show group icon when collapsed — click navigates to first sub-item
+                    val firstSubItemIndex = entries
+                        .dropWhile { it !== entry }
+                        .drop(1)
+                        .firstOrNull { it.item.isSubItem && it.navIndex >= 0 }
+                        ?.navIndex ?: -1
                     TvSidebarItem(
                         item = entry.item,
                         isSelected = false,
@@ -481,7 +485,12 @@ private fun TvSidebar(
                             if (focused) onExpandChanged(true)
                         },
                         onContentFocusLost = {},
-                        onClick = { onExpandChanged(true) }
+                        onClick = {
+                            if (firstSubItemIndex >= 0) {
+                                onItemSelected(firstSubItemIndex)
+                            }
+                            onExpandChanged(true)
+                        }
                     )
                 }
             } else if (entry.item.isSubItem) {
