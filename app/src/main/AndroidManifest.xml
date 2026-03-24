@@ -55,8 +55,23 @@
         <!-- Mobile UI (Compose) -->
         <activity
             android:name=".ui.mobile.MobileActivity"
-            android:exported="false"
-            android:theme="@style/Theme.PramanikOTT.Mobile" />
+            android:exported="true"
+            android:theme="@style/Theme.PramanikOTT.Mobile">
+            <!-- Deep link: pramanik://tv-link?code=XXXXXX -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="pramanik" android:host="tv-link" />
+            </intent-filter>
+            <!-- Web deep link: https://munipramansagar.net/tv-link?code=XXXXXX -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https" android:host="munipramansagar.net" android:pathPrefix="/tv-link" />
+            </intent-filter>
+        </activity>
 
         <!-- TV UI (Leanback) -->
         <activity

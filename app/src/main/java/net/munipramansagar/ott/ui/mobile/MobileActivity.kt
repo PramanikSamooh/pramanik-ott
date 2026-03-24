@@ -5,6 +5,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -75,6 +76,9 @@ class MobileActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
+        // Check for deep link: pramanik://tv-link?code=XXXXXX
+        val deepLinkCode = intent?.data?.getQueryParameter("code")
+
         setContent {
             PramanikTheme {
                 val navController = rememberNavController()
@@ -82,6 +86,15 @@ class MobileActivity : ComponentActivity() {
                 val currentRoute = navBackStackEntry?.destination?.route ?: Routes.HOME
                 val language by languageManager.language.collectAsState()
                 val isHindi = language == LanguageManager.HINDI
+
+                // Handle deep link — navigate to settings with TV code
+                LaunchedEffect(deepLinkCode) {
+                    if (!deepLinkCode.isNullOrBlank()) {
+                        navController.navigate("${Routes.SETTINGS}?tvCode=$deepLinkCode") {
+                            popUpTo(Routes.HOME)
+                        }
+                    }
+                }
 
                 val isHomeScreen = currentRoute == Routes.HOME
                 val isInnerScreen = !isHomeScreen && currentRoute != Routes.SHORTS

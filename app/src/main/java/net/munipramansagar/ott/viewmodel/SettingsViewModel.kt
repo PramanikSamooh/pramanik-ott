@@ -56,4 +56,10 @@ class SettingsViewModel @Inject constructor(
     fun signOut() {
         firebaseAuth.signOut()
     }
+
+    fun clearWatchHistory() {
+        viewModelScope.launch {
+            watchHistoryRepository.clearHistory()
+        }
+    }
 }

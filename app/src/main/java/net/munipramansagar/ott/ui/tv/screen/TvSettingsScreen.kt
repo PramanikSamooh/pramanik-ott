@@ -218,6 +218,105 @@ fun TvSettingsScreen(
 
         Spacer(modifier = Modifier.height(24.dp))
 
+        // ── Watch History section ──
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(GlassCard, PramanikTvTheme.shapes.card)
+                .border(BorderStroke(1.dp, GlassBorder), PramanikTvTheme.shapes.card)
+                .padding(24.dp)
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Icons.Default.History,
+                    contentDescription = null,
+                    tint = Saffron,
+                    modifier = Modifier.size(24.dp)
+                )
+                Spacer(modifier = Modifier.width(12.dp))
+                Text(
+                    text = if (isHindi) "इतिहास" else "Watch History",
+                    style = PramanikTvTheme.typography.headlineMedium.copy(
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 20.sp
+                    ),
+                    color = TextWhite
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            var showClearConfirm by remember { mutableStateOf(false) }
+            val scope = androidx.compose.runtime.rememberCoroutineScope()
+
+            Row(
+                modifier = Modifier.padding(start = 36.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Button(
+                    onClick = { showClearConfirm = true },
+                    colors = ButtonDefaults.colors(
+                        containerColor = androidx.compose.ui.graphics.Color(0xFF8B0000).copy(alpha = 0.3f),
+                        focusedContainerColor = androidx.compose.ui.graphics.Color(0xFF8B0000).copy(alpha = 0.6f)
+                    ),
+                    border = ButtonDefaults.border(
+                        border = androidx.tv.material3.Border(border = BorderStroke(1.dp, androidx.compose.ui.graphics.Color(0xFF8B0000).copy(alpha = 0.5f))),
+                        focusedBorder = androidx.tv.material3.Border(border = BorderStroke(1.5.dp, androidx.compose.ui.graphics.Color(0xFFFF5252)))
+                    ),
+                    shape = ButtonDefaults.shape(shape = PramanikTvTheme.shapes.button)
+                ) {
+                    Text(
+                        text = if (isHindi) "इतिहास मिटाएँ" else "Clear Watch History",
+                        style = PramanikTvTheme.typography.labelLarge.copy(fontSize = 14.sp)
+                    )
+                }
+            }
+
+            if (showClearConfirm) {
+                Spacer(modifier = Modifier.height(12.dp))
+                Row(
+                    modifier = Modifier.padding(start = 36.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = if (isHindi) "क्या आप सुनिश्चित हैं?" else "Are you sure?",
+                        style = PramanikTvTheme.typography.bodyMedium.copy(color = TextGray)
+                    )
+                    Button(
+                        onClick = {
+                            scope.launch {
+                                settingsViewModel.clearWatchHistory()
+                                showClearConfirm = false
+                            }
+                        },
+                        colors = ButtonDefaults.colors(
+                            containerColor = androidx.compose.ui.graphics.Color(0xFFFF5252),
+                            focusedContainerColor = androidx.compose.ui.graphics.Color(0xFFFF0000)
+                        ),
+                        shape = ButtonDefaults.shape(shape = PramanikTvTheme.shapes.button)
+                    ) {
+                        Text(
+                            text = if (isHindi) "हाँ, मिटाएँ" else "Yes, Clear",
+                            style = PramanikTvTheme.typography.labelLarge.copy(fontSize = 13.sp)
+                        )
+                    }
+                    Button(
+                        onClick = { showClearConfirm = false },
+                        colors = ButtonDefaults.colors(containerColor = GlassCard, focusedContainerColor = GlassHighlight),
+                        shape = ButtonDefaults.shape(shape = PramanikTvTheme.shapes.button)
+                    ) {
+                        Text(
+                            text = if (isHindi) "नहीं" else "Cancel",
+                            style = PramanikTvTheme.typography.labelLarge.copy(fontSize = 13.sp)
+                        )
+                    }
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
         // ── About section ──
         Column(
             modifier = Modifier
