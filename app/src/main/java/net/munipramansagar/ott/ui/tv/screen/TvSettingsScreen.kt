@@ -15,12 +15,21 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.google.firebase.auth.FirebaseAuth
+import net.munipramansagar.ott.viewmodel.SettingsViewModel
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -46,12 +55,17 @@ import net.munipramansagar.ott.util.LanguageManager
 @Composable
 fun TvSettingsScreen(
     isHindi: Boolean,
-    onLanguageChange: (String) -> Unit
+    onLanguageChange: (String) -> Unit,
+    settingsViewModel: SettingsViewModel = hiltViewModel()
 ) {
+    val userEmail by settingsViewModel.userEmail.collectAsState()
+    val isSignedIn by settingsViewModel.isSignedIn.collectAsState()
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(top = 32.dp, start = 48.dp, end = 48.dp)
+            .verticalScroll(rememberScrollState())
     ) {
         // Title
         Text(
@@ -126,6 +140,75 @@ fun TvSettingsScreen(
 
         Spacer(modifier = Modifier.height(24.dp))
 
+        // ── Account section ──
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(GlassCard, PramanikTvTheme.shapes.card)
+                .border(BorderStroke(1.dp, GlassBorder), PramanikTvTheme.shapes.card)
+                .padding(24.dp)
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Icons.Default.AccountCircle,
+                    contentDescription = null,
+                    tint = Saffron,
+                    modifier = Modifier.size(24.dp)
+                )
+                Spacer(modifier = Modifier.width(12.dp))
+                Text(
+                    text = if (isHindi) "खाता" else "Account",
+                    style = PramanikTvTheme.typography.headlineMedium.copy(
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 20.sp
+                    ),
+                    color = TextWhite
+                )
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            if (isSignedIn) {
+                Text(
+                    text = if (isHindi) "साइन इन: $userEmail" else "Signed in: $userEmail",
+                    style = PramanikTvTheme.typography.bodyMedium.copy(color = TextGray),
+                    modifier = Modifier.padding(start = 36.dp)
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                Row(modifier = Modifier.padding(start = 36.dp)) {
+                    Button(
+                        onClick = { settingsViewModel.signOut() },
+                        colors = ButtonDefaults.colors(
+                            containerColor = GlassCard,
+                            focusedContainerColor = GlassHighlight
+                        ),
+                        border = ButtonDefaults.border(
+                            border = androidx.tv.material3.Border(border = BorderStroke(1.dp, GlassBorder)),
+                            focusedBorder = androidx.tv.material3.Border(border = BorderStroke(1.5.dp, TextWhite.copy(alpha = 0.3f)))
+                        ),
+                        shape = ButtonDefaults.shape(shape = PramanikTvTheme.shapes.button)
+                    ) {
+                        Text(
+                            text = if (isHindi) "साइन आउट" else "Sign Out",
+                            style = PramanikTvTheme.typography.labelLarge.copy(fontSize = 14.sp)
+                        )
+                    }
+                }
+            } else {
+                Text(
+                    text = if (isHindi) "अपने फ़ोन ऐप से साइन इन करें — आपका इतिहास TV पर भी दिखेगा"
+                        else "Sign in from the phone app — your watch history will sync to TV",
+                    style = PramanikTvTheme.typography.bodyMedium.copy(
+                        color = TextGray,
+                        lineHeight = 20.sp
+                    ),
+                    modifier = Modifier.padding(start = 36.dp)
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
         // ── About section ──
         Column(
             modifier = Modifier
@@ -170,7 +253,7 @@ fun TvSettingsScreen(
 
             // Version pill
             Text(
-                text = "Version 2.0.0",
+                text = "Version 2.1.0",
                 style = PramanikTvTheme.typography.labelMedium.copy(
                     color = TextMuted,
                     fontSize = 12.sp
