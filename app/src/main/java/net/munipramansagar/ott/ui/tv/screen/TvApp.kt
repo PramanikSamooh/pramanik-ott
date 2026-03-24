@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -229,6 +230,7 @@ fun TvApp(
     }
 
     val contentFocusRequester = remember { FocusRequester() }
+    val focusManager = LocalFocusManager.current
 
     PramanikTvTheme {
         Box(
@@ -245,8 +247,6 @@ fun TvApp(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(start = 56.dp) // Leave space for collapsed sidebar icons
-                    .focusRequester(contentFocusRequester)
-                    .focusable()
             ) {
                     when (navItems[selectedIndex]) {
                         TvNavItem.Home -> TvHomeScreen(
@@ -366,8 +366,9 @@ fun TvApp(
                 onItemSelected = { index ->
                     selectedIndex = index
                     isSidebarExpanded = false // collapse after selection
-                    // Move focus to content area so D-pad Right doesn't re-expand sidebar
-                    try { contentFocusRequester.requestFocus() } catch (_: Exception) {}
+                    // Move focus into content — clearFocus first, then moveFocus Right
+                    // This makes focus land on the first focusable child in the content area
+                    focusManager.moveFocus(androidx.compose.ui.focus.FocusDirection.Right)
                 }
             )
         }
