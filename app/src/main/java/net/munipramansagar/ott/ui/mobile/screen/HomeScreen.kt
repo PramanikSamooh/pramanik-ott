@@ -54,6 +54,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.compose.foundation.Image
+import androidx.compose.ui.res.painterResource
 import coil.compose.AsyncImage
 import kotlinx.coroutines.delay
 import net.munipramansagar.ott.data.model.Announcement
@@ -85,7 +87,7 @@ val mainCategories = listOf(
     MainCategory("bhawna", "Bhawna Yog", "भावना योग", Icons.Default.SelfImprovement, Color(0xFF4CAF50), "section/bhawna-yog"),
     MainCategory("pravachan", "Pravachan", "प्रवचन", Icons.Default.MenuBook, Saffron, "section/pravachan"),
     MainCategory("shanka", "Shanka Samadhan", "शंका समाधान", Icons.Default.QuestionAnswer, Gold, "section/shanka-clips"),
-    MainCategory("swadhyay", "Swadhyay", "स्वाध्याय", Icons.Default.PlayCircle, Color(0xFF9C27B0), "section/swadhyay"),
+    MainCategory("swadhyay", "Swadhyay", "स्वाध्याय", Icons.Default.MenuBook, Color(0xFF9C27B0), "section/swadhyay"),
 )
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -108,6 +110,7 @@ fun HomeScreen(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
+            .padding(bottom = 80.dp) // Space for bottom nav
     ) {
         // ── Live Stream Banner ──
         LiveStreamBanner(
@@ -376,18 +379,14 @@ private fun MaharajCard(
             .padding(14.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Avatar circle
-        Box(
+        // Pramanik logo
+        Image(
+            painter = painterResource(id = net.munipramansagar.ott.R.drawable.pramanik_logo),
+            contentDescription = "Pramanik",
             modifier = Modifier
                 .size(48.dp)
                 .clip(CircleShape)
-                .background(
-                    Brush.linearGradient(listOf(Saffron, SaffronDark))
-                ),
-            contentAlignment = Alignment.Center
-        ) {
-            Text("🙏", fontSize = 22.sp)
-        }
+        )
 
         Spacer(modifier = Modifier.width(14.dp))
 
@@ -453,26 +452,35 @@ private fun CategoryCard(
         modifier = modifier
             .clip(cardShape)
             .background(
-                Brush.linearGradient(
+                Brush.verticalGradient(
                     colors = listOf(
-                        category.color.copy(alpha = 0.18f),
-                        category.color.copy(alpha = 0.04f)
+                        category.color.copy(alpha = 0.15f),
+                        category.color.copy(alpha = 0.03f)
                     )
                 )
             )
-            .border(1.dp, category.color.copy(alpha = 0.15f), cardShape)
+            .border(1.dp, category.color.copy(alpha = 0.12f), cardShape)
             .clickable { onClick() }
-            .padding(vertical = 20.dp),
+            .padding(vertical = 18.dp, horizontal = 8.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Icon(
-            imageVector = category.icon,
-            contentDescription = category.labelEn,
-            tint = category.color,
-            modifier = Modifier.size(32.dp)
-        )
-        Spacer(modifier = Modifier.height(8.dp))
+        // Icon with circle background
+        Box(
+            modifier = Modifier
+                .size(48.dp)
+                .clip(CircleShape)
+                .background(category.color.copy(alpha = 0.15f)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = category.icon,
+                contentDescription = category.labelEn,
+                tint = category.color,
+                modifier = Modifier.size(26.dp)
+            )
+        }
+        Spacer(modifier = Modifier.height(10.dp))
         Text(
             text = if (isHindi) category.labelHi else category.labelEn,
             style = MaterialTheme.typography.labelLarge.copy(
