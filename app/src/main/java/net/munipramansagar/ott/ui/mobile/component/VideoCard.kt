@@ -4,7 +4,10 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.focusable
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -59,22 +62,31 @@ fun VideoCard(
 
     val cardShape = RoundedCornerShape(12.dp)
 
+    var isFocused by remember { mutableStateOf(false) }
+
     Column(
         modifier = modifier
             .width(width)
             .graphicsLayer {
-                scaleX = scale
-                scaleY = scale
+                scaleX = if (isFocused) 1.05f else scale
+                scaleY = if (isFocused) 1.05f else scale
             }
             .shadow(
-                elevation = 8.dp,
+                elevation = if (isFocused) 16.dp else 8.dp,
                 shape = cardShape,
                 ambientColor = Color.Black.copy(alpha = 0.3f),
                 spotColor = Color.Black.copy(alpha = 0.3f)
             )
             .clip(cardShape)
             .background(CardBg)
-            .border(1.dp, CardBorder, cardShape)
+            .border(
+                width = if (isFocused) 2.dp else 1.dp,
+                color = if (isFocused) Color(0xFFE8730A) else CardBorder,
+                shape = cardShape
+            )
+            .onFocusChanged { isFocused = it.isFocused }
+            .focusable()
+            .clickable { onClick() }
             .pointerInput(Unit) {
                 detectTapGestures(
                     onPress = {

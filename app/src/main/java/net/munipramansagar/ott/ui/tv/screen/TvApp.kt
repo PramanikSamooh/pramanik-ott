@@ -228,6 +228,8 @@ fun TvApp(
         selectedIndex = safeIndex
     }
 
+    val contentFocusRequester = remember { FocusRequester() }
+
     PramanikTvTheme {
         Box(
             modifier = Modifier
@@ -243,6 +245,8 @@ fun TvApp(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(start = 56.dp) // Leave space for collapsed sidebar icons
+                    .focusRequester(contentFocusRequester)
+                    .focusable()
             ) {
                     when (navItems[selectedIndex]) {
                         TvNavItem.Home -> TvHomeScreen(
@@ -362,6 +366,8 @@ fun TvApp(
                 onItemSelected = { index ->
                     selectedIndex = index
                     isSidebarExpanded = false // collapse after selection
+                    // Move focus to content area so D-pad Right doesn't re-expand sidebar
+                    try { contentFocusRequester.requestFocus() } catch (_: Exception) {}
                 }
             )
         }
