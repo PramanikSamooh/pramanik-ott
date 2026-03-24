@@ -149,6 +149,16 @@ fun TvApp(
     val isHindi = language == LanguageManager.HINDI
     var selectedIndex by rememberSaveable { mutableIntStateOf(0) }
     var isSidebarExpanded by remember { mutableStateOf(false) }
+    // Suppress sidebar expansion during item selection (prevents re-expand from focus events)
+    var suppressExpand by remember { mutableStateOf(true) } // Start suppressed so initial focus doesn't expand
+
+    // Reset suppress flag after a short delay so user can open sidebar again
+    LaunchedEffect(suppressExpand) {
+        if (suppressExpand) {
+            kotlinx.coroutines.delay(500)
+            suppressExpand = false
+        }
+    }
 
     // Back button: collapse sidebar → go to home → let system exit
     // Only handle back if sidebar is expanded OR not on home
@@ -362,13 +372,16 @@ fun TvApp(
                 isHindi = isHindi,
                 isLive = uiState.liveStatus.isLive,
                 isExpanded = isSidebarExpanded,
-                onExpandChanged = { isSidebarExpanded = it },
+                onExpandChanged = { expand ->
+                    if (!suppressExpand || !expand) {
+                        isSidebarExpanded = expand
+                    }
+                },
                 onItemSelected = { index ->
                     selectedIndex = index
-                    isSidebarExpanded = false // collapse after selection
-                    // Move focus into content — clearFocus first, then moveFocus Right
-                    // This makes focus land on the first focusable child in the content area
-                    focusManager.moveFocus(androidx.compose.ui.focus.FocusDirection.Right)
+                    suppressExpand = true // prevent re-expand from focus events
+                    isSidebarExpanded = false
+                    focusManager.clearFocus()
                 }
             )
         }
