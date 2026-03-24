@@ -36,6 +36,9 @@ import org.schabi.newpipe.extractor.stream.VideoStream
 @AndroidEntryPoint
 class PlayerActivity : AppCompatActivity() {
 
+    @javax.inject.Inject
+    lateinit var watchHistoryRepository: net.munipramansagar.ott.data.repository.WatchHistoryRepository
+
     private lateinit var playerView: PlayerView
     private lateinit var loadingSpinner: ProgressBar
     private lateinit var titleText: TextView
@@ -44,12 +47,23 @@ class PlayerActivity : AppCompatActivity() {
     private var webView: WebView? = null
     private var isWebViewMode = false
 
-    private val videoId: String by lazy {
-        intent.getStringExtra("videoId") ?: ""
-    }
+    private val videoId: String by lazy { intent.getStringExtra("videoId") ?: "" }
+    private val videoTitle: String by lazy { intent.getStringExtra("videoTitle") ?: "" }
+    private val videoTitleHi: String by lazy { intent.getStringExtra("videoTitleHi") ?: "" }
+    private val videoThumbnail: String by lazy { intent.getStringExtra("videoThumbnail") ?: "" }
+    private val channelName: String by lazy { intent.getStringExtra("channelName") ?: "" }
+    private val durationFormatted: String by lazy { intent.getStringExtra("durationFormatted") ?: "" }
+    private val playlistId: String by lazy { intent.getStringExtra("playlistId") ?: "" }
+    private val playlistTitle: String by lazy { intent.getStringExtra("playlistTitle") ?: "" }
+    private val sectionId: String by lazy { intent.getStringExtra("sectionId") ?: "" }
+    private val playlistIndex: Int by lazy { intent.getIntExtra("playlistIndex", -1) }
 
-    private val videoTitle: String by lazy {
-        intent.getStringExtra("videoTitle") ?: ""
+    // For periodic progress saving
+    private val progressSaveRunnable = object : Runnable {
+        override fun run() {
+            saveCurrentProgress()
+            playerView.postDelayed(this, 10_000) // Save every 10 seconds
+        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -95,9 +109,19 @@ class PlayerActivity : AppCompatActivity() {
                             titleOverlay.postDelayed({
                                 titleOverlay.animate().alpha(0f).setDuration(500).start()
                             }, 3000)
+                            // Resume from saved position
+                            resumeFromSavedPosition()
+                            // Start periodic progress saving
+                            playerView.removeCallbacks(progressSaveRunnable)
+                            playerView.postDelayed(progressSaveRunnable, 10_000)
                         }
                         Player.STATE_BUFFERING -> {
                             loadingSpinner.visibility = View.VISIBLE
+                        }
+                        Player.STATE_ENDED -> {
+                            // Save as completed and try auto-next
+                            saveCurrentProgress()
+                            autoPlayNext()
                         }
                     }
                 }
@@ -113,6 +137,68 @@ class PlayerActivity : AppCompatActivity() {
             })
         }
         playerView.player = player
+    }
+
+    private var hasResumed = false
+    private fun resumeFromSavedPosition() {
+        if (hasResumed) return
+        hasResumed = true
+        lifecycleScope.launch {
+            val position = watchHistoryRepository.getResumePosition(videoId)
+            if (position > 5000) { // Only resume if > 5 seconds in
+                player?.seekTo(position)
+                Toast.makeText(
+                    this@PlayerActivity,
+                    "Resuming from where you left off",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        }
+    }
+
+    private fun saveCurrentProgress() {
+        val p = player ?: return
+        val pos = p.currentPosition
+        val dur = p.duration.coerceAtLeast(0)
+        if (pos < 3000) return // Don't save if watched less than 3 seconds
+        lifecycleScope.launch {
+            watchHistoryRepository.saveProgress(
+                videoId = videoId,
+                title = videoTitle,
+                titleHi = videoTitleHi,
+                thumbnailUrl = videoThumbnail.ifEmpty { "https://i.ytimg.com/vi/$videoId/mqdefault.jpg" },
+                channelName = channelName,
+                durationFormatted = durationFormatted,
+                playlistId = playlistId,
+                playlistTitle = playlistTitle,
+                sectionId = sectionId,
+                positionMs = pos,
+                totalDurationMs = dur,
+                playlistIndex = playlistIndex
+            )
+        }
+    }
+
+    private fun autoPlayNext() {
+        if (playlistId.isEmpty()) return
+        lifecycleScope.launch {
+            val next = watchHistoryRepository.getNextInPlaylist(playlistId)
+            if (next != null && next.videoId != videoId) {
+                // Start PlayerActivity with the next video
+                val nextIntent = android.content.Intent(this@PlayerActivity, PlayerActivity::class.java).apply {
+                    putExtra("videoId", next.videoId)
+                    putExtra("videoTitle", next.title)
+                    putExtra("videoTitleHi", next.titleHi)
+                    putExtra("videoThumbnail", next.thumbnailUrl)
+                    putExtra("playlistId", next.playlistId)
+                    putExtra("playlistTitle", next.playlistTitle)
+                    putExtra("sectionId", next.sectionId)
+                    putExtra("playlistIndex", next.playlistIndex)
+                }
+                startActivity(nextIntent)
+                finish()
+            }
+        }
     }
 
     private fun extractAndPlay() {
@@ -347,6 +433,8 @@ class PlayerActivity : AppCompatActivity() {
 
     override fun onPause() {
         super.onPause()
+        saveCurrentProgress()
+        playerView.removeCallbacks(progressSaveRunnable)
         if (isWebViewMode) webView?.onPause() else player?.pause()
     }
 
@@ -356,6 +444,8 @@ class PlayerActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
+        saveCurrentProgress()
+        playerView.removeCallbacks(progressSaveRunnable)
         if (isWebViewMode) {
             webView?.destroy()
             webView = null
