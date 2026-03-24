@@ -197,7 +197,7 @@ data class BottomNavTab(
 val bottomTabs = listOf(
     BottomNavTab(Routes.HOME, "Home", "होम", Icons.Default.Home),
     BottomNavTab(Routes.PATHSHALA, "Pathshala", "पाठशाला", Icons.Default.School),
-    BottomNavTab("curated/curated_nitya_poojan/Poojan", "Poojan", "पूजन", Icons.Default.Spa),
+    BottomNavTab(net.munipramansagar.ott.ui.mobile.navigation.Routes.POOJAN, "Poojan", "पूजन", Icons.Default.Spa),
     BottomNavTab("section/events", "Events", "कार्यक्रम", Icons.Default.Star),
     BottomNavTab(Routes.DONATE, "Donate", "दान", Icons.Default.Favorite),
 )

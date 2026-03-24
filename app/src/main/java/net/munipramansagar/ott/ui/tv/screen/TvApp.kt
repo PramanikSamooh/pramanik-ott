@@ -106,6 +106,7 @@ sealed class TvNavItem(
     data object NityaPoojan : TvNavItem("Nitya Poojan", "नित्य पूजन", Icons.Default.Favorite, true)
     data object Path : TvNavItem("Path", "पाठ", Icons.Default.ViewList, true)
     data object Stotra : TvNavItem("Stotra", "स्तोत्र", Icons.Default.ViewList, true)
+    data object Bhajan : TvNavItem("Bhajan", "भजन", Icons.Default.PlayCircle, true)
     data object GranthVachan : TvNavItem("Granth Vachan", "ग्रंथ वाचन", Icons.Default.ViewList, true)
 
     // Sub-items under Events
@@ -171,11 +172,12 @@ fun TvApp(
             TvNavItem.NityaPoojan,  // 7
             TvNavItem.Path,         // 8
             TvNavItem.Stotra,       // 9
-            TvNavItem.GranthVachan, // 10
-            TvNavItem.Programs,     // 11
-            TvNavItem.Donate,       // 12
-            TvNavItem.Search,       // 13
-            TvNavItem.Settings      // 14
+            TvNavItem.Bhajan,       // 10
+            TvNavItem.GranthVachan, // 11
+            TvNavItem.Programs,     // 12
+            TvNavItem.Donate,       // 13
+            TvNavItem.Search,       // 14
+            TvNavItem.Settings      // 15
         )
     }
 
@@ -201,19 +203,20 @@ fun TvApp(
             add(SidebarEntry(TvNavItem.NityaPoojan, navIndex = 7))
             add(SidebarEntry(TvNavItem.Path, navIndex = 8))
             add(SidebarEntry(TvNavItem.Stotra, navIndex = 9))
-            add(SidebarEntry(TvNavItem.GranthVachan, navIndex = 10))
+            add(SidebarEntry(TvNavItem.Bhajan, navIndex = 10))
+            add(SidebarEntry(TvNavItem.GranthVachan, navIndex = 11))
 
             // Events group
             add(SidebarEntry(TvNavItem.EventsGroup, isGroupHeader = true))
-            add(SidebarEntry(TvNavItem.Programs, navIndex = 11))
+            add(SidebarEntry(TvNavItem.Programs, navIndex = 12))
 
             // Swa Par Kalyan group
             add(SidebarEntry(TvNavItem.KalyanGroup, isGroupHeader = true))
-            add(SidebarEntry(TvNavItem.Donate, navIndex = 12))
+            add(SidebarEntry(TvNavItem.Donate, navIndex = 13))
 
             // Bottom
-            add(SidebarEntry(TvNavItem.Search, navIndex = 13))
-            add(SidebarEntry(TvNavItem.Settings, navIndex = 14))
+            add(SidebarEntry(TvNavItem.Search, navIndex = 14))
+            add(SidebarEntry(TvNavItem.Settings, navIndex = 15))
         }
     }
 
@@ -306,6 +309,11 @@ fun TvApp(
                         TvNavItem.Stotra -> net.munipramansagar.ott.ui.mobile.screen.CuratedVideosScreen(
                             collection = "curated_stotra",
                             title = if (isHindi) "स्तोत्र" else "Stotra",
+                            isHindi = isHindi
+                        )
+                        TvNavItem.Bhajan -> net.munipramansagar.ott.ui.mobile.screen.CuratedVideosScreen(
+                            collection = "curated_bhajan",
+                            title = if (isHindi) "भजन" else "Bhajan",
                             isHindi = isHindi
                         )
                         TvNavItem.GranthVachan -> net.munipramansagar.ott.ui.mobile.screen.CuratedVideosScreen(
