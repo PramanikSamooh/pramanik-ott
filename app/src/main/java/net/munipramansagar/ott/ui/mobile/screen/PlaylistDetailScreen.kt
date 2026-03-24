@@ -64,8 +64,8 @@ fun PlaylistDetailScreen(
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 8.dp)
                     .clip(headerShape)
-                    .background(CardBg)
-                    .border(1.dp, CardBorder, headerShape)
+                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                    .border(1.dp, MaterialTheme.colorScheme.outlineVariant, headerShape)
                     .padding(14.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -88,7 +88,7 @@ fun PlaylistDetailScreen(
                             fontWeight = FontWeight.Bold,
                             fontSize = 16.sp
                         ),
-                        color = TextWhite,
+                        color = MaterialTheme.colorScheme.onBackground,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -97,7 +97,7 @@ fun PlaylistDetailScreen(
                         Text(
                             text = playlist.description,
                             style = MaterialTheme.typography.bodySmall,
-                            color = TextGray,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             maxLines = 2,
                             overflow = TextOverflow.Ellipsis
                         )
@@ -157,7 +157,7 @@ fun PlaylistDetailScreen(
                         Text(
                             text = state.error ?: "",
                             style = MaterialTheme.typography.bodyLarge,
-                            color = TextGray
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         TextButton(onClick = onBack) {
                             Text(

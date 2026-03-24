@@ -80,7 +80,7 @@ fun CuratedVideosScreen(
                 fontWeight = FontWeight.Bold,
                 fontSize = 22.sp
             ),
-            color = TextWhite,
+            color = MaterialTheme.colorScheme.onBackground,
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
         )
 
@@ -103,13 +103,13 @@ fun CuratedVideosScreen(
                         Text(
                             text = if (isHindi) "जल्द ही उपलब्ध होगा" else "Coming soon",
                             style = MaterialTheme.typography.bodyLarge,
-                            color = TextGray
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = if (isHindi) "व्यवस्थापक से वीडियो जोड़ने को कहें" else "Admin can add videos from the panel",
                             style = MaterialTheme.typography.bodySmall,
-                            color = TextMuted
+                            color = MaterialTheme.colorScheme.outline
                         )
                     }
                 }

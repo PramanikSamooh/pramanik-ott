@@ -68,8 +68,8 @@ fun WatchHistoryScreen(
     if (showClearDialog) {
         AlertDialog(
             onDismissRequest = { showClearDialog = false },
-            title = { Text("Clear Watch History", color = TextWhite) },
-            text = { Text("This will remove all your watch history. This action cannot be undone.", color = TextGray) },
+            title = { Text("Clear Watch History", color = MaterialTheme.colorScheme.onBackground) },
+            text = { Text("This will remove all your watch history. This action cannot be undone.", color = MaterialTheme.colorScheme.onSurfaceVariant) },
             confirmButton = {
                 TextButton(onClick = {
                     viewModel.clearHistory()
@@ -80,7 +80,7 @@ fun WatchHistoryScreen(
             },
             dismissButton = {
                 TextButton(onClick = { showClearDialog = false }) {
-                    Text("Cancel", color = TextGray)
+                    Text("Cancel", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             },
             containerColor = CardBg
@@ -105,7 +105,7 @@ fun WatchHistoryScreen(
                     Icon(
                         Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = "Back",
-                        tint = TextWhite
+                        tint = MaterialTheme.colorScheme.onBackground
                     )
                 }
                 Text(
@@ -114,7 +114,7 @@ fun WatchHistoryScreen(
                         fontWeight = FontWeight.Bold,
                         fontSize = 18.sp
                     ),
-                    color = TextWhite
+                    color = MaterialTheme.colorScheme.onBackground
                 )
             }
 
@@ -123,7 +123,7 @@ fun WatchHistoryScreen(
                     Icon(
                         Icons.Default.Delete,
                         contentDescription = "Clear history",
-                        tint = TextGray
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -139,7 +139,7 @@ fun WatchHistoryScreen(
                 Text(
                     text = "No watch history yet",
                     style = MaterialTheme.typography.bodyLarge,
-                    color = TextMuted
+                    color = MaterialTheme.colorScheme.outline
                 )
             }
         } else {
@@ -171,8 +171,8 @@ private fun WatchHistoryItem(
         modifier = Modifier
             .fillMaxWidth()
             .clip(cardShape)
-            .background(CardBg)
-            .border(1.dp, CardBorder, cardShape)
+            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+            .border(1.dp, MaterialTheme.colorScheme.outlineVariant, cardShape)
             .clickable(onClick = onClick)
             .padding(10.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -210,7 +210,7 @@ private fun WatchHistoryItem(
                 Text(
                     text = entry.durationFormatted,
                     style = MaterialTheme.typography.labelSmall,
-                    color = TextWhite,
+                    color = MaterialTheme.colorScheme.onBackground,
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
                         .padding(4.dp)
@@ -234,7 +234,7 @@ private fun WatchHistoryItem(
                 style = MaterialTheme.typography.bodyMedium.copy(
                     fontWeight = FontWeight.Medium
                 ),
-                color = TextWhite,
+                color = MaterialTheme.colorScheme.onBackground,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis
             )
@@ -245,7 +245,7 @@ private fun WatchHistoryItem(
                 Text(
                     text = entry.channelName,
                     style = MaterialTheme.typography.bodySmall,
-                    color = TextGray,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -255,7 +255,7 @@ private fun WatchHistoryItem(
             Text(
                 text = formatDate(entry.lastWatchedAt),
                 style = MaterialTheme.typography.labelSmall,
-                color = TextMuted
+                color = MaterialTheme.colorScheme.outline
             )
         }
     }

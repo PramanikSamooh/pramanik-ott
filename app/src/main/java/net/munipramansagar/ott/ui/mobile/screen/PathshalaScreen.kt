@@ -93,7 +93,7 @@ fun PathshalaScreen(
             ) {
                 Text(
                     text = if (isHindi) "\u0932\u094B\u0921 \u0939\u094B \u0930\u0939\u093E \u0939\u0948..." else "Loading...",
-                    color = TextGray,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     style = MaterialTheme.typography.bodyLarge
                 )
             }
@@ -107,7 +107,7 @@ fun PathshalaScreen(
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
                         text = state.error ?: "",
-                        color = TextGray,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         style = MaterialTheme.typography.bodyLarge
                     )
                     Spacer(modifier = Modifier.height(12.dp))
@@ -361,7 +361,7 @@ private fun PathshalaClassCard(
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 6.dp)
             .clip(cardShape)
-            .background(CardBg)
+            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
             .border(
                 1.dp,
                 borderColor.copy(alpha = borderAlpha),
@@ -380,7 +380,7 @@ private fun PathshalaClassCard(
                 style = MaterialTheme.typography.titleMedium.copy(
                     fontWeight = FontWeight.SemiBold
                 ),
-                color = TextWhite,
+                color = MaterialTheme.colorScheme.onBackground,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.weight(1f)
@@ -421,7 +421,7 @@ private fun PathshalaClassCard(
             Text(
                 text = teacher?.getName(isHindi) ?: pathshalaClass.teacherName,
                 style = MaterialTheme.typography.bodyMedium,
-                color = TextGray,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -441,7 +441,7 @@ private fun PathshalaClassCard(
                 style = MaterialTheme.typography.bodyMedium.copy(
                     fontWeight = FontWeight.Medium
                 ),
-                color = TextGray
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
             Row(
@@ -504,7 +504,7 @@ private fun EmptyState(isHindi: Boolean) {
             Text(
                 text = if (isHindi) "\u0915\u094B\u0908 \u0915\u0915\u094D\u0937\u093E \u0928\u093F\u0930\u094D\u0927\u093E\u0930\u093F\u0924 \u0928\u0939\u0940\u0902 \u0939\u0948" else "No classes scheduled",
                 style = MaterialTheme.typography.bodyLarge,
-                color = TextGray
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
@@ -562,7 +562,7 @@ fun PathshalaTodayCard(
             Text(
                 text = "${todaysClasses.size} ${if (isHindi) "\u0915\u0915\u094D\u0937\u093E\u090F\u0901" else "classes"}",
                 style = MaterialTheme.typography.labelMedium,
-                color = TextGray
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
         Spacer(modifier = Modifier.height(8.dp))
@@ -572,7 +572,7 @@ fun PathshalaTodayCard(
             Text(
                 text = "\u2022 ${cls.getTitle(isHindi)} - ${formatTime12Hour(cls.time)}",
                 style = MaterialTheme.typography.bodyMedium,
-                color = TextWhite.copy(alpha = 0.85f),
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.85f),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.padding(start = 4.dp, top = 2.dp)
@@ -582,7 +582,7 @@ fun PathshalaTodayCard(
             Text(
                 text = if (isHindi) "...और ${todaysClasses.size - 3} कक्षाएँ" else "...and ${todaysClasses.size - 3} more",
                 style = MaterialTheme.typography.bodySmall,
-                color = TextGray,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(start = 4.dp, top = 2.dp)
             )
         }

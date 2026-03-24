@@ -71,7 +71,7 @@ fun CategoryScreen(
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp
                 ),
-                color = TextWhite,
+                color = MaterialTheme.colorScheme.onBackground,
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)
             )
         }
@@ -108,7 +108,7 @@ fun CategoryScreen(
                         Text(
                             text = state.error ?: "",
                             style = MaterialTheme.typography.bodyLarge,
-                            color = TextGray
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         TextButton(onClick = onBack) {
                             Text(
@@ -134,7 +134,7 @@ fun CategoryScreen(
 
                     // Latest monthly
                     if (state.latestPlaylists.isNotEmpty()) {
-                        item { SectionLabel(text = if (isHindi) "नवीनतम" else "Latest", color = TextWhite) }
+                        item { SectionLabel(text = if (isHindi) "नवीनतम" else "Latest", color = MaterialTheme.colorScheme.onBackground) }
                         items(state.latestPlaylists) { pw -> PlaylistSection(pw, onVideoClick, onPlaylistClick) }
                     }
 
@@ -146,7 +146,7 @@ fun CategoryScreen(
 
                     // Monthly Archive
                     if (state.archivePlaylists.isNotEmpty()) {
-                        item { SectionLabel(text = if (isHindi) "मासिक संग्रह" else "Monthly Archive", color = TextGray) }
+                        item { SectionLabel(text = if (isHindi) "मासिक संग्रह" else "Monthly Archive", color = MaterialTheme.colorScheme.onSurfaceVariant) }
                         items(state.archivePlaylists) { pw -> PlaylistSection(pw, onVideoClick, onPlaylistClick) }
                     }
 
@@ -189,8 +189,8 @@ private fun PlaylistSection(
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp)
                 .clip(cardShape)
-                .background(CardBg)
-                .border(1.dp, CardBorder, cardShape)
+                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                .border(1.dp, MaterialTheme.colorScheme.outlineVariant, cardShape)
                 .clickable { onPlaylistClick(playlistWithVideos.playlist.id) }
                 .padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
@@ -213,7 +213,7 @@ private fun PlaylistSection(
                     style = MaterialTheme.typography.titleMedium.copy(
                         fontWeight = FontWeight.SemiBold
                     ),
-                    color = TextWhite,
+                    color = MaterialTheme.colorScheme.onBackground,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -230,7 +230,7 @@ private fun PlaylistSection(
                         Text(
                             text = "${playlistWithVideos.playlist.videoCount} videos",
                             style = MaterialTheme.typography.bodySmall,
-                            color = TextGray
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }

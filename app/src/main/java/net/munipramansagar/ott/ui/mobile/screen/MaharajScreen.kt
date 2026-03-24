@@ -91,7 +91,7 @@ fun MaharajScreen(
                     style = MaterialTheme.typography.titleLarge.copy(
                         fontWeight = FontWeight.Bold
                     ),
-                    color = TextWhite,
+                    color = MaterialTheme.colorScheme.onBackground,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.padding(horizontal = 32.dp)
                 )
@@ -101,7 +101,7 @@ fun MaharajScreen(
                 Text(
                     text = "Muni Shri 108 Pramansagar Ji Maharaj",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = TextGray,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center
                 )
             }
@@ -226,7 +226,7 @@ private fun QuickLink(
                 fontWeight = FontWeight.Medium,
                 fontSize = 10.sp
             ),
-            color = TextWhite.copy(alpha = 0.8f),
+            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.8f),
             textAlign = TextAlign.Center
         )
     }
@@ -242,8 +242,8 @@ private fun SectionCard(
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
             .clip(RoundedCornerShape(14.dp))
-            .background(CardBg)
-            .border(1.dp, CardBorder, RoundedCornerShape(14.dp))
+            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+            .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(14.dp))
             .padding(16.dp)
     ) {
         Text(
@@ -259,7 +259,7 @@ private fun SectionCard(
             style = MaterialTheme.typography.bodySmall.copy(
                 lineHeight = 20.sp
             ),
-            color = TextGray
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
 }

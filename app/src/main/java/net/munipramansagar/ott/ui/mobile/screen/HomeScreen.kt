@@ -522,8 +522,8 @@ private fun ContinueWatchingCard(
         modifier = Modifier
             .width(180.dp)
             .clip(RoundedCornerShape(12.dp))
-            .background(CardBg)
-            .border(1.dp, CardBorder, RoundedCornerShape(12.dp))
+            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+            .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(12.dp))
             .clickable { onClick() }
     ) {
         // Thumbnail with progress bar

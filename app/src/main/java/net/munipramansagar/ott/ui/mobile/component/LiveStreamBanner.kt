@@ -84,7 +84,7 @@ fun LiveStreamBanner(
                     style = MaterialTheme.typography.titleMedium.copy(
                         fontWeight = FontWeight.SemiBold
                     ),
-                    color = TextWhite
+                    color = MaterialTheme.colorScheme.onBackground
                 )
             }
 
@@ -128,7 +128,7 @@ private fun LiveStreamCard(
         modifier = Modifier
             .width(240.dp)
             .clip(cardShape)
-            .background(CardBg)
+            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
             .border(
                 BorderStroke(1.5.dp, LiveRed.copy(alpha = borderAlpha)),
                 cardShape
@@ -146,7 +146,7 @@ private fun LiveStreamCard(
             style = MaterialTheme.typography.titleMedium.copy(
                 fontWeight = FontWeight.SemiBold
             ),
-            color = TextWhite,
+            color = MaterialTheme.colorScheme.onBackground,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis
         )
@@ -157,7 +157,7 @@ private fun LiveStreamCard(
         Text(
             text = stream.channelName,
             style = MaterialTheme.typography.bodySmall,
-            color = TextGray,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )

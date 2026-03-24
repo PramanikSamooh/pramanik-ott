@@ -119,8 +119,8 @@ fun SettingsScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(cardShape)
-                .background(CardBg)
-                .border(1.dp, CardBorder, cardShape)
+                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                .border(1.dp, MaterialTheme.colorScheme.outlineVariant, cardShape)
         ) {
             LanguageOption(
                 label = "\u0939\u093F\u0928\u094D\u0926\u0940",
@@ -203,15 +203,15 @@ fun SettingsScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(accountCardShape)
-                .background(CardBg)
-                .border(1.dp, CardBorder, accountCardShape)
+                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                .border(1.dp, MaterialTheme.colorScheme.outlineVariant, accountCardShape)
                 .padding(20.dp)
         ) {
             if (isSignedIn) {
                 Text(
                     text = "Signed in as",
                     style = MaterialTheme.typography.bodySmall,
-                    color = TextMuted
+                    color = MaterialTheme.colorScheme.outline
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
@@ -219,7 +219,7 @@ fun SettingsScreen(
                     style = MaterialTheme.typography.bodyLarge.copy(
                         fontWeight = FontWeight.SemiBold
                     ),
-                    color = TextWhite,
+                    color = MaterialTheme.colorScheme.onBackground,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -246,13 +246,13 @@ fun SettingsScreen(
                 Text(
                     text = "Not signed in",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = TextMuted
+                    color = MaterialTheme.colorScheme.outline
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = "Sign in to sync watch history across devices",
                     style = MaterialTheme.typography.bodySmall,
-                    color = TextGray
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Spacer(modifier = Modifier.height(16.dp))
                 Button(
@@ -294,8 +294,8 @@ fun SettingsScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(historyCardShape)
-                .background(CardBg)
-                .border(1.dp, CardBorder, historyCardShape)
+                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                .border(1.dp, MaterialTheme.colorScheme.outlineVariant, historyCardShape)
                 .clickable { onNavigateToWatchHistory() }
                 .padding(horizontal = 20.dp, vertical = 16.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -304,12 +304,12 @@ fun SettingsScreen(
             Text(
                 text = "Watch History",
                 style = MaterialTheme.typography.bodyLarge,
-                color = TextWhite
+                color = MaterialTheme.colorScheme.onBackground
             )
             Icon(
                 Icons.AutoMirrored.Filled.KeyboardArrowRight,
                 contentDescription = "Go to watch history",
-                tint = TextGray,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.size(24.dp)
             )
         }
@@ -322,7 +322,7 @@ fun SettingsScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(CardBg, RoundedCornerShape(16.dp))
-                .border(1.dp, CardBorder, RoundedCornerShape(16.dp))
+                .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(16.dp))
                 .clickable { showLinkTvDialog = true }
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -339,13 +339,13 @@ fun SettingsScreen(
                 Text(
                     text = "Link TV",
                     style = MaterialTheme.typography.bodyLarge,
-                    color = TextWhite
+                    color = MaterialTheme.colorScheme.onBackground
                 )
             }
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                 contentDescription = null,
-                tint = TextGray,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.size(24.dp)
             )
         }
@@ -376,8 +376,8 @@ fun SettingsScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(aboutCardShape)
-                .background(CardBg)
-                .border(1.dp, CardBorder, aboutCardShape)
+                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                .border(1.dp, MaterialTheme.colorScheme.outlineVariant, aboutCardShape)
                 .padding(20.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -395,7 +395,7 @@ fun SettingsScreen(
             Text(
                 text = "\u092A\u094D\u0930\u093E\u092E\u093E\u0923\u093F\u0915",
                 style = MaterialTheme.typography.titleMedium,
-                color = TextGray
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -406,7 +406,7 @@ fun SettingsScreen(
                 style = MaterialTheme.typography.bodySmall.copy(
                     letterSpacing = 1.sp
                 ),
-                color = TextMuted
+                color = MaterialTheme.colorScheme.outline
             )
         }
 
@@ -456,7 +456,7 @@ private fun LanguageOption(
                 Icon(
                     Icons.Default.Check,
                     contentDescription = "Selected",
-                    tint = TextWhite,
+                    tint = MaterialTheme.colorScheme.onBackground,
                     modifier = Modifier.size(14.dp)
                 )
             }
@@ -482,20 +482,20 @@ private fun LinkTvDialog(
         onDismissRequest = onDismiss,
         containerColor = CardBg,
         title = {
-            Text("Link TV", color = TextWhite, fontWeight = FontWeight.Bold)
+            Text("Link TV", color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.Bold)
         },
         text = {
             Column {
                 if (!isSignedIn) {
                     Text(
                         "Please sign in with Google first, then link your TV.",
-                        color = TextGray,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         style = MaterialTheme.typography.bodyMedium
                     )
                 } else {
                     Text(
                         "Enter the 6-digit code shown on your TV:",
-                        color = TextGray,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         style = MaterialTheme.typography.bodyMedium
                     )
                     Spacer(modifier = Modifier.height(12.dp))
@@ -555,7 +555,7 @@ private fun LinkTvDialog(
         },
         dismissButton = {
             androidx.compose.material3.TextButton(onClick = onDismiss) {
-                Text("Cancel", color = TextGray)
+                Text("Cancel", color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
     )

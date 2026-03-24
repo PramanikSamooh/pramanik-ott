@@ -150,7 +150,7 @@ fun HeroBanner(
                             fontWeight = FontWeight.Bold,
                             fontSize = 20.sp
                         ),
-                        color = TextWhite,
+                        color = MaterialTheme.colorScheme.onBackground,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -164,18 +164,18 @@ fun HeroBanner(
                         Text(
                             text = video.channelName,
                             style = MaterialTheme.typography.bodySmall,
-                            color = TextGray
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         if (video.durationFormatted.isNotEmpty()) {
                             Text(
                                 text = " \u2022 ",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = TextGray
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             Text(
                                 text = video.durationFormatted,
                                 style = MaterialTheme.typography.bodySmall,
-                                color = TextGray
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }

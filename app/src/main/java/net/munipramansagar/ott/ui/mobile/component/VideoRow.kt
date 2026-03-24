@@ -44,7 +44,7 @@ fun VideoRow(
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp
                 ),
-                color = TextWhite
+                color = MaterialTheme.colorScheme.onBackground
             )
             Text(
                 text = "View All >",

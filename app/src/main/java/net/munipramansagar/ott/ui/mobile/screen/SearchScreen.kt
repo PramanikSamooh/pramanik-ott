@@ -70,11 +70,11 @@ fun SearchScreen(
                 .padding(horizontal = 16.dp)
                 .clip(searchShape)
                 .background(CardBg, searchShape)
-                .border(1.dp, CardBorder, searchShape),
+                .border(1.dp, MaterialTheme.colorScheme.outlineVariant, searchShape),
             placeholder = {
                 Text(
                     text = stringResource(R.string.search_hint),
-                    color = TextMuted,
+                    color = MaterialTheme.colorScheme.outline,
                     style = MaterialTheme.typography.bodyLarge
                 )
             },
@@ -82,7 +82,7 @@ fun SearchScreen(
                 Icon(
                     Icons.Default.Search,
                     contentDescription = null,
-                    tint = TextGray,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.size(20.dp)
                 )
             },
@@ -92,7 +92,7 @@ fun SearchScreen(
                         Icon(
                             Icons.Default.Clear,
                             contentDescription = "Clear",
-                            tint = TextGray,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.size(18.dp)
                         )
                     }
@@ -149,7 +149,7 @@ fun SearchScreen(
                             style = MaterialTheme.typography.bodyLarge.copy(
                                 fontWeight = FontWeight.Medium
                             ),
-                            color = TextGray
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -199,7 +199,7 @@ fun SearchScreen(
                         Text(
                             text = "Search for videos",
                             style = MaterialTheme.typography.bodyLarge,
-                            color = TextMuted
+                            color = MaterialTheme.colorScheme.outline
                         )
                     }
                 }

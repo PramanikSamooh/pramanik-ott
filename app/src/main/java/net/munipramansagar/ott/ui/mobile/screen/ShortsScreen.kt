@@ -1,5 +1,6 @@
 package net.munipramansagar.ott.ui.mobile.screen
 
+import androidx.compose.material3.MaterialTheme
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.compose.animation.core.animateDpAsState
@@ -87,7 +88,7 @@ fun ShortsScreen(
                 ) {
                     Text(
                         text = uiState.error ?: "Error loading shorts",
-                        color = TextGray,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         fontSize = 14.sp
                     )
                 }
@@ -102,13 +103,13 @@ fun ShortsScreen(
                         Icon(
                             imageVector = Icons.Default.PlayArrow,
                             contentDescription = null,
-                            tint = TextGray,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.size(48.dp)
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
                             text = "No shorts available yet",
-                            color = TextGray,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             fontSize = 14.sp
                         )
                     }
@@ -318,7 +319,7 @@ private fun ShortsPage(
                 // Title
                 Text(
                     text = video.title,
-                    color = TextWhite,
+                    color = MaterialTheme.colorScheme.onBackground,
                     fontSize = 15.sp,
                     fontWeight = FontWeight.SemiBold,
                     maxLines = 2,
@@ -334,7 +335,7 @@ private fun ShortsPage(
                 ) {
                     Text(
                         text = video.channelName,
-                        color = TextGray,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         fontSize = 12.sp,
                         maxLines = 1
                     )
@@ -348,7 +349,7 @@ private fun ShortsPage(
                         ) {
                             Text(
                                 text = video.durationFormatted,
-                                color = TextWhite,
+                                color = MaterialTheme.colorScheme.onBackground,
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.Medium
                             )

@@ -78,7 +78,7 @@ fun VideoCard(
                 spotColor = Color.Black.copy(alpha = 0.3f)
             )
             .clip(cardShape)
-            .background(CardBg)
+            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
             .border(
                 width = if (isFocused) 2.dp else 1.dp,
                 color = if (isFocused) Color(0xFFE8730A) else CardBorder,
@@ -147,7 +147,7 @@ fun VideoCard(
                 fontSize = 14.sp,
                 fontWeight = FontWeight.SemiBold
             ),
-            color = TextWhite,
+            color = MaterialTheme.colorScheme.onBackground,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.padding(start = 10.dp, end = 10.dp, top = 8.dp)
@@ -163,7 +163,7 @@ fun VideoCard(
                 }
             },
             style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp),
-            color = TextGray,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.padding(start = 10.dp, end = 10.dp, top = 3.dp)

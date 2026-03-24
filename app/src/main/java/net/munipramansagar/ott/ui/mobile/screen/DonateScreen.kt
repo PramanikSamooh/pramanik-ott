@@ -80,7 +80,7 @@ fun DonateScreen(
             style = MaterialTheme.typography.headlineSmall.copy(
                 fontWeight = FontWeight.Bold
             ),
-            color = TextWhite,
+            color = MaterialTheme.colorScheme.onBackground,
             modifier = Modifier.padding(vertical = 12.dp)
         )
 
@@ -90,7 +90,7 @@ fun DonateScreen(
             else
                 "Your contribution supports these organizations in their service",
             style = MaterialTheme.typography.bodyMedium,
-            color = TextGray,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(bottom = 16.dp)
         )
 
@@ -108,7 +108,7 @@ fun DonateScreen(
             ) {
                 Text(
                     text = if (isHindi) "कोई जानकारी उपलब्ध नहीं" else "No donation info available yet",
-                    color = TextMuted
+                    color = MaterialTheme.colorScheme.outline
                 )
             }
         } else {
@@ -133,8 +133,8 @@ private fun DonationOrgCard(
         modifier = Modifier
             .fillMaxWidth()
             .clip(cardShape)
-            .background(CardBg)
-            .border(1.dp, CardBorder, cardShape)
+            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+            .border(1.dp, MaterialTheme.colorScheme.outlineVariant, cardShape)
             .padding(16.dp)
     ) {
         // Org name
@@ -152,7 +152,7 @@ private fun DonationOrgCard(
             Text(
                 text = org.getDescription(isHindi),
                 style = MaterialTheme.typography.bodySmall,
-                color = TextGray,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 3,
                 overflow = TextOverflow.Ellipsis
             )
@@ -258,14 +258,14 @@ private fun DetailRow(label: String, value: String) {
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 11.sp
             ),
-            color = TextMuted
+            color = MaterialTheme.colorScheme.outline
         )
         Text(
             text = value,
             style = MaterialTheme.typography.labelSmall.copy(
                 fontSize = 11.sp
             ),
-            color = TextWhite,
+            color = MaterialTheme.colorScheme.onBackground,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )
