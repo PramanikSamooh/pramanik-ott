@@ -73,10 +73,20 @@ fun TvCategoryScreen(
     val latest = remember(monthly) { monthly.take(3) }
     val archive = remember(monthly) { monthly.drop(3) }
 
-    val onVideoClick: (Video) -> Unit = { video ->
+    val onVideoClick: (Video, String, String, Int, List<Video>) -> Unit = { video, plId, plTitle, plIndex, allVideos ->
         val intent = Intent(context, PlayerActivity::class.java).apply {
             putExtra("videoId", video.id)
             putExtra("videoTitle", video.title)
+            putExtra("videoTitleHi", video.titleHi)
+            putExtra("videoThumbnail", video.thumbnailUrl)
+            putExtra("channelName", video.channelName)
+            putExtra("durationFormatted", video.durationFormatted)
+            putExtra("playlistId", plId)
+            putExtra("playlistTitle", plTitle)
+            putExtra("sectionId", sectionId)
+            putExtra("playlistIndex", plIndex)
+            putExtra("nextVideoIds", allVideos.map { it.id }.toTypedArray())
+            putExtra("nextVideoTitles", allVideos.map { it.title }.toTypedArray())
         }
         context.startActivity(intent)
     }
@@ -160,12 +170,13 @@ fun TvCategoryScreen(
 @Composable
 private fun TvPlaylistSection(
     playlistWithVideos: PlaylistWithVideos,
-    onVideoClick: (Video) -> Unit
+    onVideoClick: (Video, String, String, Int, List<Video>) -> Unit
 ) {
+    val pl = playlistWithVideos.playlist
     Column(modifier = Modifier.fillMaxWidth()) {
         // Playlist title
         Text(
-            text = playlistWithVideos.playlist.title,
+            text = pl.title,
             style = PramanikTvTheme.typography.titleLarge.copy(
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 18.sp
@@ -174,9 +185,9 @@ private fun TvPlaylistSection(
             modifier = Modifier.padding(horizontal = 48.dp, vertical = 4.dp)
         )
 
-        if (playlistWithVideos.playlist.videoCount > 0) {
+        if (pl.videoCount > 0) {
             Text(
-                text = "${playlistWithVideos.playlist.videoCount} videos",
+                text = "${pl.videoCount} videos",
                 style = PramanikTvTheme.typography.bodyMedium.copy(fontSize = 13.sp),
                 color = TextGray,
                 modifier = Modifier.padding(horizontal = 48.dp)
@@ -189,10 +200,11 @@ private fun TvPlaylistSection(
             contentPadding = PaddingValues(horizontal = 48.dp),
             horizontalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            items(playlistWithVideos.videos) { video ->
+            val videos = playlistWithVideos.videos
+            items(videos.size) { index ->
                 TvVideoCard(
-                    video = video,
-                    onClick = { onVideoClick(video) }
+                    video = videos[index],
+                    onClick = { onVideoClick(videos[index], pl.id, pl.title, index, videos) }
                 )
             }
         }

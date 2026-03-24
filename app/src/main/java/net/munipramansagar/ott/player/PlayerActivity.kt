@@ -58,6 +58,14 @@ class PlayerActivity : AppCompatActivity() {
     private val sectionId: String by lazy { intent.getStringExtra("sectionId") ?: "" }
     private val playlistIndex: Int by lazy { intent.getIntExtra("playlistIndex", -1) }
 
+    // Auto-next: passed as arrays from the caller
+    private val nextVideoIds: Array<String> by lazy {
+        intent.getStringArrayExtra("nextVideoIds") ?: emptyArray()
+    }
+    private val nextVideoTitles: Array<String> by lazy {
+        intent.getStringArrayExtra("nextVideoTitles") ?: emptyArray()
+    }
+
     // For periodic progress saving
     private val progressSaveRunnable = object : Runnable {
         override fun run() {
@@ -180,24 +188,26 @@ class PlayerActivity : AppCompatActivity() {
     }
 
     private fun autoPlayNext() {
-        if (playlistId.isEmpty()) return
-        lifecycleScope.launch {
-            val next = watchHistoryRepository.getNextInPlaylist(playlistId)
-            if (next != null && next.videoId != videoId) {
-                // Start PlayerActivity with the next video
-                val nextIntent = android.content.Intent(this@PlayerActivity, PlayerActivity::class.java).apply {
-                    putExtra("videoId", next.videoId)
-                    putExtra("videoTitle", next.title)
-                    putExtra("videoTitleHi", next.titleHi)
-                    putExtra("videoThumbnail", next.thumbnailUrl)
-                    putExtra("playlistId", next.playlistId)
-                    putExtra("playlistTitle", next.playlistTitle)
-                    putExtra("sectionId", next.sectionId)
-                    putExtra("playlistIndex", next.playlistIndex)
-                }
-                startActivity(nextIntent)
-                finish()
+        if (nextVideoIds.isEmpty()) return
+        // Find current video in the list and play the next one
+        val currentIdx = nextVideoIds.indexOf(videoId)
+        val nextIdx = if (currentIdx >= 0) currentIdx + 1 else 0
+        if (nextIdx < nextVideoIds.size) {
+            val nextId = nextVideoIds[nextIdx]
+            val nextTitle = if (nextIdx < nextVideoTitles.size) nextVideoTitles[nextIdx] else ""
+            Toast.makeText(this, "Playing next: ${nextTitle.take(40)}", Toast.LENGTH_SHORT).show()
+            val nextIntent = android.content.Intent(this, PlayerActivity::class.java).apply {
+                putExtra("videoId", nextId)
+                putExtra("videoTitle", nextTitle)
+                putExtra("playlistId", playlistId)
+                putExtra("playlistTitle", playlistTitle)
+                putExtra("sectionId", sectionId)
+                putExtra("playlistIndex", nextIdx)
+                putExtra("nextVideoIds", nextVideoIds)
+                putExtra("nextVideoTitles", nextVideoTitles)
             }
+            startActivity(nextIntent)
+            finish()
         }
     }
 
