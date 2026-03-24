@@ -494,7 +494,13 @@ private fun LinkTvDialog(
                                 val uid = auth.currentUser?.uid ?: ""
                                 val email = auth.currentUser?.email ?: ""
                                 val success = tvLinkRepo.linkSession(codeInput, uid, email)
-                                linkResult = if (success) "✅ TV linked successfully!" else "❌ Invalid or expired code"
+                                if (success) {
+                                    linkResult = "✅ TV linked successfully!"
+                                    kotlinx.coroutines.delay(1500)
+                                    onDismiss()
+                                } else {
+                                    linkResult = "❌ Invalid or expired code"
+                                }
                                 isLinking = false
                             }
                         }

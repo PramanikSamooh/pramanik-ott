@@ -167,8 +167,9 @@ class PlayerActivity : AppCompatActivity() {
     private fun saveCurrentProgress() {
         val p = player ?: return
         val pos = p.currentPosition
-        val dur = p.duration.coerceAtLeast(0)
-        if (pos < 3000) return // Don't save if watched less than 3 seconds
+        val dur = if (p.duration > 0) p.duration else 0L
+        if (pos < 1000) return // Don't save if watched less than 1 second
+        Log.d("PlayerActivity", "Saving progress: videoId=$videoId pos=$pos dur=$dur")
         lifecycleScope.launch {
             watchHistoryRepository.saveProgress(
                 videoId = videoId,
