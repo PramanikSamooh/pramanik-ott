@@ -45,6 +45,9 @@ import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -149,16 +152,9 @@ fun TvApp(
     val isHindi = language == LanguageManager.HINDI
     var selectedIndex by rememberSaveable { mutableIntStateOf(0) }
     var isSidebarExpanded by remember { mutableStateOf(false) }
-    // Suppress sidebar expansion during item selection (prevents re-expand from focus events)
-    var suppressExpand by remember { mutableStateOf(true) } // Start suppressed so initial focus doesn't expand
-
-    // Reset suppress flag after a short delay so user can open sidebar again
-    LaunchedEffect(suppressExpand) {
-        if (suppressExpand) {
-            kotlinx.coroutines.delay(500)
-            suppressExpand = false
-        }
-    }
+    // When true, sidebar focus events are ignored (during selection transition)
+    var ignoreExpandEvents by remember { mutableStateOf(false) }
+    val coroutineScope = rememberCoroutineScope()
 
     // Back button: collapse sidebar → go to home → let system exit
     // Only handle back if sidebar is expanded OR not on home
@@ -240,7 +236,12 @@ fun TvApp(
     }
 
     val contentFocusRequester = remember { FocusRequester() }
-    val focusManager = LocalFocusManager.current
+
+    // On startup, focus the content area (not sidebar)
+    LaunchedEffect(Unit) {
+        delay(500)
+        try { contentFocusRequester.requestFocus() } catch (_: Exception) {}
+    }
 
     PramanikTvTheme {
         Box(
@@ -257,6 +258,7 @@ fun TvApp(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(start = 56.dp) // Leave space for collapsed sidebar icons
+                    .focusRequester(contentFocusRequester)
             ) {
                     when (navItems[selectedIndex]) {
                         TvNavItem.Home -> TvHomeScreen(
@@ -373,15 +375,21 @@ fun TvApp(
                 isLive = uiState.liveStatus.isLive,
                 isExpanded = isSidebarExpanded,
                 onExpandChanged = { expand ->
-                    if (!suppressExpand || !expand) {
+                    if (!ignoreExpandEvents) {
                         isSidebarExpanded = expand
                     }
                 },
                 onItemSelected = { index ->
                     selectedIndex = index
-                    suppressExpand = true // prevent re-expand from focus events
+                    ignoreExpandEvents = true
                     isSidebarExpanded = false
-                    focusManager.clearFocus()
+                    // After a brief delay (for recomposition), move focus to content
+                    coroutineScope.launch {
+                        delay(200)
+                        try { contentFocusRequester.requestFocus() } catch (_: Exception) {}
+                        delay(100)
+                        ignoreExpandEvents = false
+                    }
                 }
             )
         }
@@ -414,22 +422,6 @@ private fun TvSidebar(
         animationSpec = tween(200),
         label = "overlayAlpha"
     )
-
-    // Create focus requesters for ALL selectable entries
-    val focusRequesters = remember(entries) {
-        entries.filter { !it.isGroupHeader }.associateBy({ it.navIndex }, { FocusRequester() })
-    }
-
-    // Track previous expanded state to detect expand transition
-    var wasExpanded by remember { mutableStateOf(false) }
-    LaunchedEffect(isExpanded) {
-        if (isExpanded && !wasExpanded) {
-            // Sidebar just expanded — focus the selected item
-            kotlinx.coroutines.delay(150)
-            try { focusRequesters[selectedIndex]?.requestFocus() } catch (_: Exception) {}
-        }
-        wasExpanded = isExpanded
-    }
 
     val scrollState = rememberScrollState()
 
@@ -514,21 +506,15 @@ private fun TvSidebar(
                     )
                 }
             } else if (entry.item.isSubItem) {
-                // Sub-items: ALWAYS rendered (so FocusRequester stays in tree)
-                // but visually hidden when collapsed via height modifier
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .then(if (!isExpanded) Modifier.height(0.dp) else Modifier)
-                ) {
+                // Sub-items only visible when expanded
+                if (isExpanded) {
                     TvSidebarItem(
                         item = entry.item,
                         isSelected = selectedIndex == entry.navIndex,
-                        isExpanded = isExpanded,
-                        textAlpha = if (isExpanded) textAlpha else 0f,
+                        isExpanded = true,
+                        textAlpha = textAlpha,
                         isHindi = isHindi,
                         isSubItem = true,
-                        focusRequester = focusRequesters[entry.navIndex],
                         onFocusChange = { focused ->
                             if (focused) onExpandChanged(true)
                         },
@@ -545,7 +531,6 @@ private fun TvSidebar(
                     textAlpha = textAlpha,
                     isHindi = isHindi,
                     showLiveDot = isLive && entry.item is TvNavItem.Home,
-                    focusRequester = focusRequesters[entry.navIndex],
                     onFocusChange = { focused ->
                         if (focused) onExpandChanged(true)
                     },
