@@ -37,9 +37,6 @@
     <string name="hindi">हिन्दी</string>
     <string name="english">English</string>
 
-    <!-- Google Sign-In (configure in Firebase Console → Authentication → Sign-in providers → Google) -->
-    <string name="default_web_client_id">721441685803-placeholder.apps.googleusercontent.com</string>
-
     <!-- Errors -->
     <string name="error_title">Something went wrong</string>
     <string name="error_no_internet">No internet connection</string>
