@@ -146,6 +146,47 @@ fun SettingsScreen(
 
         Spacer(modifier = Modifier.height(32.dp))
 
+        // Theme section
+        Text(
+            text = "Theme / थीम",
+            style = MaterialTheme.typography.titleLarge.copy(
+                fontWeight = FontWeight.Bold,
+                fontSize = 16.sp
+            ),
+            color = Saffron,
+            modifier = Modifier.padding(bottom = 16.dp)
+        )
+
+        val themeMode by viewModel.themeMode.collectAsState()
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            ThemeOption(
+                label = "Dark",
+                emoji = "🌙",
+                isSelected = themeMode == LanguageManager.THEME_DARK,
+                onClick = { viewModel.setTheme(LanguageManager.THEME_DARK) },
+                modifier = Modifier.weight(1f)
+            )
+            ThemeOption(
+                label = "Light",
+                emoji = "☀️",
+                isSelected = themeMode == LanguageManager.THEME_LIGHT,
+                onClick = { viewModel.setTheme(LanguageManager.THEME_LIGHT) },
+                modifier = Modifier.weight(1f)
+            )
+            ThemeOption(
+                label = "System",
+                emoji = "📱",
+                isSelected = themeMode == LanguageManager.THEME_SYSTEM,
+                onClick = { viewModel.setTheme(LanguageManager.THEME_SYSTEM) },
+                modifier = Modifier.weight(1f)
+            )
+        }
+
+        Spacer(modifier = Modifier.height(32.dp))
+
         // Google Sign-In section
         Text(
             text = "Account",
@@ -518,4 +559,42 @@ private fun LinkTvDialog(
             }
         }
     )
+}
+
+// ── Theme Option ──
+@Composable
+private fun ThemeOption(
+    label: String,
+    emoji: String,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val cardShape = RoundedCornerShape(14.dp)
+    Column(
+        modifier = modifier
+            .clip(cardShape)
+            .background(
+                if (isSelected) Saffron.copy(alpha = 0.15f) else CardBg
+            )
+            .border(
+                width = if (isSelected) 1.5.dp else 1.dp,
+                color = if (isSelected) Saffron.copy(alpha = 0.5f) else CardBorder,
+                shape = cardShape
+            )
+            .clickable { onClick() }
+            .padding(vertical = 14.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(emoji, fontSize = 22.sp)
+        Spacer(modifier = Modifier.height(6.dp))
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelMedium.copy(
+                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                fontSize = 12.sp
+            ),
+            color = if (isSelected) Saffron else TextGray
+        )
+    }
 }

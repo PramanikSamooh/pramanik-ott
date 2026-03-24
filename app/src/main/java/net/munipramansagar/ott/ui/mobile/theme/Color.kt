@@ -32,3 +32,13 @@ val OnSurfaceVariant = Color(0xFF888888)
 val LiveRed = Color(0xFFFF1744)
 val LiveRedDark = Color(0xFFB71C1C)
 val KidsBlue = Color(0xFF2196F3)
+
+// Light theme
+val LightBackground = Color(0xFFF8F5F0)
+val LightSurface = Color(0xFFFFFFFF)
+val LightSurfaceVariant = Color(0xFFF0EDE8)
+val LightCardBg = Color(0xFFFFFFFF)
+val LightCardBorder = Color(0x1A000000)
+val LightTextPrimary = Color(0xFF1A1A1A)
+val LightTextSecondary = Color(0xFF555555)
+val LightTextMuted = Color(0xFF999999)

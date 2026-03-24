@@ -80,7 +80,8 @@ class MobileActivity : ComponentActivity() {
         val deepLinkCode = intent?.data?.getQueryParameter("code")
 
         setContent {
-            PramanikTheme {
+            val themeMode by languageManager.themeMode.collectAsState()
+            PramanikTheme(themeMode = themeMode) {
                 val navController = rememberNavController()
                 val navBackStackEntry by navController.currentBackStackEntryAsState()
                 val currentRoute = navBackStackEntry?.destination?.route ?: Routes.HOME

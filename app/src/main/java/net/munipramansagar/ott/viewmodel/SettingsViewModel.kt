@@ -20,6 +20,7 @@ class SettingsViewModel @Inject constructor(
 ) : ViewModel() {
 
     val language: StateFlow<String> = languageManager.language
+    val themeMode: StateFlow<String> = languageManager.themeMode
 
     private val _userEmail = MutableStateFlow<String?>(firebaseAuth.currentUser?.email)
     val userEmail: StateFlow<String?> = _userEmail.asStateFlow()
@@ -55,6 +56,10 @@ class SettingsViewModel @Inject constructor(
 
     fun signOut() {
         firebaseAuth.signOut()
+    }
+
+    fun setTheme(mode: String) {
+        languageManager.setTheme(mode)
     }
 
     fun clearWatchHistory() {
