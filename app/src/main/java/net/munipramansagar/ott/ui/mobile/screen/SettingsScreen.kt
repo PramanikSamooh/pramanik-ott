@@ -237,7 +237,7 @@ fun SettingsScreen(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = TextGray
+                        contentColor = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 ) {
                     Text("Sign out")
@@ -268,7 +268,7 @@ fun SettingsScreen(
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Saffron,
-                        contentColor = TextWhite
+                        contentColor = MaterialTheme.colorScheme.onBackground
                     )
                 ) {
                     Text("Sign in with Google")
@@ -433,7 +433,7 @@ private fun LanguageOption(
             style = MaterialTheme.typography.bodyLarge.copy(
                 fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
             ),
-            color = if (isSelected) TextWhite else TextGray
+            color = if (isSelected) MaterialTheme.colorScheme.onBackground else MaterialTheme.colorScheme.onSurfaceVariant
         )
 
         // Radio button style indicator
@@ -443,7 +443,7 @@ private fun LanguageOption(
                 .clip(CircleShape)
                 .border(
                     width = if (isSelected) 0.dp else 2.dp,
-                    color = if (isSelected) Saffron else TextMuted,
+                    color = if (isSelected) Saffron else MaterialTheme.colorScheme.outline,
                     shape = CircleShape
                 )
                 .background(
@@ -510,8 +510,8 @@ private fun LinkTvDialog(
                             unfocusedBorderColor = CardBorder,
                             focusedLabelColor = Saffron,
                             cursorColor = Saffron,
-                            focusedTextColor = TextWhite,
-                            unfocusedTextColor = TextWhite
+                            focusedTextColor = MaterialTheme.colorScheme.onBackground,
+                            unfocusedTextColor = MaterialTheme.colorScheme.onBackground
                         )
                     )
                     if (linkResult != null) {
@@ -594,7 +594,7 @@ private fun ThemeOption(
                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
                 fontSize = 12.sp
             ),
-            color = if (isSelected) Saffron else TextGray
+            color = if (isSelected) Saffron else MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
 }
