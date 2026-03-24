@@ -116,7 +116,7 @@ class MobileActivity : ComponentActivity() {
 
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
-                    containerColor = if (isShortsScreen) Color.Black else Background,
+                    containerColor = if (isShortsScreen) Color.Black else MaterialTheme.colorScheme.background,
                     topBar = {
                         if (!isShortsScreen) TopAppBar(
                             title = {
@@ -126,13 +126,13 @@ class MobileActivity : ComponentActivity() {
                                         MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold)
                                     else
                                         MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.SemiBold),
-                                    color = if (isHomeScreen) Saffron else TextWhite
+                                    color = if (isHomeScreen) Saffron else MaterialTheme.colorScheme.onBackground
                                 )
                             },
                             navigationIcon = {
                                 if (isInnerScreen) {
                                     IconButton(onClick = { navController.popBackStack() }) {
-                                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = TextWhite)
+                                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = MaterialTheme.colorScheme.onBackground)
                                     }
                                 }
                             },
@@ -142,7 +142,7 @@ class MobileActivity : ComponentActivity() {
                                     IconButton(onClick = {
                                         navController.navigate(Routes.SEARCH)
                                     }) {
-                                        Icon(Icons.Default.Search, "Search", tint = TextGray, modifier = Modifier.size(22.dp))
+                                        Icon(Icons.Default.Search, "Search", tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(22.dp))
                                     }
                                 }
                                 // Settings icon (always on home)
@@ -150,13 +150,13 @@ class MobileActivity : ComponentActivity() {
                                     IconButton(onClick = {
                                         navController.navigate(Routes.SETTINGS)
                                     }) {
-                                        Icon(Icons.Default.Settings, "Settings", tint = TextGray, modifier = Modifier.size(22.dp))
+                                        Icon(Icons.Default.Settings, "Settings", tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(22.dp))
                                     }
                                 }
                             },
                             colors = TopAppBarDefaults.topAppBarColors(
                                 containerColor = Color.Transparent,
-                                scrolledContainerColor = Background.copy(alpha = 0.9f)
+                                scrolledContainerColor = MaterialTheme.colorScheme.background.copy(alpha = 0.95f)
                             )
                         )
                     },
@@ -227,12 +227,12 @@ private fun BottomNavigation(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(0.5.dp)
-                .background(CardBorder)
+                .background(MaterialTheme.colorScheme.outlineVariant)
         )
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(Surface.copy(alpha = 0.92f))
+                .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.95f))
                 .windowInsetsPadding(WindowInsets.navigationBars)
                 .padding(top = 8.dp, bottom = 8.dp),
             horizontalArrangement = Arrangement.SpaceEvenly,
@@ -256,7 +256,7 @@ private fun BottomNavigation(
                     Icon(
                         imageVector = tab.icon,
                         contentDescription = tab.labelEn,
-                        tint = if (isSelected) Saffron else TextGray,
+                        tint = if (isSelected) Saffron else MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.size(22.dp)
                     )
                     Spacer(modifier = Modifier.height(2.dp))
@@ -264,7 +264,7 @@ private fun BottomNavigation(
                         text = if (isHindi) tab.labelHi else tab.labelEn,
                         fontSize = 10.sp,
                         fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
-                        color = if (isSelected) Saffron else TextGray,
+                        color = if (isSelected) Saffron else MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1
                     )
                     Spacer(modifier = Modifier.height(3.dp))

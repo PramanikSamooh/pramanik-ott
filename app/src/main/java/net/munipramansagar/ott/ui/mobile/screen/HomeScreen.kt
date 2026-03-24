@@ -333,7 +333,7 @@ private fun NotificationCard(
         Text(
             text = announcement.getTitle(isHindi),
             style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
-            color = TextWhite,
+            color = MaterialTheme.colorScheme.onBackground,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )
@@ -342,7 +342,7 @@ private fun NotificationCard(
             Text(
                 text = announcement.getBody(isHindi),
                 style = MaterialTheme.typography.bodySmall,
-                color = TextGray,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -394,13 +394,13 @@ private fun MaharajCard(
             Text(
                 text = if (isHindi) "मुनि श्री प्रमाणसागर जी महाराज" else "Muni Shri Pramansagar Ji Maharaj",
                 style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
-                color = TextWhite
+                color = MaterialTheme.colorScheme.onBackground
             )
             Spacer(modifier = Modifier.height(2.dp))
             Text(
                 text = if (isHindi) "जीवन परिचय • फोटो • आरती • पूजन" else "Biography • Photos • Aarti • Poojan",
                 style = MaterialTheme.typography.bodySmall,
-                color = TextGray
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
@@ -487,7 +487,7 @@ private fun CategoryCard(
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 13.sp
             ),
-            color = TextWhite.copy(alpha = 0.9f),
+            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.9f),
             textAlign = TextAlign.Center
         )
     }
@@ -502,7 +502,7 @@ private fun SectionHeader(title: String) {
             fontWeight = FontWeight.Bold,
             fontSize = 16.sp
         ),
-        color = TextWhite,
+        color = MaterialTheme.colorScheme.onBackground,
         modifier = Modifier.padding(horizontal = 16.dp)
     )
 }
@@ -575,7 +575,7 @@ private fun ContinueWatchingCard(
         Text(
             text = if (isHindi && entry.titleHi.isNotBlank()) entry.titleHi else entry.title,
             style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp),
-            color = TextWhite,
+            color = MaterialTheme.colorScheme.onBackground,
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp)
