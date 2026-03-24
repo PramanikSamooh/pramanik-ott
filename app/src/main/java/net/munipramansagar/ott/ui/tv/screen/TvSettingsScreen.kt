@@ -80,7 +80,7 @@ fun TvSettingsScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(top = 32.dp, start = 48.dp, end = 48.dp)
+            .padding(top = 32.dp, start = 48.dp, end = 48.dp, bottom = 48.dp)
             .verticalScroll(rememberScrollState())
     ) {
         // Title

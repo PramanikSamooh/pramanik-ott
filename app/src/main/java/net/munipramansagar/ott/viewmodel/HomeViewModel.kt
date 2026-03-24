@@ -133,4 +133,24 @@ class HomeViewModel @Inject constructor(
     fun refresh() {
         loadHome()
     }
+
+    // Load full section data for category pages (all playlists, 50 videos each)
+    suspend fun getFullSectionData(sectionId: String): HomeSectionData? {
+        return try {
+            val sections = videoRepository.getSections()
+            val section = sections.find { it.id == sectionId } ?: return null
+            val playlists = videoRepository.getPlaylistsBySection(sectionId, limit = 100)
+            val playlistsWithVideos = playlists.map { playlist ->
+                try {
+                    val videos = videoRepository.getPlaylistVideos(playlist.id, limit = 50)
+                    PlaylistWithVideos(playlist, videos)
+                } catch (_: Exception) {
+                    PlaylistWithVideos(playlist, emptyList())
+                }
+            }
+            HomeSectionData(section, playlistsWithVideos)
+        } catch (_: Exception) {
+            null
+        }
+    }
 }

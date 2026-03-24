@@ -13,9 +13,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -47,16 +50,19 @@ fun TvCategoryScreen(
     val uiState by homeViewModel.uiState.collectAsState()
     val context = LocalContext.current
 
-    // Find the section data from home state
-    val sectionData = remember(uiState.sections, sectionId) {
-        uiState.sections.find { it.section.id == sectionId }
+    // Load full section data (all playlists, 50 videos each) — not the home page's limited data
+    var fullSectionData by remember { mutableStateOf<net.munipramansagar.ott.viewmodel.HomeSectionData?>(null) }
+    var isLoadingFull by remember { mutableStateOf(true) }
+    LaunchedEffect(sectionId) {
+        isLoadingFull = true
+        fullSectionData = homeViewModel.getFullSectionData(sectionId)
+        isLoadingFull = false
     }
-    val title = remember(sectionData, isHindi) {
-        sectionData?.section?.getLabel(isHindi) ?: sectionId.replaceFirstChar { it.uppercase() }
-    }
-    val playlists = remember(sectionData) {
-        sectionData?.playlists ?: emptyList()
-    }
+
+    // Use full data if loaded, otherwise fall back to home page data
+    val sectionData = fullSectionData ?: uiState.sections.find { it.section.id == sectionId }
+    val title = sectionData?.section?.getLabel(isHindi) ?: sectionId.replaceFirstChar { it.uppercase() }
+    val playlists = sectionData?.playlists ?: emptyList()
 
     // Group playlists: featured, monthly (latest+archive), series
     val monthlyPattern = remember { Regex("^\\d{4}-\\d{2}$") }
