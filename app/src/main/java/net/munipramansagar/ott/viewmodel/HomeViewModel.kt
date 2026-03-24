@@ -14,8 +14,10 @@ import net.munipramansagar.ott.data.model.LiveStatus
 import net.munipramansagar.ott.data.model.Playlist
 import net.munipramansagar.ott.data.model.Section
 import net.munipramansagar.ott.data.model.Video
+import net.munipramansagar.ott.data.local.WatchHistoryEntry
 import net.munipramansagar.ott.data.repository.LiveRepository
 import net.munipramansagar.ott.data.repository.VideoRepository
+import net.munipramansagar.ott.data.repository.WatchHistoryRepository
 import javax.inject.Inject
 
 data class PlaylistWithVideos(
@@ -40,11 +42,16 @@ data class HomeUiState(
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val videoRepository: VideoRepository,
-    private val liveRepository: LiveRepository
+    private val liveRepository: LiveRepository,
+    private val watchHistoryRepository: WatchHistoryRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
+
+    // Continue watching — collected as Flow from Room
+    val continueWatching = watchHistoryRepository.getContinueWatching(10)
+    val recentlyWatched = watchHistoryRepository.getRecentlyWatched(20)
 
     init {
         loadHome()

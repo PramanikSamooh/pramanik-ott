@@ -2,6 +2,7 @@ package net.munipramansagar.ott.ui.tv.screen
 
 import android.content.Intent
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Arrangement
@@ -109,11 +110,12 @@ fun TvHomeScreen(
                     }
                 }
 
-                // Announcements
-                if (uiState.announcements.isNotEmpty()) {
+                // Announcements (filtered for TV)
+                val tvAnnouncements = uiState.announcements.filter { it.showOnTv }
+                if (tvAnnouncements.isNotEmpty()) {
                     item {
                         TvAnnouncementRow(
-                            announcements = uiState.announcements,
+                            announcements = tvAnnouncements,
                             isHindi = isHindi
                         )
                         Spacer(modifier = Modifier.height(16.dp))
@@ -351,10 +353,29 @@ private fun TvAnnouncementRow(
                     else -> net.munipramansagar.ott.ui.tv.theme.GlassBorder
                 }
 
+                val context = androidx.compose.ui.platform.LocalContext.current
+                var isFocused by androidx.compose.runtime.mutableStateOf(false)
                 Box(
                     modifier = Modifier
                         .width(320.dp)
-                        .background(bgColor, RoundedCornerShape(14.dp))
+                        .background(
+                            if (isFocused) bgColor.copy(alpha = bgColor.alpha + 0.1f) else bgColor,
+                            RoundedCornerShape(14.dp)
+                        )
+                        .then(
+                            if (isFocused) Modifier.border(2.dp, borderColor, RoundedCornerShape(14.dp))
+                            else Modifier.border(1.dp, borderColor.copy(alpha = 0.2f), RoundedCornerShape(14.dp))
+                        )
+                        .onFocusChanged { isFocused = it.isFocused }
+                        .focusable()
+                        .clickable {
+                            if (a.actionUrl.isNotBlank()) {
+                                try {
+                                    val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(a.actionUrl))
+                                    context.startActivity(intent)
+                                } catch (_: Exception) {}
+                            }
+                        }
                         .padding(16.dp)
                 ) {
                     Column {

@@ -16,6 +16,8 @@ data class Announcement(
     val actionLabelHi: String = "",
     val priority: Int = 0,
     val active: Boolean = true,
+    val showOnMobile: Boolean = true,
+    val showOnTv: Boolean = true,
     val startDate: String = "",
     val endDate: String = ""
 ) {

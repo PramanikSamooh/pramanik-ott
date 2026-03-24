@@ -18,6 +18,7 @@ import net.munipramansagar.ott.ui.mobile.screen.DonateScreen
 import net.munipramansagar.ott.ui.mobile.screen.MaharajScreen
 import net.munipramansagar.ott.ui.mobile.screen.PoojanScreen
 import net.munipramansagar.ott.ui.mobile.screen.ShortsScreen
+import net.munipramansagar.ott.ui.mobile.screen.WatchHistoryScreen
 
 object Routes {
     const val HOME = "home"
@@ -33,6 +34,7 @@ object Routes {
     const val PLAYLIST = "playlist/{playlistId}"
     const val SEARCH = "search"
     const val SETTINGS = "settings"
+    const val WATCH_HISTORY = "watch_history"
 
     fun section(sectionId: String) = "section/$sectionId"
     fun playlist(playlistId: String) = "playlist/$playlistId"
@@ -144,7 +146,15 @@ fun MobileNavGraph(
 
         composable(Routes.SETTINGS) {
             SettingsScreen(
-                onBack = { navController.popBackStack() }
+                onBack = { navController.popBackStack() },
+                onNavigateToWatchHistory = { navController.navigate(Routes.WATCH_HISTORY) }
+            )
+        }
+
+        composable(Routes.WATCH_HISTORY) {
+            WatchHistoryScreen(
+                onBack = { navController.popBackStack() },
+                onVideoClick = { onPlayVideo(it) }
             )
         }
     }

@@ -1,5 +1,9 @@
 package net.munipramansagar.ott.ui.mobile.screen
 
+import android.app.Activity
+import android.util.Log
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -14,12 +18,18 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -27,10 +37,18 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.common.api.ApiException
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.GoogleAuthProvider
+import net.munipramansagar.ott.R
 import net.munipramansagar.ott.ui.mobile.theme.CardBg
 import net.munipramansagar.ott.ui.mobile.theme.CardBorder
 import net.munipramansagar.ott.ui.mobile.theme.Saffron
@@ -43,13 +61,39 @@ import net.munipramansagar.ott.viewmodel.SettingsViewModel
 @Composable
 fun SettingsScreen(
     onBack: () -> Unit,
+    onNavigateToWatchHistory: () -> Unit = {},
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val language by viewModel.language.collectAsState()
+    val isSignedIn by viewModel.isSignedIn.collectAsState()
+    val userEmail by viewModel.userEmail.collectAsState()
+    val context = LocalContext.current
+
+    val googleSignInLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
+            try {
+                val account = task.getResult(ApiException::class.java)
+                val credential = GoogleAuthProvider.getCredential(account.idToken, null)
+                FirebaseAuth.getInstance().signInWithCredential(credential)
+                    .addOnSuccessListener {
+                        viewModel.onSignInSuccess()
+                    }
+                    .addOnFailureListener { e ->
+                        Log.e("SettingsScreen", "Firebase sign-in failed", e)
+                    }
+            } catch (e: ApiException) {
+                Log.e("SettingsScreen", "Google sign-in failed", e)
+            }
+        }
+    }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .verticalScroll(rememberScrollState())
             .padding(horizontal = 16.dp, vertical = 8.dp)
     ) {
         // Language section
@@ -91,6 +135,135 @@ fun SettingsScreen(
                 label = "English",
                 isSelected = language == LanguageManager.ENGLISH,
                 onClick = { viewModel.setLanguage(LanguageManager.ENGLISH) }
+            )
+        }
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        // Google Sign-In section
+        Text(
+            text = "Account",
+            style = MaterialTheme.typography.titleLarge.copy(
+                fontWeight = FontWeight.Bold,
+                fontSize = 16.sp
+            ),
+            color = Saffron,
+            modifier = Modifier.padding(bottom = 16.dp)
+        )
+
+        val accountCardShape = RoundedCornerShape(16.dp)
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(accountCardShape)
+                .background(CardBg)
+                .border(1.dp, CardBorder, accountCardShape)
+                .padding(20.dp)
+        ) {
+            if (isSignedIn) {
+                Text(
+                    text = "Signed in as",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = TextMuted
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = userEmail ?: "Unknown",
+                    style = MaterialTheme.typography.bodyLarge.copy(
+                        fontWeight = FontWeight.SemiBold
+                    ),
+                    color = TextWhite,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                OutlinedButton(
+                    onClick = {
+                        // Sign out from both Firebase and Google
+                        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                            .requestIdToken(context.getString(R.string.default_web_client_id))
+                            .requestEmail()
+                            .build()
+                        GoogleSignIn.getClient(context, gso).signOut()
+                        viewModel.signOut()
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = TextGray
+                    )
+                ) {
+                    Text("Sign out")
+                }
+            } else {
+                Text(
+                    text = "Not signed in",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = TextMuted
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "Sign in to sync watch history across devices",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = TextGray
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                Button(
+                    onClick = {
+                        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                            .requestIdToken(context.getString(R.string.default_web_client_id))
+                            .requestEmail()
+                            .build()
+                        val client = GoogleSignIn.getClient(context, gso)
+                        googleSignInLauncher.launch(client.signInIntent)
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Saffron,
+                        contentColor = TextWhite
+                    )
+                ) {
+                    Text("Sign in with Google")
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        // Watch History section
+        Text(
+            text = "History",
+            style = MaterialTheme.typography.titleLarge.copy(
+                fontWeight = FontWeight.Bold,
+                fontSize = 16.sp
+            ),
+            color = Saffron,
+            modifier = Modifier.padding(bottom = 16.dp)
+        )
+
+        val historyCardShape = RoundedCornerShape(16.dp)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(historyCardShape)
+                .background(CardBg)
+                .border(1.dp, CardBorder, historyCardShape)
+                .clickable { onNavigateToWatchHistory() }
+                .padding(horizontal = 20.dp, vertical = 16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = "Watch History",
+                style = MaterialTheme.typography.bodyLarge,
+                color = TextWhite
+            )
+            Icon(
+                Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                contentDescription = "Go to watch history",
+                tint = TextGray,
+                modifier = Modifier.size(24.dp)
             )
         }
 
@@ -145,6 +318,8 @@ fun SettingsScreen(
                 color = TextMuted
             )
         }
+
+        Spacer(modifier = Modifier.height(24.dp))
     }
 }
 

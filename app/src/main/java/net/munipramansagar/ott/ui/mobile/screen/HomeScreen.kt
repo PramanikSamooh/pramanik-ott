@@ -34,10 +34,12 @@ import androidx.compose.material.icons.filled.SelfImprovement
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import net.munipramansagar.ott.data.local.WatchHistoryEntry
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -99,6 +101,7 @@ fun HomeScreen(
     pathshalaViewModel: PathshalaViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsState()
+    val continueWatching by viewModel.continueWatching.collectAsState(initial = emptyList())
     val context = LocalContext.current
 
     Column(
@@ -113,13 +116,46 @@ fun HomeScreen(
             onWatchClick = { videoId -> onVideoClick(videoId) }
         )
 
-        // ── Notification Carousel ──
-        if (state.announcements.isNotEmpty()) {
+        // ── Notification Carousel (filtered for mobile) ──
+        val mobileAnnouncements = state.announcements.filter { it.showOnMobile }
+        if (mobileAnnouncements.isNotEmpty()) {
             Spacer(modifier = Modifier.height(8.dp))
             NotificationCarousel(
-                announcements = state.announcements,
+                announcements = mobileAnnouncements,
                 isHindi = isHindi
             )
+        }
+
+        // ── Continue Watching ──
+        if (continueWatching.isNotEmpty()) {
+            Spacer(modifier = Modifier.height(12.dp))
+            SectionHeader(
+                title = if (isHindi) "जारी रखें" else "Continue Watching"
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            LazyRow(
+                contentPadding = PaddingValues(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                items(continueWatching, key = { it.videoId }) { entry ->
+                    ContinueWatchingCard(
+                        entry = entry,
+                        isHindi = isHindi,
+                        onClick = {
+                            val intent = Intent(context, PlayerActivity::class.java).apply {
+                                putExtra("videoId", entry.videoId)
+                                putExtra("videoTitle", entry.title)
+                                putExtra("videoTitleHi", entry.titleHi)
+                                putExtra("videoThumbnail", entry.thumbnailUrl)
+                                putExtra("playlistId", entry.playlistId)
+                                putExtra("playlistTitle", entry.playlistTitle)
+                                putExtra("sectionId", entry.sectionId)
+                            }
+                            context.startActivity(intent)
+                        }
+                    )
+                }
+            }
         }
 
         // ── Maharaj Shree Card ──
@@ -461,4 +497,80 @@ private fun SectionHeader(title: String) {
         color = TextWhite,
         modifier = Modifier.padding(horizontal = 16.dp)
     )
+}
+
+// ── Continue Watching Card ──
+@Composable
+private fun ContinueWatchingCard(
+    entry: WatchHistoryEntry,
+    isHindi: Boolean,
+    onClick: () -> Unit
+) {
+    val progress = if (entry.totalDurationMs > 0)
+        (entry.resumePositionMs.toFloat() / entry.totalDurationMs).coerceIn(0f, 1f)
+    else 0f
+
+    Column(
+        modifier = Modifier
+            .width(180.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .background(CardBg)
+            .border(1.dp, CardBorder, RoundedCornerShape(12.dp))
+            .clickable { onClick() }
+    ) {
+        // Thumbnail with progress bar
+        Box {
+            AsyncImage(
+                model = entry.thumbnailUrl.ifEmpty { "https://i.ytimg.com/vi/${entry.videoId}/mqdefault.jpg" },
+                contentDescription = entry.title,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(16f / 9f)
+                    .clip(RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp))
+            )
+            // Progress bar at bottom of thumbnail
+            if (progress > 0f) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.BottomStart)
+                        .fillMaxWidth()
+                        .height(3.dp)
+                        .background(Color.White.copy(alpha = 0.3f))
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth(progress)
+                            .height(3.dp)
+                            .background(Saffron)
+                    )
+                }
+            }
+            // Play icon overlay
+            Box(
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .size(36.dp)
+                    .clip(CircleShape)
+                    .background(Color.Black.copy(alpha = 0.6f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.PlayCircle,
+                    contentDescription = "Play",
+                    tint = Color.White,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+        }
+        // Title
+        Text(
+            text = if (isHindi && entry.titleHi.isNotBlank()) entry.titleHi else entry.title,
+            style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp),
+            color = TextWhite,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp)
+        )
+    }
 }
