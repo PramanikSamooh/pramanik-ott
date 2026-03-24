@@ -396,18 +396,23 @@ private fun TvSidebar(
         label = "overlayAlpha"
     )
 
-    // Create focus requesters for each selectable entry
+    // Create focus requesters for ALL selectable entries
     val focusRequesters = remember(entries) {
         entries.filter { !it.isGroupHeader }.associateBy({ it.navIndex }, { FocusRequester() })
     }
 
-    // When sidebar expands, request focus on the selected item
+    // Track previous expanded state to detect expand transition
+    var wasExpanded by remember { mutableStateOf(false) }
     LaunchedEffect(isExpanded) {
-        if (isExpanded) {
-            kotlinx.coroutines.delay(100) // Wait for expansion animation
-            focusRequesters[selectedIndex]?.requestFocus()
+        if (isExpanded && !wasExpanded) {
+            // Sidebar just expanded — focus the selected item
+            kotlinx.coroutines.delay(150)
+            try { focusRequesters[selectedIndex]?.requestFocus() } catch (_: Exception) {}
         }
+        wasExpanded = isExpanded
     }
+
+    val scrollState = rememberScrollState()
 
     Column(
         modifier = Modifier
@@ -415,7 +420,7 @@ private fun TvSidebar(
             .width(sidebarWidth)
             .background(Color(0xFF0A0A0A).copy(alpha = overlayAlpha))
             .selectableGroup()
-            .verticalScroll(rememberScrollState()),
+            .verticalScroll(scrollState),
         verticalArrangement = Arrangement.Center
     ) {
         // App logo — only when expanded
@@ -438,7 +443,7 @@ private fun TvSidebar(
             Spacer(modifier = Modifier.height(4.dp))
         }
 
-        // Render entries with group headers and sub-items
+        // Render ALL entries — sub-items always present but hidden when collapsed
         entries.forEach { entry ->
             if (entry.isGroupHeader) {
                 if (isExpanded) {
@@ -480,13 +485,18 @@ private fun TvSidebar(
                     )
                 }
             } else if (entry.item.isSubItem) {
-                // Sub-items only visible when expanded
-                if (isExpanded) {
+                // Sub-items: ALWAYS rendered (so FocusRequester stays in tree)
+                // but visually hidden when collapsed via height modifier
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .then(if (!isExpanded) Modifier.height(0.dp) else Modifier)
+                ) {
                     TvSidebarItem(
                         item = entry.item,
                         isSelected = selectedIndex == entry.navIndex,
-                        isExpanded = true,
-                        textAlpha = textAlpha,
+                        isExpanded = isExpanded,
+                        textAlpha = if (isExpanded) textAlpha else 0f,
                         isHindi = isHindi,
                         isSubItem = true,
                         focusRequester = focusRequesters[entry.navIndex],
