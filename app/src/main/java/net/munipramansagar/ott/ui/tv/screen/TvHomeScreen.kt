@@ -62,6 +62,7 @@ fun TvHomeScreen(
     onPathshalaClick: () -> Unit = {}
 ) {
     val uiState by homeViewModel.uiState.collectAsState()
+    val continueWatching by homeViewModel.continueWatching.collectAsState(initial = emptyList())
     val pathshalaState = pathshalaViewModel?.uiState?.collectAsState()
     val context = LocalContext.current
 
@@ -93,6 +94,55 @@ fun TvHomeScreen(
                             isLive = uiState.liveStatus.isLive,
                             activeStreams = uiState.liveStatus.activeStreams
                         )
+                        Spacer(modifier = Modifier.height(16.dp))
+                    }
+                }
+
+                // Continue Watching
+                if (continueWatching.isNotEmpty()) {
+                    item {
+                        Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 48.dp)) {
+                            Text(
+                                text = if (isHindi) "जारी रखें" else "Continue Watching",
+                                style = PramanikTvTheme.typography.titleLarge.copy(
+                                    fontWeight = FontWeight.Bold, fontSize = 20.sp
+                                ),
+                                color = TextWhite
+                            )
+                            Spacer(modifier = Modifier.height(12.dp))
+                        }
+                        TvLazyRow(
+                            contentPadding = PaddingValues(horizontal = 48.dp),
+                            horizontalArrangement = Arrangement.spacedBy(20.dp)
+                        ) {
+                            items(continueWatching.size) { index ->
+                                val entry = continueWatching[index]
+                                val video = Video(
+                                    id = entry.videoId,
+                                    title = entry.title,
+                                    titleHi = entry.titleHi,
+                                    thumbnailUrl = entry.thumbnailUrl.ifEmpty { "https://i.ytimg.com/vi/${entry.videoId}/mqdefault.jpg" },
+                                    thumbnailUrlHQ = "https://i.ytimg.com/vi/${entry.videoId}/hqdefault.jpg",
+                                    channelName = entry.channelName,
+                                    durationFormatted = entry.durationFormatted
+                                )
+                                TvVideoCard(
+                                    video = video,
+                                    onClick = {
+                                        val intent = Intent(context, PlayerActivity::class.java).apply {
+                                            putExtra("videoId", entry.videoId)
+                                            putExtra("videoTitle", entry.title)
+                                            putExtra("videoTitleHi", entry.titleHi)
+                                            putExtra("videoThumbnail", entry.thumbnailUrl)
+                                            putExtra("playlistId", entry.playlistId)
+                                            putExtra("playlistTitle", entry.playlistTitle)
+                                            putExtra("sectionId", entry.sectionId)
+                                        }
+                                        context.startActivity(intent)
+                                    }
+                                )
+                            }
+                        }
                         Spacer(modifier = Modifier.height(16.dp))
                     }
                 }

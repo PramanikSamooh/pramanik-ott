@@ -41,6 +41,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.qrcode.QRCodeWriter
+import kotlinx.coroutines.launch
 import net.munipramansagar.ott.data.repository.TvLinkRepository
 import net.munipramansagar.ott.data.repository.TvSession
 import net.munipramansagar.ott.viewmodel.SettingsViewModel
@@ -261,7 +262,7 @@ fun TvSettingsScreen(
 
             // Version pill
             Text(
-                text = "Version 2.1.0",
+                text = "Version ${net.munipramansagar.ott.BuildConfig.VERSION_NAME}",
                 style = PramanikTvTheme.typography.labelMedium.copy(
                     color = TextMuted,
                     fontSize = 12.sp
@@ -275,6 +276,7 @@ fun TvSettingsScreen(
     }
 }
 
+@OptIn(ExperimentalTvMaterial3Api::class)
 @Composable
 private fun TvQrLinkSection(isHindi: Boolean) {
     val context = LocalContext.current
@@ -283,113 +285,163 @@ private fun TvQrLinkSection(isHindi: Boolean) {
     val deviceId = remember {
         Settings.Secure.getString(context.contentResolver, Settings.Secure.ANDROID_ID) ?: "unknown"
     }
+    val prefs = remember { context.getSharedPreferences("tv_link", android.content.Context.MODE_PRIVATE) }
+    val scope = androidx.compose.runtime.rememberCoroutineScope()
 
+    // Load persisted link state
+    var savedEmail by remember { mutableStateOf(prefs.getString("linked_email", "") ?: "") }
+    var savedUid by remember { mutableStateOf(prefs.getString("linked_uid", "") ?: "") }
+    var showQr by remember { mutableStateOf(false) }
     var sessionCode by remember { mutableStateOf<String?>(null) }
-    var sessionStatus by remember { mutableStateOf("pending") }
-    var linkedEmail by remember { mutableStateOf("") }
+    var isGenerating by remember { mutableStateOf(false) }
     var qrBitmap by remember { mutableStateOf<Bitmap?>(null) }
 
-    // Generate session and QR code
-    LaunchedEffect(Unit) {
-        try {
-            val code = tvLinkRepo.createSession(deviceId)
-            sessionCode = code
+    fun generateCode() {
+        isGenerating = true
+        scope.launch {
+            try {
+                val code = tvLinkRepo.createSession(deviceId)
+                sessionCode = code
 
-            // Generate QR code bitmap
-            val url = "pramanik://tv-link?code=$code"
-            val writer = QRCodeWriter()
-            val bitMatrix = writer.encode(url, BarcodeFormat.QR_CODE, 300, 300)
-            val width = bitMatrix.width
-            val height = bitMatrix.height
-            val bmp = Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565)
-            for (x in 0 until width) {
-                for (y in 0 until height) {
-                    bmp.setPixel(x, y, if (bitMatrix[x, y]) 0xFF000000.toInt() else 0xFFFFFFFF.toInt())
+                val url = "pramanik://tv-link?code=$code"
+                val writer = QRCodeWriter()
+                val bitMatrix = writer.encode(url, BarcodeFormat.QR_CODE, 300, 300)
+                val w = bitMatrix.width
+                val h = bitMatrix.height
+                val bmp = Bitmap.createBitmap(w, h, Bitmap.Config.RGB_565)
+                for (x in 0 until w) {
+                    for (y in 0 until h) {
+                        bmp.setPixel(x, y, if (bitMatrix[x, y]) 0xFF000000.toInt() else 0xFFFFFFFF.toInt())
+                    }
                 }
+                qrBitmap = bmp
+                showQr = true
+                isGenerating = false
+            } catch (e: Exception) {
+                isGenerating = false
+                android.util.Log.e("TvLink", "Failed to create session", e)
             }
-            qrBitmap = bmp
-        } catch (_: Exception) {}
+        }
     }
 
     // Listen for session link
     LaunchedEffect(sessionCode) {
         val code = sessionCode ?: return@LaunchedEffect
         tvLinkRepo.observeSession(code).collect { session ->
-            if (session != null) {
-                sessionStatus = session.status
-                linkedEmail = session.linkedEmail
+            if (session != null && session.status == "linked" && session.linkedEmail.isNotBlank()) {
+                // Save to SharedPreferences
+                prefs.edit()
+                    .putString("linked_email", session.linkedEmail)
+                    .putString("linked_uid", session.linkedUid)
+                    .apply()
+                savedEmail = session.linkedEmail
+                savedUid = session.linkedUid
+                showQr = false
             }
         }
     }
 
-    Column(modifier = androidx.compose.ui.Modifier.padding(start = 36.dp)) {
-        if (sessionStatus == "linked") {
+    Column(modifier = Modifier.padding(start = 36.dp)) {
+        if (savedEmail.isNotBlank()) {
+            // Already linked
             Text(
-                text = if (isHindi) "✅ लिंक हो गया: $linkedEmail" else "✅ Linked: $linkedEmail",
+                text = if (isHindi) "लिंक: $savedEmail" else "Linked: $savedEmail",
                 style = PramanikTvTheme.typography.bodyLarge.copy(
                     color = androidx.compose.ui.graphics.Color(0xFF4CAF50),
                     fontWeight = FontWeight.SemiBold
                 )
             )
-        } else {
+            Spacer(modifier = Modifier.height(12.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Button(
+                    onClick = {
+                        // Re-link with different account
+                        prefs.edit().clear().apply()
+                        savedEmail = ""
+                        savedUid = ""
+                    },
+                    colors = ButtonDefaults.colors(containerColor = GlassCard, focusedContainerColor = GlassHighlight),
+                    border = ButtonDefaults.border(
+                        border = androidx.tv.material3.Border(border = BorderStroke(1.dp, GlassBorder)),
+                        focusedBorder = androidx.tv.material3.Border(border = BorderStroke(1.5.dp, TextWhite.copy(alpha = 0.3f)))
+                    ),
+                    shape = ButtonDefaults.shape(shape = PramanikTvTheme.shapes.button)
+                ) {
+                    Text(
+                        text = if (isHindi) "दूसरे खाते से लिंक करें" else "Link Different Account",
+                        style = PramanikTvTheme.typography.labelLarge.copy(fontSize = 13.sp)
+                    )
+                }
+            }
+        } else if (showQr && sessionCode != null) {
+            // Show QR + code
             Text(
-                text = if (isHindi) "फ़ोन से QR स्कैन करें या कोड दर्ज करें" else "Scan QR from phone or enter code",
+                text = if (isHindi) "फ़ोन ऐप में Settings → Link TV में कोड दर्ज करें" else "Enter code in phone app: Settings → Link TV",
                 style = PramanikTvTheme.typography.bodyMedium.copy(color = TextGray)
             )
-            Spacer(modifier = androidx.compose.ui.Modifier.height(16.dp))
-
+            Spacer(modifier = Modifier.height(16.dp))
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(24.dp)
             ) {
-                // QR Code
                 if (qrBitmap != null) {
                     Box(
-                        modifier = androidx.compose.ui.Modifier
+                        modifier = Modifier
                             .size(150.dp)
-                            .background(
-                                androidx.compose.ui.graphics.Color.White,
-                                androidx.compose.foundation.shape.RoundedCornerShape(12.dp)
-                            )
+                            .background(androidx.compose.ui.graphics.Color.White, androidx.compose.foundation.shape.RoundedCornerShape(12.dp))
                             .padding(8.dp)
                     ) {
                         Image(
                             bitmap = qrBitmap!!.asImageBitmap(),
                             contentDescription = "QR Code",
-                            modifier = androidx.compose.ui.Modifier.fillMaxSize()
+                            modifier = Modifier.fillMaxSize()
                         )
                     }
-                } else {
-                    CircularProgressIndicator(
-                        color = Saffron,
-                        strokeWidth = 2.dp,
-                        modifier = androidx.compose.ui.Modifier.size(40.dp)
-                    )
                 }
-
-                // Code display
                 Column {
                     Text(
-                        text = if (isHindi) "या कोड दर्ज करें:" else "Or enter code:",
+                        text = if (isHindi) "कोड:" else "Code:",
                         style = PramanikTvTheme.typography.bodyMedium.copy(color = TextMuted)
                     )
-                    Spacer(modifier = androidx.compose.ui.Modifier.height(4.dp))
+                    Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = sessionCode ?: "...",
+                        text = sessionCode ?: "",
                         style = PramanikTvTheme.typography.displayMedium.copy(
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 36.sp,
-                            letterSpacing = 8.sp,
-                            color = Saffron
+                            fontWeight = FontWeight.Bold, fontSize = 36.sp, letterSpacing = 8.sp, color = Saffron
                         )
                     )
-                    Spacer(modifier = androidx.compose.ui.Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = if (isHindi) "कोड 10 मिनट में समाप्त होगा" else "Code expires in 10 minutes",
+                        text = if (isHindi) "10 मिनट में समाप्त होगा" else "Expires in 10 minutes",
                         style = PramanikTvTheme.typography.bodyMedium.copy(color = TextMuted, fontSize = 11.sp)
                     )
                 }
             }
+        } else {
+            // Show button to start linking
+            Button(
+                onClick = { generateCode() },
+                colors = ButtonDefaults.colors(containerColor = Saffron, focusedContainerColor = SaffronLight),
+                shape = ButtonDefaults.shape(shape = PramanikTvTheme.shapes.button)
+            ) {
+                if (isGenerating) {
+                    CircularProgressIndicator(color = TextWhite, strokeWidth = 2.dp, modifier = Modifier.size(18.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(imageVector = Icons.Default.QrCode, contentDescription = null, tint = TextWhite, modifier = Modifier.size(18.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = if (isHindi) "फ़ोन से लिंक करें" else "Link with Phone",
+                        style = PramanikTvTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = if (isHindi) "वॉच हिस्ट्री सिंक करने के लिए" else "Sync watch history across devices",
+                style = PramanikTvTheme.typography.bodyMedium.copy(color = TextMuted, fontSize = 12.sp)
+            )
         }
     }
 }
