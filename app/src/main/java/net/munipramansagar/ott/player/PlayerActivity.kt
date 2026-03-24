@@ -455,7 +455,31 @@ class PlayerActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
-        saveCurrentProgress()
+        // Save progress synchronously before destroying
+        val p = player
+        if (p != null) {
+            val pos = p.currentPosition
+            val dur = if (p.duration > 0) p.duration else 0L
+            if (pos > 1000) {
+                Log.d("PlayerActivity", "onDestroy saving: pos=$pos dur=$dur")
+                kotlinx.coroutines.runBlocking {
+                    watchHistoryRepository.saveProgress(
+                        videoId = videoId,
+                        title = videoTitle,
+                        titleHi = videoTitleHi,
+                        thumbnailUrl = videoThumbnail.ifEmpty { "https://i.ytimg.com/vi/$videoId/mqdefault.jpg" },
+                        channelName = channelName,
+                        durationFormatted = durationFormatted,
+                        playlistId = playlistId,
+                        playlistTitle = playlistTitle,
+                        sectionId = sectionId,
+                        positionMs = pos,
+                        totalDurationMs = dur,
+                        playlistIndex = playlistIndex
+                    )
+                }
+            }
+        }
         playerView.removeCallbacks(progressSaveRunnable)
         if (isWebViewMode) {
             webView?.destroy()
