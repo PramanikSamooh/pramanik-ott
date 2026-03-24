@@ -89,7 +89,7 @@ class MobileActivity : ComponentActivity() {
 
                 // Title for inner screens
                 val topBarTitle = when {
-                    isHomeScreen -> if (isHindi) "प्रामाणिक" else "Pramanik"
+                    isHomeScreen -> if (isHindi) "प्रमाणिक" else "Pramanik"
                     currentRoute == Routes.SEARCH -> if (isHindi) "खोजें" else "Search"
                     currentRoute == Routes.PATHSHALA -> if (isHindi) "पाठशाला" else "Pathshala"
                     currentRoute == Routes.SETTINGS -> if (isHindi) "सेटिंग्स" else "Settings"

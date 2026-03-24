@@ -158,13 +158,13 @@ private fun SplashScreen(onFinished: () -> Unit) {
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Title — प्रामाणिक
+            // Title — प्रमाणिक
             AnimatedVisibility(
                 visible = showTitle,
                 enter = fadeIn(animationSpec = tween(600))
             ) {
                 Text(
-                    text = "प्रामाणिक",
+                    text = "प्रमाणिक",
                     fontSize = 42.sp,
                     fontWeight = FontWeight.Bold,
                     color = Saffron,

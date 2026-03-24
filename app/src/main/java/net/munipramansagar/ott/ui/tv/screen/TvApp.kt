@@ -411,7 +411,7 @@ private fun TvSidebar(
                 contentAlignment = Alignment.CenterStart
             ) {
                 Text(
-                    text = "प्रामाणिक",
+                    text = "प्रमाणिक",
                     style = PramanikTvTheme.typography.headlineLarge.copy(
                         color = Color.White,
                         fontSize = 20.sp
