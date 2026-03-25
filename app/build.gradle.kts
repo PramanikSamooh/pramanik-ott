@@ -51,10 +51,14 @@ android {
 
     signingConfigs {
         create("release") {
-            storeFile = file("${rootProject.projectDir}/../pramanik-ott-upload.jks")
-            storePassword = "pramanikott@123"
-            keyAlias = "pramanik-ott"
-            keyPassword = "pramanikott@123"
+            val props = java.util.Properties()
+            val localPropsFile = rootProject.file("local.properties")
+            if (localPropsFile.exists()) props.load(localPropsFile.inputStream())
+
+            storeFile = file(props.getProperty("RELEASE_STORE_FILE", "${rootProject.projectDir}/../pramanik-ott-upload.jks"))
+            storePassword = props.getProperty("RELEASE_STORE_PASSWORD", "")
+            keyAlias = props.getProperty("RELEASE_KEY_ALIAS", "pramanik-ott")
+            keyPassword = props.getProperty("RELEASE_KEY_PASSWORD", "")
         }
     }
 

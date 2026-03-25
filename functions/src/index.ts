@@ -618,7 +618,7 @@ export const triggerLiveCheck = onRequest(
 // Admin can manually set a video as live (for unlisted/private streams)
 // ══════════════════════════════════════════════════════════════
 export const setLiveOverride = onRequest(
-  { secrets: [youtubeApiKey], memory: "256MiB", timeoutSeconds: 30, cors: true },
+  { secrets: [youtubeApiKey], memory: "256MiB", timeoutSeconds: 30, cors: ["https://admin.munipramansagar.net", "https://www.munipramansagar.net", "http://localhost:3000"] },
   async (req, res) => {
     const { videoId, channelKey, channelName, active } = req.body || {};
 

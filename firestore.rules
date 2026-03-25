@@ -84,9 +84,12 @@ service cloud.firestore {
       allow read: if true;
       allow write: if isAdmin();
     }
-    // TV link sessions (public read/write for QR code linking)
+    // TV link sessions — read public (TV polls), write requires auth (phone links)
     match /tv_sessions/{code} {
-      allow read, write: if true;
+      allow read: if true;
+      allow create: if true; // TV creates session (no auth on TV)
+      allow update: if request.auth != null; // Only authenticated phone can link
+      allow delete: if isAdmin();
     }
     // User watch history (only own data)
     match /users/{uid}/watch_history/{videoId} {
