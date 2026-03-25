@@ -3,6 +3,10 @@ package net.munipramansagar.ott.ui.mobile.screen
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.Image
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.getValue
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -56,6 +60,44 @@ fun MaharajScreen(
     onBack: () -> Unit = {}
 ) {
     val context = LocalContext.current
+    var showPoojanDialog by remember { mutableStateOf(false) }
+    var showAartiDialog by remember { mutableStateOf(false) }
+
+    // Poojan dialog
+    if (showPoojanDialog) {
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { showPoojanDialog = false },
+            title = { Text("पूजन विधि", fontWeight = FontWeight.Bold) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    WebLink("हे वीतराग आगमज्ञानी", "https://www.munipramansagar.net/praman-sagar-ji-pujan-1/", context)
+                    WebLink("श्री प्रमाणसागर की बोलो जय-जयकार", "https://www.munipramansagar.net/praman-sagar-ji-pujan-2/", context)
+                    WebLink("जिनका विरागमय ही जीवन", "https://www.munipramansagar.net/praman-sagar-ji-pujan-3/", context)
+                }
+            },
+            confirmButton = {
+                Text("बंद करें", color = Saffron, modifier = Modifier.clickable { showPoojanDialog = false }.padding(8.dp))
+            }
+        )
+    }
+
+    // Aarti dialog
+    if (showAartiDialog) {
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { showAartiDialog = false },
+            title = { Text("आरती", fontWeight = FontWeight.Bold) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    WebLink("प्रमाण सागर की, गुणआगर की", "https://www.munipramansagar.net/praman-sagar-ji-aarti-1/", context)
+                    WebLink("ओ गुरुवर मुनिवर प्रमाण सागर", "https://www.munipramansagar.net/praman-sagar-ji-aarti-2/", context)
+                    WebLink("आरती गुरु प्रमाण की", "https://www.munipramansagar.net/praman-sagar-ji-aarti-3/", context)
+                }
+            },
+            confirmButton = {
+                Text("बंद करें", color = Saffron, modifier = Modifier.clickable { showAartiDialog = false }.padding(8.dp))
+            }
+        )
+    }
 
     Column(
         modifier = Modifier
@@ -146,10 +188,10 @@ fun MaharajScreen(
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             QuickLink(Icons.Default.PlayCircle, if (isHindi) "पूजन" else "Poojan", Color(0xFF4CAF50), Modifier.weight(1f)) {
-                context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://www.munipramansagar.net/praman-sagar-ji-pujan-1/")))
+                showPoojanDialog = true
             }
             QuickLink(Icons.Default.MusicNote, if (isHindi) "आरती" else "Aarti", Gold, Modifier.weight(1f)) {
-                context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://www.munipramansagar.net/praman-sagar-ji-aarti-1/")))
+                showAartiDialog = true
             }
             QuickLink(Icons.Default.MenuBook, if (isHindi) "पुस्तकें" else "Books", Color(0xFF9C27B0), Modifier.weight(1f)) {
                 context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://www.munipramansagar.net/e-books/")))
@@ -226,25 +268,7 @@ fun MaharajScreen(
             }
         }
 
-        // ── Poojan Links ──
-        Spacer(modifier = Modifier.height(12.dp))
-        SectionCard(title = if (isHindi) "पूजन विधि" else "Poojan Vidhi") {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                WebLink("हे वीतराग आगमज्ञानी", "https://www.munipramansagar.net/praman-sagar-ji-pujan-1/", context)
-                WebLink("श्री प्रमाणसागर की बोलो जय-जयकार", "https://www.munipramansagar.net/praman-sagar-ji-pujan-2/", context)
-                WebLink("जिनका विरागमय ही जीवन", "https://www.munipramansagar.net/praman-sagar-ji-pujan-3/", context)
-            }
-        }
-
-        // ── Aarti ──
-        Spacer(modifier = Modifier.height(12.dp))
-        SectionCard(title = if (isHindi) "आरती" else "Aarti") {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                WebLink("प्रमाण सागर की, गुणआगर की", "https://www.munipramansagar.net/praman-sagar-ji-aarti-1/", context)
-                WebLink("ओ गुरुवर मुनिवर प्रमाण सागर", "https://www.munipramansagar.net/praman-sagar-ji-aarti-2/", context)
-                WebLink("आरती गुरु प्रमाण की", "https://www.munipramansagar.net/praman-sagar-ji-aarti-3/", context)
-            }
-        }
+        // Poojan and Aarti are now accessed via Quick Link icons (dialogs)
 
         // ── Literary Works ──
         Spacer(modifier = Modifier.height(12.dp))
