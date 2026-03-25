@@ -91,6 +91,7 @@ sealed class TvNavItem(
     val isSubItem: Boolean = false
 ) {
     data object Home : TvNavItem("Home", "होम", Icons.Default.Home)
+    data object ContinueWatching : TvNavItem("Continue", "जारी रखें", Icons.Default.PlayCircle)
 
     // Group headers
     data object MuniGroup : TvNavItem("Muni Pramansagar Ji", "मुनि प्रमाणसागर जी", Icons.Default.PlayCircle)
@@ -173,22 +174,23 @@ fun TvApp(
     // Build flat navigation items list (for content switching)
     val navItems = remember(uiState.sections) {
         listOf(
-            TvNavItem.Home,          // 0
-            TvNavItem.BhawnaYog,     // 1
-            TvNavItem.Pravachan,     // 2
-            TvNavItem.ShankaSamadhan,// 3
-            TvNavItem.Swadhyay,     // 4
-            TvNavItem.AnimatedVideos,// 5
-            TvNavItem.LiveClasses,  // 6
-            TvNavItem.NityaPoojan,  // 7
-            TvNavItem.Path,         // 8
-            TvNavItem.Stotra,       // 9
-            TvNavItem.Bhajan,       // 10
-            TvNavItem.GranthVachan, // 11
-            TvNavItem.Programs,     // 12
-            TvNavItem.Donate,       // 13
-            TvNavItem.Search,       // 14
-            TvNavItem.Settings      // 15
+            TvNavItem.Home,              // 0
+            TvNavItem.ContinueWatching,  // 1
+            TvNavItem.BhawnaYog,         // 2
+            TvNavItem.Pravachan,         // 3
+            TvNavItem.ShankaSamadhan,    // 4
+            TvNavItem.Swadhyay,         // 5
+            TvNavItem.AnimatedVideos,    // 6
+            TvNavItem.LiveClasses,      // 7
+            TvNavItem.NityaPoojan,      // 8
+            TvNavItem.Path,             // 9
+            TvNavItem.Stotra,           // 10
+            TvNavItem.Bhajan,           // 11
+            TvNavItem.GranthVachan,     // 12
+            TvNavItem.Programs,         // 13
+            TvNavItem.Donate,           // 14
+            TvNavItem.Search,           // 15
+            TvNavItem.Settings          // 16
         )
     }
 
@@ -196,40 +198,41 @@ fun TvApp(
     // No standalone top-level items — ensures Left always opens the right group
     val sidebarEntries = remember(navItems) {
         buildList {
-            // Home group (single item, but treated as group for consistency)
+            // Top items
             add(SidebarEntry(TvNavItem.Home, navIndex = 0))
+            add(SidebarEntry(TvNavItem.ContinueWatching, navIndex = 1))
 
             // Muni Pramansagar Ji group
             add(SidebarEntry(TvNavItem.MuniGroup, isGroupHeader = true))
-            add(SidebarEntry(TvNavItem.BhawnaYog, navIndex = 1))
-            add(SidebarEntry(TvNavItem.Pravachan, navIndex = 2))
-            add(SidebarEntry(TvNavItem.ShankaSamadhan, navIndex = 3))
-            add(SidebarEntry(TvNavItem.Swadhyay, navIndex = 4))
+            add(SidebarEntry(TvNavItem.BhawnaYog, navIndex = 2))
+            add(SidebarEntry(TvNavItem.Pravachan, navIndex = 3))
+            add(SidebarEntry(TvNavItem.ShankaSamadhan, navIndex = 4))
+            add(SidebarEntry(TvNavItem.Swadhyay, navIndex = 5))
 
             // Jain Pathshala group
             add(SidebarEntry(TvNavItem.PathshalaGroup, isGroupHeader = true))
-            add(SidebarEntry(TvNavItem.AnimatedVideos, navIndex = 5))
-            add(SidebarEntry(TvNavItem.LiveClasses, navIndex = 6))
+            add(SidebarEntry(TvNavItem.AnimatedVideos, navIndex = 6))
+            add(SidebarEntry(TvNavItem.LiveClasses, navIndex = 7))
 
             // Poojan & Path group
             add(SidebarEntry(TvNavItem.PoojanGroup, isGroupHeader = true))
-            add(SidebarEntry(TvNavItem.NityaPoojan, navIndex = 7))
-            add(SidebarEntry(TvNavItem.Path, navIndex = 8))
-            add(SidebarEntry(TvNavItem.Stotra, navIndex = 9))
-            add(SidebarEntry(TvNavItem.Bhajan, navIndex = 10))
-            add(SidebarEntry(TvNavItem.GranthVachan, navIndex = 11))
+            add(SidebarEntry(TvNavItem.NityaPoojan, navIndex = 8))
+            add(SidebarEntry(TvNavItem.Path, navIndex = 9))
+            add(SidebarEntry(TvNavItem.Stotra, navIndex = 10))
+            add(SidebarEntry(TvNavItem.Bhajan, navIndex = 11))
+            add(SidebarEntry(TvNavItem.GranthVachan, navIndex = 12))
 
             // Events group
             add(SidebarEntry(TvNavItem.EventsGroup, isGroupHeader = true))
-            add(SidebarEntry(TvNavItem.Programs, navIndex = 12))
+            add(SidebarEntry(TvNavItem.Programs, navIndex = 13))
 
             // Swa Par Kalyan group
             add(SidebarEntry(TvNavItem.KalyanGroup, isGroupHeader = true))
-            add(SidebarEntry(TvNavItem.Donate, navIndex = 13))
+            add(SidebarEntry(TvNavItem.Donate, navIndex = 14))
 
-            // Utility group
-            add(SidebarEntry(TvNavItem.Search, navIndex = 14, isUtility = true))
-            add(SidebarEntry(TvNavItem.Settings, navIndex = 15, isUtility = true))
+            // Utility
+            add(SidebarEntry(TvNavItem.Search, navIndex = 15, isUtility = true))
+            add(SidebarEntry(TvNavItem.Settings, navIndex = 16, isUtility = true))
         }
     }
 
@@ -285,6 +288,11 @@ fun TvApp(
                             onPathshalaClick = {
                                 selectedIndex = navItems.indexOf(TvNavItem.LiveClasses)
                             }
+                        )
+                        // Continue Watching — dedicated page
+                        TvNavItem.ContinueWatching -> TvContinueWatchingScreen(
+                            homeViewModel = homeViewModel,
+                            isHindi = isHindi
                         )
                         // Muni Pramansagar Ji sections
                         TvNavItem.BhawnaYog -> TvCategoryScreen(

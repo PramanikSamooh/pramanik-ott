@@ -122,7 +122,8 @@ fun TvHeroBanner(
             AsyncImage(
                 model = video.thumbnailUrlHQ.ifEmpty { video.thumbnailUrl },
                 contentDescription = null,
-                contentScale = ContentScale.FillWidth,
+                contentScale = ContentScale.Crop,
+                alignment = Alignment.Center,
                 modifier = Modifier.fillMaxSize()
             )
         }
