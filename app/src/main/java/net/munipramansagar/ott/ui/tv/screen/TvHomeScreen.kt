@@ -195,44 +195,74 @@ fun TvHomeScreen(
 
 @Composable
 private fun TvHomeShimmer() {
-    // Breathing pulse animation
-    val infiniteTransition = androidx.compose.animation.core.rememberInfiniteTransition(label = "skeleton")
-    val alpha by infiniteTransition.animateFloat(
-        initialValue = 0.4f,
-        targetValue = 1f,
+    // Shimmer sweep animation — light bar moves left to right
+    val infiniteTransition = androidx.compose.animation.core.rememberInfiniteTransition(label = "shimmer")
+    val shimmerOffset by infiniteTransition.animateFloat(
+        initialValue = -1f,
+        targetValue = 2f,
         animationSpec = androidx.compose.animation.core.infiniteRepeatable(
-            animation = androidx.compose.animation.core.tween(1500, easing = androidx.compose.animation.core.EaseInOut),
-            repeatMode = androidx.compose.animation.core.RepeatMode.Reverse
+            animation = androidx.compose.animation.core.tween(2000, easing = androidx.compose.animation.core.LinearEasing)
         ),
-        label = "skeletonAlpha"
-    )
-    val scale by infiniteTransition.animateFloat(
-        initialValue = 1f,
-        targetValue = 1.03f,
-        animationSpec = androidx.compose.animation.core.infiniteRepeatable(
-            animation = androidx.compose.animation.core.tween(2000, easing = androidx.compose.animation.core.EaseInOut),
-            repeatMode = androidx.compose.animation.core.RepeatMode.Reverse
-        ),
-        label = "skeletonScale"
+        label = "shimmerOffset"
     )
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(androidx.compose.ui.graphics.Color(0xFF0D0D1A)),
+            .background(Color(0xFF0D0D1A)),
         contentAlignment = Alignment.Center
     ) {
+        // Aura glow — pulsing saffron radial gradient behind Maharaj Ji
+        val auraTransition = androidx.compose.animation.core.rememberInfiniteTransition(label = "aura")
+        val auraAlpha by auraTransition.animateFloat(
+            initialValue = 0.15f,
+            targetValue = 0.35f,
+            animationSpec = androidx.compose.animation.core.infiniteRepeatable(
+                animation = androidx.compose.animation.core.tween(2500, easing = androidx.compose.animation.core.EaseInOut),
+                repeatMode = androidx.compose.animation.core.RepeatMode.Reverse
+            ),
+            label = "auraAlpha"
+        )
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.radialGradient(
+                        colors = listOf(
+                            Color(0xFFE8730A).copy(alpha = auraAlpha),
+                            Color(0xFFC9932A).copy(alpha = auraAlpha * 0.5f),
+                            Color.Transparent
+                        ),
+                        radius = 600f
+                    )
+                )
+        )
+
+        // Static image
         coil.compose.AsyncImage(
             model = net.munipramansagar.ott.R.drawable.skeleton_loader,
             contentDescription = null,
-            contentScale = ContentScale.Crop,
+            contentScale = ContentScale.Fit,
+            modifier = Modifier.fillMaxSize()
+        )
+
+        // Shimmer sweep — subtle light bar
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .graphicsLayer {
-                    scaleX = scale
-                    scaleY = scale
-                },
-            alpha = alpha
+                .background(
+                    Brush.horizontalGradient(
+                        colors = listOf(
+                            Color.Transparent,
+                            Color.White.copy(alpha = 0.06f),
+                            Color.White.copy(alpha = 0.12f),
+                            Color.White.copy(alpha = 0.06f),
+                            Color.Transparent
+                        ),
+                        startX = shimmerOffset * 2000f,
+                        endX = (shimmerOffset + 0.5f) * 2000f
+                    )
+                )
         )
     }
 }
