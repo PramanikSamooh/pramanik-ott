@@ -1,6 +1,12 @@
 package net.munipramansagar.ott.ui.tv.screen
 
 import android.content.Intent
+import android.graphics.Bitmap
+import androidx.compose.ui.graphics.asImageBitmap
+import com.google.zxing.BarcodeFormat
+import com.google.zxing.EncodeHintType
+import com.google.zxing.qrcode.QRCodeWriter
+import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -11,7 +17,10 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -342,41 +351,97 @@ private fun TvAnnouncementRow(
                         }
                         .padding(16.dp)
                 ) {
-                    Column {
-                        Text(
-                            text = a.getTitle(isHindi),
-                            style = PramanikTvTheme.typography.titleMedium.copy(
-                                fontWeight = FontWeight.SemiBold
-                            ),
-                            color = TextWhite,
-                            maxLines = 2
-                        )
-                        if (a.getBody(isHindi).isNotBlank()) {
-                            Spacer(modifier = Modifier.height(4.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        // Text content
+                        Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = a.getBody(isHindi),
-                                style = PramanikTvTheme.typography.bodyMedium,
-                                color = TextGray,
+                                text = a.getTitle(isHindi),
+                                style = PramanikTvTheme.typography.titleMedium.copy(
+                                    fontWeight = FontWeight.SemiBold
+                                ),
+                                color = TextWhite,
                                 maxLines = 2
                             )
-                        }
-                        if (a.getActionLabel(isHindi).isNotBlank()) {
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                text = a.getActionLabel(isHindi),
-                                style = PramanikTvTheme.typography.labelMedium.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    color = when (a.type) {
-                                        "event" -> net.munipramansagar.ott.ui.tv.theme.Saffron
-                                        "whatsapp" -> androidx.compose.ui.graphics.Color(0xFF25D366)
-                                        else -> net.munipramansagar.ott.ui.tv.theme.SaffronLight
-                                    }
+                            if (a.getBody(isHindi).isNotBlank()) {
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = a.getBody(isHindi),
+                                    style = PramanikTvTheme.typography.bodyMedium,
+                                    color = TextGray,
+                                    maxLines = 2
                                 )
-                            )
+                            }
+                            if (a.getActionLabel(isHindi).isNotBlank()) {
+                                Spacer(modifier = Modifier.height(6.dp))
+                                Text(
+                                    text = a.getActionLabel(isHindi),
+                                    style = PramanikTvTheme.typography.labelMedium.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        color = when (a.type) {
+                                            "event" -> net.munipramansagar.ott.ui.tv.theme.Saffron
+                                            "whatsapp" -> androidx.compose.ui.graphics.Color(0xFF25D366)
+                                            else -> net.munipramansagar.ott.ui.tv.theme.SaffronLight
+                                        }
+                                    )
+                                )
+                            }
+                        }
+                        // QR code for actionable links (TV can't open browser)
+                        if (a.actionUrl.isNotBlank()) {
+                            Spacer(modifier = Modifier.width(12.dp))
+                            QrCodeImage(url = a.actionUrl)
                         }
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun QrCodeImage(url: String, qrSize: Int = 72) {
+    val qrBitmap = remember(url) {
+        try {
+            val hints = mapOf(
+                EncodeHintType.MARGIN to 1,
+                EncodeHintType.ERROR_CORRECTION to ErrorCorrectionLevel.L
+            )
+            val matrix = QRCodeWriter().encode(url, BarcodeFormat.QR_CODE, 200, 200, hints)
+            val w = matrix.width
+            val h = matrix.height
+            val bmp = Bitmap.createBitmap(w, h, Bitmap.Config.RGB_565)
+            for (x in 0 until w) {
+                for (y in 0 until h) {
+                    bmp.setPixel(x, y, if (matrix[x, y]) android.graphics.Color.BLACK else android.graphics.Color.WHITE)
+                }
+            }
+            bmp
+        } catch (_: Exception) { null }
+    }
+
+    if (qrBitmap != null) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Box(
+                modifier = Modifier
+                    .size(qrSize.dp)
+                    .clip(RoundedCornerShape(6.dp))
+                    .background(androidx.compose.ui.graphics.Color.White),
+                contentAlignment = Alignment.Center
+            ) {
+                Canvas(
+                    modifier = Modifier.size((qrSize - 8).dp)
+                ) {
+                    drawImage(qrBitmap.asImageBitmap())
+                }
+            }
+            Spacer(modifier = Modifier.height(2.dp))
+            Text(
+                text = "Scan",
+                style = PramanikTvTheme.typography.labelMedium.copy(
+                    color = TextGray,
+                    fontSize = 9.sp
+                )
+            )
         }
     }
 }

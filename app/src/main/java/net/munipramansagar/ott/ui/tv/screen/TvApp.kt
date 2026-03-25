@@ -152,9 +152,10 @@ fun TvApp(
     val isHindi = language == LanguageManager.HINDI
     var selectedIndex by rememberSaveable { mutableIntStateOf(0) }
     var isSidebarExpanded by remember { mutableStateOf(false) }
-    // When true, sidebar focus events are ignored (during selection transition)
     var ignoreExpandEvents by remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
+    // Debounced collapse — prevents flicker when focus moves between sidebar items
+    var collapseJob by remember { mutableStateOf<kotlinx.coroutines.Job?>(null) }
 
     // Back button: collapse sidebar → go to home → let system exit
     // Only handle back if sidebar is expanded OR not on home
@@ -376,7 +377,18 @@ fun TvApp(
                 isExpanded = isSidebarExpanded,
                 onExpandChanged = { expand ->
                     if (!ignoreExpandEvents) {
-                        isSidebarExpanded = expand
+                        if (expand) {
+                            // Expand immediately, cancel any pending collapse
+                            collapseJob?.cancel()
+                            isSidebarExpanded = true
+                        } else {
+                            // Debounce collapse — wait 150ms so focus can land on another sidebar item
+                            collapseJob?.cancel()
+                            collapseJob = coroutineScope.launch {
+                                kotlinx.coroutines.delay(150)
+                                isSidebarExpanded = false
+                            }
+                        }
                     }
                 },
                 onItemSelected = { index ->
