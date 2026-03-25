@@ -1,5 +1,8 @@
 package net.munipramansagar.ott.ui.mobile.screen
 
+import android.content.Intent
+import android.net.Uri
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -19,11 +22,14 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.MenuBook
+import androidx.compose.material.icons.filled.MusicNote
+import androidx.compose.material.icons.filled.OpenInNew
 import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material.icons.filled.PlayCircle
-import androidx.compose.material.icons.filled.Spa
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -33,165 +39,213 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import net.munipramansagar.ott.ui.mobile.theme.CardBg
-import net.munipramansagar.ott.ui.mobile.theme.CardBorder
+import net.munipramansagar.ott.R
 import net.munipramansagar.ott.ui.mobile.theme.Gold
 import net.munipramansagar.ott.ui.mobile.theme.Saffron
-import net.munipramansagar.ott.ui.mobile.theme.SaffronDark
-import net.munipramansagar.ott.ui.mobile.theme.TextGray
-import net.munipramansagar.ott.ui.mobile.theme.TextMuted
-import net.munipramansagar.ott.ui.mobile.theme.TextWhite
 
 @Composable
 fun MaharajScreen(
     isHindi: Boolean,
     onBack: () -> Unit = {}
 ) {
+    val context = LocalContext.current
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
     ) {
-        // Header with avatar
+        // ── Header with photo ──
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(
                     Brush.verticalGradient(
                         colors = listOf(
-                            Saffron.copy(alpha = 0.15f),
+                            Saffron.copy(alpha = 0.2f),
                             Color.Transparent
                         )
                     )
                 )
-                .padding(vertical = 24.dp),
+                .padding(top = 16.dp, bottom = 20.dp),
             contentAlignment = Alignment.Center
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Box(
+                // Back button
+                Row(
                     modifier = Modifier
-                        .size(96.dp)
-                        .clip(CircleShape)
-                        .background(
-                            Brush.linearGradient(listOf(Saffron, SaffronDark))
-                        ),
-                    contentAlignment = Alignment.Center
+                        .fillMaxWidth()
+                        .padding(horizontal = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("🙏", fontSize = 40.sp)
+                    IconButton(onClick = onBack) {
+                        Icon(
+                            Icons.Default.ArrowBack,
+                            contentDescription = "Back",
+                            tint = MaterialTheme.colorScheme.onBackground
+                        )
+                    }
+                    Text(
+                        text = if (isHindi) "महाराज श्री" else "Maharaj Shree",
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
                 }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Photo
+                Image(
+                    painter = painterResource(id = R.drawable.maharaj_photo),
+                    contentDescription = "Muni Pramansagar Ji",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .size(120.dp)
+                        .clip(CircleShape)
+                        .border(3.dp, Saffron, CircleShape)
+                )
 
                 Spacer(modifier = Modifier.height(12.dp))
 
                 Text(
                     text = "मुनि श्री 108 प्रमाणसागर जी महाराज",
                     style = MaterialTheme.typography.titleLarge.copy(
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold, fontSize = 18.sp
                     ),
                     color = MaterialTheme.colorScheme.onBackground,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.padding(horizontal = 32.dp)
                 )
 
-                Spacer(modifier = Modifier.height(4.dp))
-
                 Text(
                     text = "Muni Shri 108 Pramansagar Ji Maharaj",
-                    style = MaterialTheme.typography.bodyMedium,
+                    style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center
                 )
             }
         }
 
-        // Quick links grid
-        Spacer(modifier = Modifier.height(8.dp))
+        // ── Quick Links ──
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            QuickLink(
-                icon = Icons.Default.MenuBook,
-                label = if (isHindi) "जीवन परिचय" else "Biography",
-                color = Saffron,
-                modifier = Modifier.weight(1f)
-            )
-            QuickLink(
-                icon = Icons.Default.PhotoLibrary,
-                label = if (isHindi) "फोटो गैलरी" else "Photos",
-                color = Color(0xFF2196F3),
-                modifier = Modifier.weight(1f)
-            )
-            QuickLink(
-                icon = Icons.Default.Spa,
-                label = if (isHindi) "आरती" else "Aarti",
-                color = Gold,
-                modifier = Modifier.weight(1f)
-            )
-            QuickLink(
-                icon = Icons.Default.PlayCircle,
-                label = if (isHindi) "पूजन" else "Poojan",
-                color = Color(0xFF4CAF50),
-                modifier = Modifier.weight(1f)
-            )
+            QuickLink(Icons.Default.PlayCircle, if (isHindi) "पूजन" else "Poojan", Color(0xFF4CAF50), Modifier.weight(1f)) {
+                context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://www.munipramansagar.net/praman-sagar-ji-pujan-1/")))
+            }
+            QuickLink(Icons.Default.MusicNote, if (isHindi) "आरती" else "Aarti", Gold, Modifier.weight(1f)) {
+                context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://www.munipramansagar.net/praman-sagar-ji-aarti-1/")))
+            }
+            QuickLink(Icons.Default.MenuBook, if (isHindi) "पुस्तकें" else "Books", Color(0xFF9C27B0), Modifier.weight(1f)) {
+                context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://www.munipramansagar.net/e-books/")))
+            }
+            QuickLink(Icons.Default.PhotoLibrary, if (isHindi) "फोटो" else "Photos", Color(0xFF2196F3), Modifier.weight(1f)) {
+                context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://www.munipramansagar.net/portfolio/muni-pramansagar-ji-images/")))
+            }
         }
 
-        // Biography section
-        Spacer(modifier = Modifier.height(20.dp))
+        // ── Biography ──
+        Spacer(modifier = Modifier.height(16.dp))
         SectionCard(
-            title = if (isHindi) "जीवन परिचय" else "Biography",
-            content = if (isHindi)
-                "मुनि श्री 108 प्रमाणसागर जी महाराज एक प्रसिद्ध जैन दिगंबर मुनि हैं। " +
-                "उनके प्रवचन, भावना योग और शंका समाधान कार्यक्रम लाखों लोगों को प्रेरित करते हैं। " +
-                "वे 2015 से नियमित रूप से प्रवचन दे रहे हैं और उनके YouTube चैनल पर लाखों अनुयायी हैं।\n\n" +
-                "विस्तृत जानकारी जल्द ही उपलब्ध होगी।"
-            else
-                "Muni Shri 108 Pramansagar Ji Maharaj is a renowned Jain Digambar Muni. " +
-                "His discourses, Bhawna Yog sessions, and Shanka Samadhan programs inspire millions. " +
-                "He has been delivering regular pravachans since 2015 and has a large following on YouTube.\n\n" +
-                "Detailed biography coming soon."
-        )
+            title = if (isHindi) "जीवन परिचय" else "Biography"
+        ) {
+            Column {
+                InfoRow("जन्म नाम / Birth Name", "नवीन कुमार जैन / Navin Kumar Jain")
+                InfoRow("जन्म तिथि / Birth Date", "27 जून 1967 / June 27, 1967")
+                InfoRow("जन्म स्थान / Birthplace", "हजारीबाग, झारखंड / Hazaribagh, Jharkhand")
+                InfoRow("पिता / Father", "श्री सुरेन्द्र कुमार जैन")
+                InfoRow("माता / Mother", "श्रीमती सोहनी देवी जैन")
 
-        // Aarti section
-        Spacer(modifier = Modifier.height(12.dp))
-        SectionCard(
-            title = if (isHindi) "आरती" else "Aarti",
-            content = if (isHindi)
-                "आरती का पाठ जल्द ही यहाँ उपलब्ध होगा।\n" +
-                "व्यवस्थापक पैनल से आरती का पाठ जोड़ा जाएगा।"
-            else
-                "Aarti text will be available here soon.\n" +
-                "This content will be managed from the admin panel."
-        )
+                Spacer(modifier = Modifier.height(12.dp))
+                Text(
+                    text = if (isHindi)
+                        "आध्यात्मिक यात्रा"
+                    else "Spiritual Journey",
+                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                    color = Saffron
+                )
+                Spacer(modifier = Modifier.height(6.dp))
 
-        // Poojan section
-        Spacer(modifier = Modifier.height(12.dp))
-        SectionCard(
-            title = if (isHindi) "पूजन विधि" else "Poojan Vidhi",
-            content = if (isHindi)
-                "पूजन विधि जल्द ही यहाँ उपलब्ध होगी।\n" +
-                "व्यवस्थापक पैनल से पूजन विधि जोड़ी जाएगी।"
-            else
-                "Poojan Vidhi will be available here soon.\n" +
-                "This content will be managed from the admin panel."
-        )
+                TimelineItem("1983", if (isHindi) "आचार्य विद्यासागर जी से प्रथम भेंट — 17 वर्ष की आयु में आध्यात्मिक जागरण" else "First meeting with Acharya Vidyasagar Ji — spiritual awakening at age 17")
+                TimelineItem("1984", if (isHindi) "ब्रह्मचर्य व्रत (4 मार्च)" else "Brahmacharya vow (March 4)")
+                TimelineItem("1985", if (isHindi) "क्षुल्लक दीक्षा — सिद्ध क्षेत्र अहारजी (8 नवंबर)" else "Kshullak Diksha — Siddha Kshetra Aharji (Nov 8)")
+                TimelineItem("1987", if (isHindi) "ऐलक दीक्षा — अतिशय क्षेत्र ठुबौन (11 जुलाई)" else "Aik Diksha — Atishaya Kshetra Thubaun (July 11)")
+                TimelineItem("1988", if (isHindi) "मुनि दीक्षा — सिद्धभूमि सोनागिरि (31 मार्च)" else "Muni Diksha — Siddhabhoomi Sonagiri (March 31)")
 
-        // Photos section placeholder
+                Spacer(modifier = Modifier.height(12.dp))
+                Text(
+                    text = if (isHindi)
+                        "दिगंबर जैन मुनि परंपरा का पालन करते हुए, मुनि श्री चातुर्मास के चार महीनों को छोड़कर निरंतर विहार करते हैं। उन्होंने कभी वाहन का उपयोग नहीं किया। तीस वर्षों से अधिक समय से वे कठोर आध्यात्मिक अनुशासन बनाए रखते हुए निरंतर तीर्थयात्रा में लगे हैं।"
+                    else
+                        "Following Digambara Jain monastic tradition, Muni Shri maintains constant mobility except during the four-month monsoon period (chaturmas). He has never used vehicles. For over thirty years, he has engaged in continuous pilgrimage while maintaining rigorous spiritual discipline.",
+                    style = MaterialTheme.typography.bodySmall.copy(lineHeight = 20.sp),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+
+        // ── Contributions ──
         Spacer(modifier = Modifier.height(12.dp))
-        SectionCard(
-            title = if (isHindi) "फोटो गैलरी" else "Photo Gallery",
-            content = if (isHindi)
-                "महाराज श्री के फोटो जल्द ही यहाँ उपलब्ध होंगे।\n" +
-                "पोस्टर, बैनर और अन्य प्रचार सामग्री के लिए फोटो डाउनलोड कर सकते हैं।"
-            else
-                "Photos of Maharaj Shree will be available soon.\n" +
-                "Download photos for posters, banners, and promotional materials."
-        )
+        SectionCard(title = if (isHindi) "प्रमुख योगदान" else "Key Contributions") {
+            Column {
+                ContributionItem(
+                    if (isHindi) "शंका समाधान कार्यक्रम" else "Shanka Samadhan Program",
+                    if (isHindi) "जैन मुनि और जिज्ञासुओं के बीच सीधे संवाद की अनुमति देने वाला पहला टीवी कार्यक्रम" else "First TV program enabling direct dialogue between spiritual seekers and a Jain monk"
+                )
+                ContributionItem(
+                    if (isHindi) "धर्म बचाओ आंदोलन (2015)" else "Dharm Bachao Movement (2015)",
+                    if (isHindi) "सल्लेखना के प्रश्न पर एक करोड़ से अधिक लोगों का वैश्विक शांत प्रदर्शन" else "Global silent protest uniting over one crore people worldwide on August 24, 2015"
+                )
+                ContributionItem(
+                    if (isHindi) "गुणायतन" else "Gunayatan",
+                    if (isHindi) "सम्मेत शिखरजी में 9D एनिमेशन, होलोग्राम और 360° डिस्प्ले वाला आधुनिक ज्ञान केंद्र" else "Contemporary knowledge center at Sammet Shikharji with 9D animation, holograms, and 360° displays"
+                )
+            }
+        }
+
+        // ── Poojan Links ──
+        Spacer(modifier = Modifier.height(12.dp))
+        SectionCard(title = if (isHindi) "पूजन विधि" else "Poojan Vidhi") {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                WebLink(if (isHindi) "प्रमाणसागर जी पूजन - भाग 1" else "Pramansagar Ji Pujan - Part 1", "https://www.munipramansagar.net/praman-sagar-ji-pujan-1/", context)
+                WebLink(if (isHindi) "प्रमाणसागर जी पूजन - भाग 2" else "Pramansagar Ji Pujan - Part 2", "https://www.munipramansagar.net/praman-sagar-ji-pujan-2/", context)
+                WebLink(if (isHindi) "प्रमाणसागर जी पूजन - भाग 3" else "Pramansagar Ji Pujan - Part 3", "https://www.munipramansagar.net/praman-sagar-ji-pujan-3/", context)
+            }
+        }
+
+        // ── Aarti Links ──
+        Spacer(modifier = Modifier.height(12.dp))
+        SectionCard(title = if (isHindi) "आरती" else "Aarti") {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                WebLink(if (isHindi) "प्रमाणसागर जी आरती - 1" else "Pramansagar Ji Aarti - 1", "https://www.munipramansagar.net/praman-sagar-ji-aarti-1/", context)
+                WebLink(if (isHindi) "प्रमाणसागर जी आरती - 2" else "Pramansagar Ji Aarti - 2", "https://www.munipramansagar.net/praman-sagar-ji-aarti-2/", context)
+                WebLink(if (isHindi) "प्रमाणसागर जी आरती - 3" else "Pramansagar Ji Aarti - 3", "https://www.munipramansagar.net/praman-sagar-ji-aarti-3/", context)
+            }
+        }
+
+        // ── Literary Works ──
+        Spacer(modifier = Modifier.height(12.dp))
+        SectionCard(title = if (isHindi) "साहित्यिक कृतियाँ" else "Literary Works") {
+            Column {
+                BookItem("जैन धर्म और दर्शन", "Jain Dharm aur Darshan")
+                BookItem("जैन तत्व विद्या", "Jain Tatva Vidya (Bharat Jnanpith)")
+                BookItem("धार्मिक जीवन का आधार", "Dhaarm Jeevan ka Aadhar")
+                BookItem("शंका समाधान (भाग 1-2)", "Shanka Samadhan (Parts 1-2)")
+                BookItem("चार बातें (14 खंड)", "Char Batein (14 volumes)")
+                Spacer(modifier = Modifier.height(8.dp))
+                WebLink(if (isHindi) "सभी ई-पुस्तकें देखें" else "View All E-Books", "https://www.munipramansagar.net/e-books/", context)
+            }
+        }
 
         Spacer(modifier = Modifier.height(100.dp))
     }
@@ -202,30 +256,23 @@ private fun QuickLink(
     icon: ImageVector,
     label: String,
     color: Color,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
 ) {
     Column(
         modifier = modifier
             .clip(RoundedCornerShape(12.dp))
             .background(color.copy(alpha = 0.1f))
             .border(1.dp, color.copy(alpha = 0.15f), RoundedCornerShape(12.dp))
-            .clickable { }
+            .clickable { onClick() }
             .padding(vertical = 14.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            tint = color,
-            modifier = Modifier.size(24.dp)
-        )
-        Spacer(modifier = Modifier.height(6.dp))
+        Icon(icon, null, tint = color, modifier = Modifier.size(22.dp))
+        Spacer(modifier = Modifier.height(4.dp))
         Text(
             text = label,
-            style = MaterialTheme.typography.labelSmall.copy(
-                fontWeight = FontWeight.Medium,
-                fontSize = 10.sp
-            ),
+            style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp, fontWeight = FontWeight.Medium),
             color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.8f),
             textAlign = TextAlign.Center
         )
@@ -233,10 +280,7 @@ private fun QuickLink(
 }
 
 @Composable
-private fun SectionCard(
-    title: String,
-    content: String
-) {
+private fun SectionCard(title: String, content: @Composable () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -248,18 +292,106 @@ private fun SectionCard(
     ) {
         Text(
             text = title,
-            style = MaterialTheme.typography.titleSmall.copy(
-                fontWeight = FontWeight.Bold
-            ),
+            style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
             color = Saffron
         )
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(10.dp))
+        content()
+    }
+}
+
+@Composable
+private fun InfoRow(label: String, value: String) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 3.dp)
+    ) {
         Text(
-            text = content,
-            style = MaterialTheme.typography.bodySmall.copy(
-                lineHeight = 20.sp
-            ),
+            text = label,
+            style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.weight(1f)
+        )
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onBackground,
+            modifier = Modifier.weight(1.2f)
+        )
+    }
+}
+
+@Composable
+private fun TimelineItem(year: String, desc: String) {
+    Row(
+        modifier = Modifier.padding(vertical = 4.dp),
+        horizontalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        Text(
+            text = year,
+            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
+            color = Saffron,
+            modifier = Modifier.width(40.dp)
+        )
+        Text(
+            text = desc,
+            style = MaterialTheme.typography.bodySmall.copy(lineHeight = 18.sp),
             color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+}
+
+@Composable
+private fun ContributionItem(title: String, desc: String) {
+    Column(modifier = Modifier.padding(vertical = 6.dp)) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
+            color = MaterialTheme.colorScheme.onBackground
+        )
+        Text(
+            text = desc,
+            style = MaterialTheme.typography.bodySmall.copy(lineHeight = 18.sp),
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+}
+
+@Composable
+private fun BookItem(titleHi: String, titleEn: String) {
+    Text(
+        text = "• $titleHi ($titleEn)",
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier.padding(vertical = 2.dp)
+    )
+}
+
+@Composable
+private fun WebLink(label: String, url: String, context: android.content.Context) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(8.dp))
+            .background(Saffron.copy(alpha = 0.08f))
+            .clickable {
+                context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+            }
+            .padding(horizontal = 12.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium),
+            color = Saffron
+        )
+        Icon(
+            Icons.Default.OpenInNew,
+            contentDescription = null,
+            tint = Saffron.copy(alpha = 0.6f),
+            modifier = Modifier.size(16.dp)
         )
     }
 }

@@ -346,7 +346,7 @@ private fun MaharajCard(
     ) {
         // Pramanik logo
         Image(
-            painter = painterResource(id = net.munipramansagar.ott.R.drawable.pramanik_logo),
+            painter = painterResource(id = net.munipramansagar.ott.R.drawable.maharaj_photo),
             contentDescription = "Pramanik",
             modifier = Modifier
                 .size(48.dp)
