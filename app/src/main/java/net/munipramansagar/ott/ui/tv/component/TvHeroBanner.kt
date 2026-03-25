@@ -10,7 +10,9 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.togetherWith
+import android.view.KeyEvent
 import androidx.compose.foundation.background
+import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,12 +22,21 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.filled.KeyboardArrowRight
+import androidx.compose.material3.Icon
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -62,12 +73,15 @@ fun TvHeroBanner(
     if (videos.isEmpty()) return
 
     var currentIndex by remember { mutableIntStateOf(0) }
+    var isBannerFocused by remember { mutableStateOf(false) }
 
-    // Auto-advance every 6 seconds
-    LaunchedEffect(videos.size) {
-        while (true) {
-            delay(6000)
-            currentIndex = (currentIndex + 1) % videos.size
+    // Auto-advance every 6 seconds (pause when focused for manual control)
+    LaunchedEffect(videos.size, isBannerFocused) {
+        if (!isBannerFocused) {
+            while (true) {
+                delay(6000)
+                currentIndex = (currentIndex + 1) % videos.size
+            }
         }
     }
 
@@ -76,8 +90,24 @@ fun TvHeroBanner(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(360.dp)
+            .height(280.dp)
             .clip(RoundedCornerShape(bottomStart = 20.dp, bottomEnd = 20.dp))
+            .onFocusChanged { isBannerFocused = it.hasFocus }
+            .onKeyEvent { event ->
+                if (event.nativeKeyEvent.action == KeyEvent.ACTION_DOWN) {
+                    when (event.nativeKeyEvent.keyCode) {
+                        KeyEvent.KEYCODE_DPAD_LEFT -> {
+                            currentIndex = if (currentIndex > 0) currentIndex - 1 else videos.size - 1
+                            true
+                        }
+                        KeyEvent.KEYCODE_DPAD_RIGHT -> {
+                            currentIndex = (currentIndex + 1) % videos.size
+                            true
+                        }
+                        else -> false
+                    }
+                } else false
+            }
     ) {
         // ── Background image with crossfade + subtle scale ──
         AnimatedContent(
@@ -92,7 +122,7 @@ fun TvHeroBanner(
             AsyncImage(
                 model = video.thumbnailUrlHQ.ifEmpty { video.thumbnailUrl },
                 contentDescription = null,
-                contentScale = ContentScale.Crop,
+                contentScale = ContentScale.FillWidth,
                 modifier = Modifier.fillMaxSize()
             )
         }
@@ -231,6 +261,48 @@ fun TvHeroBanner(
                     )
                 }
 
+            }
+        }
+
+        // ── Left/Right arrow indicators (visible when focused) ──
+        if (videos.size > 1) {
+            // Left arrow
+            Box(
+                modifier = Modifier
+                    .align(Alignment.CenterStart)
+                    .padding(start = 12.dp)
+                    .size(36.dp)
+                    .background(
+                        Color.Black.copy(alpha = if (isBannerFocused) 0.5f else 0.2f),
+                        CircleShape
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.KeyboardArrowLeft,
+                    contentDescription = "Previous",
+                    tint = Color.White.copy(alpha = if (isBannerFocused) 0.9f else 0.4f),
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+            // Right arrow
+            Box(
+                modifier = Modifier
+                    .align(Alignment.CenterEnd)
+                    .padding(end = 12.dp)
+                    .size(36.dp)
+                    .background(
+                        Color.Black.copy(alpha = if (isBannerFocused) 0.5f else 0.2f),
+                        CircleShape
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.KeyboardArrowRight,
+                    contentDescription = "Next",
+                    tint = Color.White.copy(alpha = if (isBannerFocused) 0.9f else 0.4f),
+                    modifier = Modifier.size(24.dp)
+                )
             }
         }
 

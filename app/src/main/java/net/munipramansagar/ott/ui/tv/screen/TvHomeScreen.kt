@@ -47,10 +47,8 @@ import net.munipramansagar.ott.ui.tv.theme.Saffron
 import net.munipramansagar.ott.ui.tv.theme.SaffronLight
 import net.munipramansagar.ott.ui.tv.theme.TextGray
 import net.munipramansagar.ott.ui.tv.theme.TextWhite
-import net.munipramansagar.ott.viewmodel.HomeSectionData
 import net.munipramansagar.ott.viewmodel.HomeViewModel
 import net.munipramansagar.ott.viewmodel.PathshalaViewModel
-import net.munipramansagar.ott.viewmodel.PlaylistWithVideos
 
 @OptIn(ExperimentalTvMaterial3Api::class)
 @Composable
@@ -83,207 +81,142 @@ fun TvHomeScreen(
                 onRetry = { homeViewModel.refresh() }
             )
         } else {
-            TvLazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(bottom = 48.dp)
+            // Fixed layout — no scrolling, everything fits on one screen
+            Column(
+                modifier = Modifier.fillMaxSize()
             ) {
-                // Live stream banner — above hero when live
+                // 1. Live stream banner — topmost when live
                 if (uiState.liveStatus.isLive && uiState.liveStatus.activeStreams.isNotEmpty()) {
-                    item {
-                        TvLiveStreamBanner(
-                            isLive = uiState.liveStatus.isLive,
-                            activeStreams = uiState.liveStatus.activeStreams
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
-                    }
+                    TvLiveStreamBanner(
+                        isLive = uiState.liveStatus.isLive,
+                        activeStreams = uiState.liveStatus.activeStreams
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
                 }
 
-                // Continue Watching
-                if (continueWatching.isNotEmpty()) {
-                    item {
-                        Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 48.dp)) {
-                            Text(
-                                text = if (isHindi) "जारी रखें" else "Continue Watching",
-                                style = PramanikTvTheme.typography.titleLarge.copy(
-                                    fontWeight = FontWeight.Bold, fontSize = 20.sp
-                                ),
-                                color = TextWhite
-                            )
-                            Spacer(modifier = Modifier.height(12.dp))
-                        }
-                        TvLazyRow(
-                            contentPadding = PaddingValues(horizontal = 48.dp),
-                            horizontalArrangement = Arrangement.spacedBy(20.dp)
-                        ) {
-                            items(continueWatching.size) { index ->
-                                val entry = continueWatching[index]
-                                val video = Video(
-                                    id = entry.videoId,
-                                    title = entry.title,
-                                    titleHi = entry.titleHi,
-                                    thumbnailUrl = entry.thumbnailUrl.ifEmpty { "https://i.ytimg.com/vi/${entry.videoId}/mqdefault.jpg" },
-                                    thumbnailUrlHQ = "https://i.ytimg.com/vi/${entry.videoId}/hqdefault.jpg",
-                                    channelName = entry.channelName,
-                                    durationFormatted = entry.durationFormatted
-                                )
-                                TvVideoCard(
-                                    video = video,
-                                    onClick = {
-                                        val intent = Intent(context, PlayerActivity::class.java).apply {
-                                            putExtra("videoId", entry.videoId)
-                                            putExtra("videoTitle", entry.title)
-                                            putExtra("videoTitleHi", entry.titleHi)
-                                            putExtra("videoThumbnail", entry.thumbnailUrl)
-                                            putExtra("playlistId", entry.playlistId)
-                                            putExtra("playlistTitle", entry.playlistTitle)
-                                            putExtra("sectionId", entry.sectionId)
-                                        }
-                                        context.startActivity(intent)
-                                    }
+                // 2. Hero carousel — pinned/latest videos, D-pad navigable
+                if (uiState.heroBannerVideos.isNotEmpty()) {
+                    TvHeroBanner(
+                        videos = uiState.heroBannerVideos,
+                        onPlayClick = onVideoClick
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
+
+                // 3. Pathshala Today (30%) + Notifications (70%) side by side
+                val todaysPathshalaClasses = pathshalaState?.value?.todaysClasses
+                val tvAnnouncements = uiState.announcements.filter { it.showOnTv }
+                val hasPathshala = todaysPathshalaClasses != null && todaysPathshalaClasses.isNotEmpty()
+                val hasAnnouncements = tvAnnouncements.isNotEmpty()
+
+                if (hasPathshala || hasAnnouncements) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 48.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        if (hasPathshala) {
+                            Box(modifier = Modifier.weight(if (hasAnnouncements) 0.3f else 1f)) {
+                                TvPathshalaTodayCard(
+                                    todaysClasses = todaysPathshalaClasses!!,
+                                    isHindi = isHindi,
+                                    onViewPathshala = onPathshalaClick
                                 )
                             }
                         }
-                        Spacer(modifier = Modifier.height(16.dp))
+                        if (hasAnnouncements) {
+                            Box(modifier = Modifier.weight(if (hasPathshala) 0.7f else 1f)) {
+                                TvAnnouncementRow(
+                                    announcements = tvAnnouncements,
+                                    isHindi = isHindi
+                                )
+                            }
+                        }
                     }
+                    Spacer(modifier = Modifier.height(8.dp))
                 }
 
-                // Pathshala Today card
-                val todaysPathshalaClasses = pathshalaState?.value?.todaysClasses
-                if (todaysPathshalaClasses != null && todaysPathshalaClasses.isNotEmpty()) {
-                    item {
-                        TvPathshalaTodayCard(
-                            todaysClasses = todaysPathshalaClasses,
-                            isHindi = isHindi,
-                            onViewPathshala = onPathshalaClick
+                // 4. Continue Watching — max 3 items + "More" button
+                if (continueWatching.isNotEmpty()) {
+                    Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 48.dp)) {
+                        Text(
+                            text = if (isHindi) "जारी रखें" else "Continue Watching",
+                            style = PramanikTvTheme.typography.titleLarge.copy(
+                                fontWeight = FontWeight.Bold, fontSize = 18.sp
+                            ),
+                            color = TextWhite
                         )
-                        Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(8.dp))
+                    }
+                    TvLazyRow(
+                        contentPadding = PaddingValues(horizontal = 48.dp),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        // Show max 3 items
+                        val displayItems = continueWatching.take(3)
+                        items(displayItems.size) { index ->
+                            val entry = displayItems[index]
+                            val video = Video(
+                                id = entry.videoId,
+                                title = entry.title,
+                                titleHi = entry.titleHi,
+                                thumbnailUrl = entry.thumbnailUrl.ifEmpty { "https://i.ytimg.com/vi/${entry.videoId}/mqdefault.jpg" },
+                                thumbnailUrlHQ = "https://i.ytimg.com/vi/${entry.videoId}/hqdefault.jpg",
+                                channelName = entry.channelName,
+                                durationFormatted = entry.durationFormatted
+                            )
+                            TvVideoCard(
+                                video = video,
+                                onClick = {
+                                    val intent = Intent(context, PlayerActivity::class.java).apply {
+                                        putExtra("videoId", entry.videoId)
+                                        putExtra("videoTitle", entry.title)
+                                        putExtra("videoTitleHi", entry.titleHi)
+                                        putExtra("videoThumbnail", entry.thumbnailUrl)
+                                        putExtra("playlistId", entry.playlistId)
+                                        putExtra("playlistTitle", entry.playlistTitle)
+                                        putExtra("sectionId", entry.sectionId)
+                                    }
+                                    context.startActivity(intent)
+                                }
+                            )
+                        }
+                        // "More" button if more than 3
+                        if (continueWatching.size > 3) {
+                            item {
+                                var moreFocused by remember { mutableStateOf(false) }
+                                Box(
+                                    modifier = Modifier
+                                        .width(120.dp)
+                                        .height(100.dp)
+                                        .background(
+                                            if (moreFocused) Saffron.copy(alpha = 0.2f)
+                                            else androidx.compose.ui.graphics.Color.White.copy(alpha = 0.05f),
+                                            RoundedCornerShape(12.dp)
+                                        )
+                                        .border(
+                                            1.dp,
+                                            if (moreFocused) Saffron else androidx.compose.ui.graphics.Color.White.copy(alpha = 0.1f),
+                                            RoundedCornerShape(12.dp)
+                                        )
+                                        .onFocusChanged { moreFocused = it.isFocused }
+                                        .focusable()
+                                        .clickable { /* navigate to watch history */ },
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = if (isHindi) "और देखें ›" else "More ›",
+                                        style = PramanikTvTheme.typography.titleMedium.copy(
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = if (moreFocused) SaffronLight else TextGray
+                                        )
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
-
-                // Announcements (filtered for TV)
-                val tvAnnouncements = uiState.announcements.filter { it.showOnTv }
-                if (tvAnnouncements.isNotEmpty()) {
-                    item {
-                        TvAnnouncementRow(
-                            announcements = tvAnnouncements,
-                            isHindi = isHindi
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
-                    }
-                }
-
-                // Hero banner
-                if (uiState.heroBannerVideos.isNotEmpty()) {
-                    item {
-                        TvHeroBanner(
-                            videos = uiState.heroBannerVideos,
-                            onPlayClick = onVideoClick
-                        )
-                        Spacer(modifier = Modifier.height(32.dp))
-                    }
-                }
-
-                // Section rows — each section has playlist sub-rows
-                items(uiState.sections.size) { index ->
-                    val sectionData = uiState.sections[index]
-                    TvSectionBlock(
-                        sectionData = sectionData,
-                        isHindi = isHindi,
-                        onVideoClick = onVideoClick,
-                        onViewAllClick = { onSectionClick(sectionData.section.id) }
-                    )
-                    Spacer(modifier = Modifier.height(32.dp))
-                }
-            }
-        }
-    }
-}
-
-@OptIn(ExperimentalTvMaterial3Api::class)
-@Composable
-private fun TvSectionBlock(
-    sectionData: HomeSectionData,
-    isHindi: Boolean,
-    onVideoClick: (Video) -> Unit,
-    onViewAllClick: () -> Unit
-) {
-    Column(modifier = Modifier.fillMaxWidth()) {
-        // Section header
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 48.dp, vertical = 8.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = sectionData.section.getLabel(isHindi),
-                style = PramanikTvTheme.typography.titleLarge.copy(
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 22.sp
-                ),
-                color = TextWhite
-            )
-
-            var viewAllFocused by remember { mutableStateOf(false) }
-            Text(
-                text = "View All \u203A",
-                style = PramanikTvTheme.typography.labelLarge.copy(
-                    color = if (viewAllFocused) SaffronLight else Saffron,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.SemiBold
-                ),
-                modifier = Modifier
-                    .onFocusChanged { viewAllFocused = it.isFocused }
-                    .focusable()
-                    .clickable { onViewAllClick() }
-                    .background(
-                        if (viewAllFocused) Saffron.copy(alpha = 0.15f) else androidx.compose.ui.graphics.Color.Transparent,
-                        RoundedCornerShape(8.dp)
-                    )
-                    .padding(horizontal = 12.dp, vertical = 6.dp)
-            )
-        }
-
-        // Playlist sub-rows
-        sectionData.playlists.forEach { playlistWithVideos ->
-            TvPlaylistRow(
-                playlistWithVideos = playlistWithVideos,
-                onVideoClick = onVideoClick
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-        }
-    }
-}
-
-@OptIn(ExperimentalTvMaterial3Api::class)
-@Composable
-private fun TvPlaylistRow(
-    playlistWithVideos: PlaylistWithVideos,
-    onVideoClick: (Video) -> Unit
-) {
-    Column(modifier = Modifier.fillMaxWidth()) {
-        // Playlist title
-        Text(
-            text = playlistWithVideos.playlist.title,
-            style = PramanikTvTheme.typography.titleMedium.copy(
-                fontWeight = FontWeight.SemiBold,
-                fontSize = 16.sp
-            ),
-            color = TextGray,
-            modifier = Modifier.padding(horizontal = 48.dp, vertical = 4.dp)
-        )
-
-        // Video cards row
-        TvLazyRow(
-            contentPadding = PaddingValues(horizontal = 48.dp),
-            horizontalArrangement = Arrangement.spacedBy(20.dp)
-        ) {
-            items(playlistWithVideos.videos) { video ->
-                TvVideoCard(
-                    video = video,
-                    onClick = { onVideoClick(video) }
-                )
             }
         }
     }

@@ -574,10 +574,9 @@ fun TvPathshalaTodayCard(
     var isFocused by remember { mutableStateOf(false) }
     val cardShape = RoundedCornerShape(16.dp)
 
-    Row(
+    Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 48.dp, vertical = 8.dp)
             .clip(cardShape)
             .background(if (isFocused) SaffronDim else GlassCard)
             .border(
@@ -590,17 +589,9 @@ fun TvPathshalaTodayCard(
             .onFocusChanged { isFocused = it.isFocused }
             .focusable()
             .clickable { onViewPathshala() }
-            .padding(20.dp),
-        verticalAlignment = Alignment.CenterVertically
+            .padding(14.dp)
     ) {
-        Icon(
-            Icons.Default.School,
-            contentDescription = null,
-            tint = Saffron,
-            modifier = Modifier.size(32.dp)
-        )
-        Spacer(modifier = Modifier.width(16.dp))
-        Column(modifier = Modifier.weight(1f)) {
+        Column {
             Text(
                 text = if (isHindi) "\u092A\u093E\u0920\u0936\u093E\u0932\u093E \u0906\u091C" else "Pathshala Today",
                 style = PramanikTvTheme.typography.titleLarge.copy(
