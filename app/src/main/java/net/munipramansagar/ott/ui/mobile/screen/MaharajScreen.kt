@@ -101,16 +101,21 @@ fun MaharajScreen(
 
                 Spacer(modifier = Modifier.height(12.dp))
 
-                // Photo
-                Image(
-                    painter = painterResource(id = R.drawable.maharaj_photo),
-                    contentDescription = "Muni Pramansagar Ji",
-                    contentScale = ContentScale.Crop,
+                // Photo — properly cropped circle
+                Box(
                     modifier = Modifier
                         .size(120.dp)
                         .clip(CircleShape)
                         .border(3.dp, Saffron, CircleShape)
-                )
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.maharaj_photo),
+                        contentDescription = "Muni Pramansagar Ji",
+                        contentScale = ContentScale.Crop,
+                        alignment = Alignment.TopCenter,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
 
                 Spacer(modifier = Modifier.height(12.dp))
 
@@ -185,9 +190,13 @@ fun MaharajScreen(
                 Spacer(modifier = Modifier.height(12.dp))
                 Text(
                     text = if (isHindi)
-                        "दिगंबर जैन मुनि परंपरा का पालन करते हुए, मुनि श्री चातुर्मास के चार महीनों को छोड़कर निरंतर विहार करते हैं। उन्होंने कभी वाहन का उपयोग नहीं किया। तीस वर्षों से अधिक समय से वे कठोर आध्यात्मिक अनुशासन बनाए रखते हुए निरंतर तीर्थयात्रा में लगे हैं।"
+                        "नवीन कुमार जैन का जन्म हजारीबाग, बिहार (अब झारखंड) के एक धार्मिक जैन व्यापारी परिवार में हुआ। वे सुरेन्द्र कुमार और सोहनी देवी जैन की दूसरी संतान थे। उनके भाई-बहनों में बड़े भाई अनिल कुमार, छोटे भाई अरविंद और छोटी बहन नीतू शामिल हैं।\n\n" +
+                        "दिगंबर जैन मुनि परंपरा का पालन करते हुए, मुनि श्री चातुर्मास के चार महीनों को छोड़कर निरंतर विहार करते हैं। उन्होंने कभी वाहन का उपयोग नहीं किया। तीस वर्षों से अधिक समय से वे कठोर आध्यात्मिक अनुशासन बनाए रखते हुए निरंतर तीर्थयात्रा में लगे हैं।\n\n" +
+                        "मुनि श्री हिंदी, संस्कृत और प्राकृत में पारंगत हैं। उनके शिष्यों और अनुयायियों की संख्या लाखों में है।"
                     else
-                        "Following Digambara Jain monastic tradition, Muni Shri maintains constant mobility except during the four-month monsoon period (chaturmas). He has never used vehicles. For over thirty years, he has engaged in continuous pilgrimage while maintaining rigorous spiritual discipline.",
+                        "Navin Kumar Jain was born into a devout Jain merchant family in Hazaribagh, Bihar (now Jharkhand). He was the second child of Surendra Kumar and Sohni Devi Jain. His siblings include older brother Anil Kumar, younger brother Arvind, and younger sister Neetu.\n\n" +
+                        "Following Digambara Jain monastic tradition, Muni Shri maintains constant mobility except during the four-month monsoon period (chaturmas). He has never used vehicles. For over thirty years, he has engaged in continuous pilgrimage while maintaining rigorous spiritual discipline.\n\n" +
+                        "Muni Shri is proficient in Hindi, Sanskrit, and Prakrit. He has millions of disciples and followers worldwide.",
                     style = MaterialTheme.typography.bodySmall.copy(lineHeight = 20.sp),
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -199,12 +208,16 @@ fun MaharajScreen(
         SectionCard(title = if (isHindi) "प्रमुख योगदान" else "Key Contributions") {
             Column {
                 ContributionItem(
+                    if (isHindi) "भावना योग" else "Bhawna Yog",
+                    if (isHindi) "आत्म-चिंतन और ध्यान की अनूठी पद्धति जो लाखों लोगों के जीवन को बदल रही है। प्रतिदिन सुबह भावना योग का आयोजन होता है।" else "A unique practice of self-reflection and meditation transforming millions of lives. Daily morning Bhawna Yog sessions are conducted."
+                )
+                ContributionItem(
                     if (isHindi) "शंका समाधान कार्यक्रम" else "Shanka Samadhan Program",
-                    if (isHindi) "जैन मुनि और जिज्ञासुओं के बीच सीधे संवाद की अनुमति देने वाला पहला टीवी कार्यक्रम" else "First TV program enabling direct dialogue between spiritual seekers and a Jain monk"
+                    if (isHindi) "जैन मुनि और जिज्ञासुओं के बीच सीधे संवाद की अनुमति देने वाला पहला टीवी कार्यक्रम। प्रतिदिन संध्या को प्रश्नोत्तर सत्र।" else "First TV program enabling direct dialogue between spiritual seekers and a Jain monk. Daily evening Q&A sessions."
                 )
                 ContributionItem(
                     if (isHindi) "धर्म बचाओ आंदोलन (2015)" else "Dharm Bachao Movement (2015)",
-                    if (isHindi) "सल्लेखना के प्रश्न पर एक करोड़ से अधिक लोगों का वैश्विक शांत प्रदर्शन" else "Global silent protest uniting over one crore people worldwide on August 24, 2015"
+                    if (isHindi) "सल्लेखना के प्रश्न पर एक करोड़ से अधिक लोगों का वैश्विक शांत प्रदर्शन (24 अगस्त 2015)" else "Global silent protest uniting over one crore people worldwide on August 24, 2015"
                 )
                 ContributionItem(
                     if (isHindi) "गुणायतन" else "Gunayatan",
@@ -217,19 +230,19 @@ fun MaharajScreen(
         Spacer(modifier = Modifier.height(12.dp))
         SectionCard(title = if (isHindi) "पूजन विधि" else "Poojan Vidhi") {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                WebLink(if (isHindi) "प्रमाणसागर जी पूजन - भाग 1" else "Pramansagar Ji Pujan - Part 1", "https://www.munipramansagar.net/praman-sagar-ji-pujan-1/", context)
-                WebLink(if (isHindi) "प्रमाणसागर जी पूजन - भाग 2" else "Pramansagar Ji Pujan - Part 2", "https://www.munipramansagar.net/praman-sagar-ji-pujan-2/", context)
-                WebLink(if (isHindi) "प्रमाणसागर जी पूजन - भाग 3" else "Pramansagar Ji Pujan - Part 3", "https://www.munipramansagar.net/praman-sagar-ji-pujan-3/", context)
+                WebLink("हे वीतराग आगमज्ञानी", "https://www.munipramansagar.net/praman-sagar-ji-pujan-1/", context)
+                WebLink("श्री प्रमाणसागर की बोलो जय-जयकार", "https://www.munipramansagar.net/praman-sagar-ji-pujan-2/", context)
+                WebLink("जिनका विरागमय ही जीवन", "https://www.munipramansagar.net/praman-sagar-ji-pujan-3/", context)
             }
         }
 
-        // ── Aarti Links ──
+        // ── Aarti ──
         Spacer(modifier = Modifier.height(12.dp))
         SectionCard(title = if (isHindi) "आरती" else "Aarti") {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                WebLink(if (isHindi) "प्रमाणसागर जी आरती - 1" else "Pramansagar Ji Aarti - 1", "https://www.munipramansagar.net/praman-sagar-ji-aarti-1/", context)
-                WebLink(if (isHindi) "प्रमाणसागर जी आरती - 2" else "Pramansagar Ji Aarti - 2", "https://www.munipramansagar.net/praman-sagar-ji-aarti-2/", context)
-                WebLink(if (isHindi) "प्रमाणसागर जी आरती - 3" else "Pramansagar Ji Aarti - 3", "https://www.munipramansagar.net/praman-sagar-ji-aarti-3/", context)
+                WebLink("प्रमाण सागर की, गुणआगर की", "https://www.munipramansagar.net/praman-sagar-ji-aarti-1/", context)
+                WebLink("ओ गुरुवर मुनिवर प्रमाण सागर", "https://www.munipramansagar.net/praman-sagar-ji-aarti-2/", context)
+                WebLink("आरती गुरु प्रमाण की", "https://www.munipramansagar.net/praman-sagar-ji-aarti-3/", context)
             }
         }
 
