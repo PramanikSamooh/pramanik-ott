@@ -426,7 +426,44 @@ export const checkLiveStatus = onSchedule(
 
     const apiKey = youtubeApiKey.value();
 
-    // Check both channels using RSS feed (FREE — no API quota)
+    // ── Step 1: Check for admin override ──
+    // Admin can manually set a live video ID from the admin panel
+    try {
+      const overrideDoc = await db.collection("live").doc("override").get();
+      if (overrideDoc.exists) {
+        const override = overrideDoc.data();
+        if (override?.active && override?.videoId) {
+          // Verify the video is actually live via API (1 unit cost)
+          const details = await fetchVideoDetails([override.videoId], apiKey);
+          const item = details[0];
+          if (item?.liveStreamingDetails?.actualStartTime && !item?.liveStreamingDetails?.actualEndTime) {
+            await db.collection("live").doc("status").set({
+              isLive: true,
+              currentVideoId: override.videoId,
+              activeStreams: [{
+                videoId: override.videoId,
+                channelKey: override.channelKey || "pramansagarji",
+                channelName: override.channelName || item.snippet?.channelTitle || "",
+                title: item.snippet?.title || override.title || "",
+              }],
+              upcomingVideos: [],
+              checkedAt: admin.firestore.FieldValue.serverTimestamp(),
+              source: "admin_override",
+            });
+            console.log(`Live check: admin override active — ${override.videoId}`);
+            return;
+          } else {
+            // Override video is no longer live — auto-clear
+            await db.collection("live").doc("override").update({ active: false });
+            console.log(`Live check: admin override cleared — video no longer live`);
+          }
+        }
+      }
+    } catch (err) {
+      console.error("Error checking admin override:", err);
+    }
+
+    // ── Step 2: Check RSS feeds for all channels ──
     const channelsToCheck = [
       { id: youtubeChannelPramansagarji.value(), key: "pramansagarji", name: "Muni Pramansagar Ji" },
       { id: youtubeChannelJainpathshala.value(), key: "jainpathshala", name: "Jain Pathshala" },
@@ -436,12 +473,10 @@ export const checkLiveStatus = onSchedule(
 
     for (const channel of channelsToCheck) {
       try {
-        // RSS feed returns latest 15 videos — FREE, no API quota
         const rssUrl = `https://www.youtube.com/feeds/videos.xml?channel_id=${channel.id}`;
         const rssRes = await fetch(rssUrl);
         const rssText = await rssRes.text();
 
-        // Extract video IDs from RSS XML using regex
         const videoIdMatches = rssText.matchAll(/<yt:videoId>([^<]+)<\/yt:videoId>/g);
         for (const match of videoIdMatches) {
           recentVideoIds.push({
@@ -455,8 +490,7 @@ export const checkLiveStatus = onSchedule(
       }
     }
 
-    // Now check if any of these recent videos are currently live
-    // videos.list costs only 1 unit per 50 videos (vs 100 units for search.list)
+    // ── Step 3: Check if any RSS videos are currently live ──
     const activeStreams: Array<{
       videoId: string;
       channelKey: string;
@@ -476,7 +510,6 @@ export const checkLiveStatus = onSchedule(
             liveDetails.actualStartTime &&
             !liveDetails.actualEndTime
           ) {
-            // This video is currently live!
             const channelInfo = recentVideoIds.find((v) => v.videoId === item.id);
             activeStreams.push({
               videoId: item.id,
@@ -497,9 +530,163 @@ export const checkLiveStatus = onSchedule(
       activeStreams,
       upcomingVideos: [],
       checkedAt: admin.firestore.FieldValue.serverTimestamp(),
+      source: "rss_auto",
     });
 
     console.log(`Live check: ${activeStreams.length} active streams (checked ${recentVideoIds.length} recent videos)`);
+  }
+);
+
+// ══════════════════════════════════════════════════════════════
+// ── HTTP: Manual trigger to check live status ──
+// ══════════════════════════════════════════════════════════════
+export const triggerLiveCheck = onRequest(
+  { secrets: [youtubeApiKey, youtubeChannelPramansagarji, youtubeChannelJainpathshala], memory: "256MiB", timeoutSeconds: 60 },
+  async (req, res) => {
+    const apiKey = youtubeApiKey.value();
+    const channelsToCheck = [
+      { id: youtubeChannelPramansagarji.value(), key: "pramansagarji", name: "Muni Pramansagar Ji" },
+      { id: youtubeChannelJainpathshala.value(), key: "jainpathshala", name: "Jain Pathshala" },
+    ];
+
+    const recentVideoIds: Array<{ videoId: string; channelKey: string; channelName: string }> = [];
+
+    for (const channel of channelsToCheck) {
+      try {
+        const rssUrl = `https://www.youtube.com/feeds/videos.xml?channel_id=${channel.id}`;
+        const rssRes = await fetch(rssUrl);
+        const rssText = await rssRes.text();
+        const videoIdMatches = rssText.matchAll(/<yt:videoId>([^<]+)<\/yt:videoId>/g);
+        for (const match of videoIdMatches) {
+          recentVideoIds.push({ videoId: match[1], channelKey: channel.key, channelName: channel.name });
+        }
+      } catch (err) {
+        console.error(`RSS error for ${channel.key}:`, err);
+      }
+    }
+
+    const activeStreams: Array<{ videoId: string; channelKey: string; channelName: string; title: string }> = [];
+    const upcomingVideos: Array<{ videoId: string; channelKey: string; channelName: string; title: string; scheduledStart: string }> = [];
+
+    if (recentVideoIds.length > 0) {
+      const ids = recentVideoIds.map((v) => v.videoId);
+      const details = await fetchVideoDetails(ids, apiKey);
+      for (const item of details) {
+        const liveDetails = item.liveStreamingDetails;
+        if (liveDetails && liveDetails.actualStartTime && !liveDetails.actualEndTime) {
+          const channelInfo = recentVideoIds.find((v) => v.videoId === item.id);
+          activeStreams.push({
+            videoId: item.id,
+            channelKey: channelInfo?.channelKey || "",
+            channelName: channelInfo?.channelName || "",
+            title: item.snippet?.title || "",
+          });
+        } else if (liveDetails && liveDetails.scheduledStartTime && !liveDetails.actualStartTime) {
+          const channelInfo = recentVideoIds.find((v) => v.videoId === item.id);
+          upcomingVideos.push({
+            videoId: item.id,
+            channelKey: channelInfo?.channelKey || "",
+            channelName: channelInfo?.channelName || "",
+            title: item.snippet?.title || "",
+            scheduledStart: liveDetails.scheduledStartTime,
+          });
+        }
+      }
+    }
+
+    await db.collection("live").doc("status").set({
+      isLive: activeStreams.length > 0,
+      currentVideoId: activeStreams[0]?.videoId || "",
+      activeStreams,
+      upcomingVideos,
+      checkedAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+
+    res.json({
+      success: true,
+      rssVideosFound: recentVideoIds.length,
+      activeStreams: activeStreams.length,
+      upcomingVideos: upcomingVideos.length,
+      streams: activeStreams,
+      upcoming: upcomingVideos,
+    });
+  }
+);
+
+// ══════════════════════════════════════════════════════════════
+// ── HTTP: Set live override from admin panel ──
+// Admin can manually set a video as live (for unlisted/private streams)
+// ══════════════════════════════════════════════════════════════
+export const setLiveOverride = onRequest(
+  { secrets: [youtubeApiKey], memory: "256MiB", timeoutSeconds: 30, cors: true },
+  async (req, res) => {
+    const { videoId, channelKey, channelName, active } = req.body || {};
+
+    if (active === false) {
+      // Clear override
+      await db.collection("live").doc("override").set({ active: false });
+      await db.collection("live").doc("status").set({
+        isLive: false,
+        currentVideoId: "",
+        activeStreams: [],
+        upcomingVideos: [],
+        checkedAt: admin.firestore.FieldValue.serverTimestamp(),
+        source: "admin_cleared",
+      });
+      res.json({ success: true, message: "Live override cleared" });
+      return;
+    }
+
+    if (!videoId) {
+      res.status(400).json({ error: "videoId is required" });
+      return;
+    }
+
+    // Verify video exists and get its details
+    const apiKey = youtubeApiKey.value();
+    const details = await fetchVideoDetails([videoId], apiKey);
+    const item = details[0];
+
+    if (!item) {
+      res.status(404).json({ error: "Video not found" });
+      return;
+    }
+
+    const isLive = !!(item.liveStreamingDetails?.actualStartTime && !item.liveStreamingDetails?.actualEndTime);
+    const title = item.snippet?.title || "";
+
+    // Set override
+    await db.collection("live").doc("override").set({
+      active: true,
+      videoId,
+      channelKey: channelKey || "pramansagarji",
+      channelName: channelName || item.snippet?.channelTitle || "",
+      title,
+      setAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+
+    // Also update live status immediately
+    await db.collection("live").doc("status").set({
+      isLive: isLive,
+      currentVideoId: videoId,
+      activeStreams: isLive ? [{
+        videoId,
+        channelKey: channelKey || "pramansagarji",
+        channelName: channelName || item.snippet?.channelTitle || "",
+        title,
+      }] : [],
+      upcomingVideos: [],
+      checkedAt: admin.firestore.FieldValue.serverTimestamp(),
+      source: "admin_override",
+    });
+
+    res.json({
+      success: true,
+      videoId,
+      title,
+      isCurrentlyLive: isLive,
+      message: isLive ? "Video is LIVE — override set" : "Video found but not currently live — override set anyway",
+    });
   }
 );
 

@@ -122,10 +122,11 @@ class HomeViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 liveRepository.observeLiveStatus().collect { status ->
+                    android.util.Log.d("HomeViewModel", "LIVE STATUS: isLive=${status.isLive}, streams=${status.activeStreams.size}, videoId=${status.currentVideoId}")
                     _uiState.value = _uiState.value.copy(liveStatus = status)
                 }
-            } catch (_: Exception) {
-                // Live status is non-critical — don't crash
+            } catch (e: Exception) {
+                android.util.Log.e("HomeViewModel", "LIVE STATUS ERROR: ${e.message}", e)
             }
         }
     }
