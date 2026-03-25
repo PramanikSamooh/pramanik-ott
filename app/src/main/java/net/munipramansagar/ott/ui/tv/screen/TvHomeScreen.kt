@@ -2,6 +2,9 @@ package net.munipramansagar.ott.ui.tv.screen
 
 import android.content.Intent
 import android.graphics.Bitmap
+import android.view.KeyEvent
+import androidx.compose.ui.input.key.onKeyEvent
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.graphics.asImageBitmap
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.EncodeHintType
@@ -174,9 +177,18 @@ fun TvHomeScreen(
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                         }
+                        val focusManager = LocalFocusManager.current
                         TvLazyRow(
                             contentPadding = PaddingValues(horizontal = 48.dp),
-                            horizontalArrangement = Arrangement.spacedBy(16.dp)
+                            horizontalArrangement = Arrangement.spacedBy(16.dp),
+                            modifier = Modifier.onKeyEvent { event ->
+                                if (event.nativeKeyEvent.action == KeyEvent.ACTION_DOWN &&
+                                    event.nativeKeyEvent.keyCode == KeyEvent.KEYCODE_DPAD_LEFT) {
+                                    // Let focus escape to sidebar
+                                    focusManager.moveFocus(androidx.compose.ui.focus.FocusDirection.Left)
+                                    true
+                                } else false
+                            }
                         ) {
                             items(continueWatching.size) { index ->
                                 val entry = continueWatching[index]
