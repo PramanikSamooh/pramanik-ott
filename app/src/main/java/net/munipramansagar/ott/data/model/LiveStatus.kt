@@ -9,7 +9,7 @@ data class LiveStatus(
     var live: Boolean = false,
     val currentVideoId: String = "",
     val activeStreams: List<LiveStream> = emptyList(),
-    val upcomingVideos: List<String> = emptyList()
+    val upcomingVideos: List<UpcomingStream> = emptyList()
 ) {
     // Convenience getter that matches old code
     val isLive: Boolean get() = live
@@ -21,4 +21,13 @@ data class LiveStream(
     val channelKey: String = "",
     val channelName: String = "",
     val title: String = ""
+)
+
+@IgnoreExtraProperties
+data class UpcomingStream(
+    val videoId: String = "",
+    val channelKey: String = "",
+    val channelName: String = "",
+    val title: String = "",
+    val scheduledStart: String = ""
 )

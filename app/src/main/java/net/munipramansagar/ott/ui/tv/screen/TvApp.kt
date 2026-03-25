@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -159,14 +160,39 @@ fun TvApp(
     // Debounced collapse — prevents flicker when focus moves between sidebar items
     var collapseJob by remember { mutableStateOf<kotlinx.coroutines.Job?>(null) }
 
-    // Back button: collapse sidebar → go to home → let system exit
-    // Only handle back if sidebar is expanded OR not on home
-    BackHandler(enabled = isSidebarExpanded || selectedIndex != 0) {
+    // Exit confirmation dialog
+    var showExitDialog by remember { mutableStateOf(false) }
+    val activity = LocalContext.current as? android.app.Activity
+
+    // Back button: collapse sidebar → go to home → confirm exit
+    BackHandler(enabled = true) {
         if (isSidebarExpanded) {
             isSidebarExpanded = false
         } else if (selectedIndex != 0) {
             selectedIndex = 0
+        } else {
+            showExitDialog = true
         }
+    }
+
+    if (showExitDialog) {
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { showExitDialog = false },
+            title = { androidx.compose.material3.Text("Exit App") },
+            text = { androidx.compose.material3.Text(
+                if (isHindi) "क्या आप ऐप से बाहर निकलना चाहते हैं?" else "Are you sure you want to exit?"
+            ) },
+            confirmButton = {
+                androidx.compose.material3.TextButton(onClick = { activity?.finish() }) {
+                    androidx.compose.material3.Text("Yes", color = Saffron)
+                }
+            },
+            dismissButton = {
+                androidx.compose.material3.TextButton(onClick = { showExitDialog = false }) {
+                    androidx.compose.material3.Text("No")
+                }
+            }
+        )
     }
 
     val uiState by homeViewModel.uiState.collectAsState()

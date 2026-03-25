@@ -9,6 +9,8 @@ import androidx.compose.ui.graphics.asImageBitmap
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.EncodeHintType
 import com.google.zxing.qrcode.QRCodeWriter
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -113,6 +115,17 @@ fun TvHomeScreen(
                         TvLiveStreamBanner(
                             isLive = uiState.liveStatus.isLive,
                             activeStreams = uiState.liveStatus.activeStreams
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                    }
+                }
+
+                // 1b. Upcoming live streams — show when not live but scheduled
+                if (!uiState.liveStatus.isLive && uiState.liveStatus.upcomingVideos.isNotEmpty()) {
+                    item {
+                        TvUpcomingBanner(
+                            upcomingStreams = uiState.liveStatus.upcomingVideos,
+                            isHindi = isHindi
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                     }
@@ -420,5 +433,73 @@ private fun QrCodeImage(url: String, qrSize: Int = 72) {
                 )
             )
         }
+    }
+}
+
+@OptIn(ExperimentalTvMaterial3Api::class)
+@Composable
+private fun TvUpcomingBanner(
+    upcomingStreams: List<net.munipramansagar.ott.data.model.UpcomingStream>,
+    isHindi: Boolean
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 48.dp, vertical = 8.dp)
+            .clip(RoundedCornerShape(14.dp))
+            .background(
+                Brush.horizontalGradient(
+                    colors = listOf(
+                        Color(0xFF1A237E).copy(alpha = 0.3f),
+                        Color(0xFF0D47A1).copy(alpha = 0.15f)
+                    )
+                )
+            )
+            .border(1.dp, Color(0xFF42A5F5).copy(alpha = 0.3f), RoundedCornerShape(14.dp))
+            .padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // Clock icon + "Upcoming" label
+        Text(
+            text = "🕐",
+            fontSize = 24.sp
+        )
+        Spacer(modifier = Modifier.width(12.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = if (isHindi) "आगामी लाइव" else "Upcoming Live",
+                style = PramanikTvTheme.typography.titleMedium.copy(
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF90CAF9)
+                )
+            )
+            upcomingStreams.take(2).forEach { stream ->
+                Text(
+                    text = "${stream.title} • ${formatScheduledTime(stream.scheduledStart)}",
+                    style = PramanikTvTheme.typography.bodyMedium,
+                    color = TextWhite,
+                    maxLines = 1,
+                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                )
+            }
+        }
+    }
+}
+
+private fun formatScheduledTime(isoTime: String): String {
+    return try {
+        val instant = java.time.Instant.parse(isoTime)
+        val zoned = instant.atZone(java.time.ZoneId.of("Asia/Kolkata"))
+        val hour = zoned.hour
+        val minute = zoned.minute
+        val amPm = if (hour < 12) "AM" else "PM"
+        val displayHour = when {
+            hour == 0 -> 12
+            hour > 12 -> hour - 12
+            else -> hour
+        }
+        "$displayHour:${minute.toString().padStart(2, '0')} $amPm IST"
+    } catch (_: Exception) {
+        isoTime
     }
 }
