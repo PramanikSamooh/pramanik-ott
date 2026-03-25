@@ -45,10 +45,19 @@ class VideoRepository @Inject constructor(
             .await()
             .toObjects(Playlist::class.java)
 
-        return playlists
-            .filter { it.visible }
-            .sortedWith(compareByDescending<Playlist> { it.pinned }.thenBy { it.displayOrder })
-            .take(limit.toInt())
+        // Separate monthly (title matches YYYY-MM) from special series
+        val visible = playlists.filter { it.visible }
+        val monthly = visible.filter { it.title.matches(Regex("^\\d{4}-\\d{2}$")) }
+        val series = visible.filter { !it.title.matches(Regex("^\\d{4}-\\d{2}$")) }
+
+        // Pinned first, then monthly (newest first), then series (by displayOrder)
+        val sorted = buildList {
+            addAll(visible.filter { it.pinned }.sortedBy { it.displayOrder })
+            addAll(monthly.filter { !it.pinned }.sortedByDescending { it.title })
+            addAll(series.filter { !it.pinned }.sortedBy { it.displayOrder })
+        }
+
+        return sorted.take(limit.toInt())
     }
 
     suspend fun getPlaylistById(playlistId: String): Playlist? {

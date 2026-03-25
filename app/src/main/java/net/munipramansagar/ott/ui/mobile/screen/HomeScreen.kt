@@ -106,6 +106,24 @@ fun HomeScreen(
     val continueWatching by viewModel.continueWatching.collectAsState(initial = emptyList())
     val context = LocalContext.current
 
+    if (state.isLoading) {
+        // Skeleton loader with Maharaj photo + shimmer
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background),
+            contentAlignment = Alignment.Center
+        ) {
+            Image(
+                painter = painterResource(id = net.munipramansagar.ott.R.drawable.skeleton_loader),
+                contentDescription = null,
+                contentScale = ContentScale.Fit,
+                modifier = Modifier.fillMaxSize()
+            )
+        }
+        return
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()

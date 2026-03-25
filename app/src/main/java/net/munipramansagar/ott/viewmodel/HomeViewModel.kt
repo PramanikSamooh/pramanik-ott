@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -94,13 +95,25 @@ class HomeViewModel @Inject constructor(
                     }
                 }.awaitAll().filter { it.playlists.isNotEmpty() }
 
-                // Hero banner = first 5 videos from the first section's first playlist
-                val heroBanner = sectionDataList
-                    .firstOrNull()
-                    ?.playlists
-                    ?.firstOrNull()
-                    ?.videos
-                    ?.take(5)
+                // Hero banner — try admin-pinned videos first, fallback to first section
+                val heroBanner = try {
+                    val heroDoc = com.google.firebase.firestore.FirebaseFirestore.getInstance()
+                        .collection("config").document("hero").get().await()
+                    if (heroDoc.exists()) {
+                        val videosList = heroDoc.get("videos") as? List<*> ?: emptyList<Any>()
+                        videosList.mapNotNull { item ->
+                            val map = item as? Map<*, *> ?: return@mapNotNull null
+                            val videoId = map["videoId"] as? String ?: return@mapNotNull null
+                            net.munipramansagar.ott.data.model.Video(
+                                id = videoId,
+                                title = map["title"] as? String ?: "",
+                                thumbnailUrl = map["thumbnailUrl"] as? String ?: "https://i.ytimg.com/vi/$videoId/hqdefault.jpg",
+                                thumbnailUrlHQ = "https://i.ytimg.com/vi/$videoId/maxresdefault.jpg"
+                            )
+                        }.ifEmpty { null }
+                    } else null
+                } catch (_: Exception) { null }
+                    ?: sectionDataList.firstOrNull()?.playlists?.firstOrNull()?.videos?.take(5)
                     ?: emptyList()
 
                 _uiState.value = _uiState.value.copy(

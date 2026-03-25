@@ -51,14 +51,11 @@ android {
 
     signingConfigs {
         create("release") {
-            val props = java.util.Properties()
-            val localPropsFile = rootProject.file("local.properties")
-            if (localPropsFile.exists()) props.load(localPropsFile.inputStream())
-
-            storeFile = file(props.getProperty("RELEASE_STORE_FILE", "${rootProject.projectDir}/../pramanik-ott-upload.jks"))
-            storePassword = props.getProperty("RELEASE_STORE_PASSWORD", "")
-            keyAlias = props.getProperty("RELEASE_KEY_ALIAS", "pramanik-ott")
-            keyPassword = props.getProperty("RELEASE_KEY_PASSWORD", "")
+            // Read signing config from gradle.properties or environment
+            storeFile = file(findProperty("RELEASE_STORE_FILE")?.toString() ?: "${rootProject.projectDir}/../pramanik-ott-upload.jks")
+            storePassword = findProperty("RELEASE_STORE_PASSWORD")?.toString() ?: System.getenv("RELEASE_STORE_PASSWORD") ?: ""
+            keyAlias = findProperty("RELEASE_KEY_ALIAS")?.toString() ?: "pramanik-ott"
+            keyPassword = findProperty("RELEASE_KEY_PASSWORD")?.toString() ?: System.getenv("RELEASE_KEY_PASSWORD") ?: ""
         }
     }
 

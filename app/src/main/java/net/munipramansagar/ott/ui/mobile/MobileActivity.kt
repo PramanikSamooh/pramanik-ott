@@ -3,7 +3,12 @@ package net.munipramansagar.ott.ui.mobile
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.getValue
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.foundation.background
@@ -100,6 +105,29 @@ class MobileActivity : ComponentActivity() {
                 val isHomeScreen = currentRoute == Routes.HOME
                 val isInnerScreen = !isHomeScreen && currentRoute != Routes.SHORTS
                 val isShortsScreen = currentRoute == Routes.SHORTS
+
+                // Exit confirmation on home screen
+                var showExitDialog by remember { mutableStateOf(false) }
+                BackHandler(enabled = isHomeScreen) {
+                    showExitDialog = true
+                }
+                if (showExitDialog) {
+                    androidx.compose.material3.AlertDialog(
+                        onDismissRequest = { showExitDialog = false },
+                        title = { Text("Exit App") },
+                        text = { Text(if (isHindi) "क्या आप ऐप से बाहर निकलना चाहते हैं?" else "Are you sure you want to exit?") },
+                        confirmButton = {
+                            androidx.compose.material3.TextButton(onClick = { finish() }) {
+                                Text("Yes", color = net.munipramansagar.ott.ui.mobile.theme.Saffron)
+                            }
+                        },
+                        dismissButton = {
+                            androidx.compose.material3.TextButton(onClick = { showExitDialog = false }) {
+                                Text("No")
+                            }
+                        }
+                    )
+                }
 
                 // Title for inner screens
                 val topBarTitle = when {
