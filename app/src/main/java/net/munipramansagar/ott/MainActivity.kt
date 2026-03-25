@@ -32,10 +32,15 @@ class MainActivity : AppCompatActivity() {
         db.collection("config").document("app").get()
             .addOnSuccessListener { doc ->
                 if (doc.exists()) {
-                    val maintenanceMode = doc.getBoolean("maintenanceMode") ?: false
+                    // Handle both boolean and string "true"/"True"
+                    val maintenanceRaw = doc.get("maintenanceMode")
+                    val maintenanceMode = when (maintenanceRaw) {
+                        is Boolean -> maintenanceRaw
+                        is String -> maintenanceRaw.equals("true", ignoreCase = true)
+                        else -> false
+                    }
                     val maintenanceMessage = doc.getString("maintenanceMessage") ?: "App is under maintenance. Please try again later."
-                    // minVersionCode is an integer (version code), minVersion is a display string
-                    val minVersionCode = doc.getLong("minVersionCode")?.toInt() ?: 0
+                    val minVersionCode = (doc.getLong("minVersionCode") ?: doc.get("minVersionCode")?.toString()?.toIntOrNull()?.toLong() ?: 0L).toInt()
                     val currentVersion = BuildConfig.VERSION_CODE
 
                     when {
