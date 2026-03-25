@@ -7,7 +7,7 @@ service cloud.firestore {
       return request.auth != null && (
         request.auth.token.email == "gunayatan.org@gmail.com" ||
         request.auth.token.email == "sachin@ifsjaipur.com" ||
-        request.auth.token.email == "pramaniksamooh@gmail.com"
+        request.auth.token.email == "admin@munipramansagar.net"
       );
     }
 
