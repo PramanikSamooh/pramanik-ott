@@ -110,28 +110,63 @@ fun HomeScreen(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(bottom = 80.dp) // Space for bottom nav
+            .padding(bottom = 80.dp)
     ) {
-        // ── Live Stream Banner ──
+        // ── 1. Live Stream Banner ──
         LiveStreamBanner(
             isLive = state.liveStatus.isLive,
             activeStreams = state.liveStatus.activeStreams,
             onWatchClick = { videoId -> onVideoClick(videoId) }
         )
 
-        // ── Notification Carousel (filtered for mobile) ──
+        // ── 2. Maharaj Shree Card (photo + name) ──
+        Spacer(modifier = Modifier.height(8.dp))
+        MaharajCard(
+            isHindi = isHindi,
+            onClick = { onNavigate("maharaj") }
+        )
+
+        // ── 3. Four Category Icons (1x4 row) ──
+        Spacer(modifier = Modifier.height(12.dp))
+        MainCategoryGrid(
+            categories = mainCategories,
+            isHindi = isHindi,
+            onCategoryClick = { cat -> onNavigate(cat.route) }
+        )
+
+        // ── 4. Notification Carousel ──
         val mobileAnnouncements = state.announcements.filter { it.showOnMobile }
         if (mobileAnnouncements.isNotEmpty()) {
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(12.dp))
             NotificationCarousel(
                 announcements = mobileAnnouncements,
                 isHindi = isHindi
             )
         }
 
-        // ── Continue Watching ──
+        // ── 5. Hero Videos (pinned/latest — same as TV hero) ──
+        if (state.heroBannerVideos.isNotEmpty()) {
+            Spacer(modifier = Modifier.height(16.dp))
+            SectionHeader(
+                title = if (isHindi) "नवीनतम वीडियो" else "Latest Videos"
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            LazyRow(
+                contentPadding = PaddingValues(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                items(state.heroBannerVideos.take(8), key = { it.id }) { video ->
+                    VideoCard(
+                        video = video,
+                        onClick = { onVideoClick(video.id) }
+                    )
+                }
+            }
+        }
+
+        // ── 6. Continue Watching ──
         if (continueWatching.isNotEmpty()) {
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(16.dp))
             SectionHeader(
                 title = if (isHindi) "जारी रखें" else "Continue Watching"
             )
@@ -161,76 +196,6 @@ fun HomeScreen(
             }
         }
 
-        // ── Maharaj Shree Card ──
-        Spacer(modifier = Modifier.height(12.dp))
-        MaharajCard(
-            isHindi = isHindi,
-            onClick = { onNavigate("maharaj") }
-        )
-
-        // ── 2x2 Main Categories ──
-        Spacer(modifier = Modifier.height(16.dp))
-        MainCategoryGrid(
-            categories = mainCategories,
-            isHindi = isHindi,
-            onCategoryClick = { cat -> onNavigate(cat.route) }
-        )
-
-        // ── Recently Added Videos ──
-        if (state.heroBannerVideos.isNotEmpty()) {
-            Spacer(modifier = Modifier.height(20.dp))
-            SectionHeader(
-                title = if (isHindi) "हाल ही में जोड़े गए" else "Recently Added"
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            LazyRow(
-                contentPadding = PaddingValues(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                items(state.heroBannerVideos.take(6), key = { it.id }) { video ->
-                    VideoCard(
-                        video = video,
-                        onClick = { onVideoClick(video.id) }
-                    )
-                }
-            }
-        }
-
-        // ── First section preview ──
-        if (state.sections.isNotEmpty()) {
-            val firstSection = state.sections.first()
-            Spacer(modifier = Modifier.height(20.dp))
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                SectionHeader(title = firstSection.section.getLabel(isHindi))
-                Text(
-                    text = if (isHindi) "सभी देखें >" else "View All >",
-                    style = MaterialTheme.typography.labelLarge.copy(
-                        fontSize = 13.sp, fontWeight = FontWeight.SemiBold
-                    ),
-                    color = Saffron,
-                    modifier = Modifier.clickable { onViewAllClick(firstSection.section.id) }
-                )
-            }
-            Spacer(modifier = Modifier.height(8.dp))
-            firstSection.playlists.firstOrNull()?.let { pw ->
-                LazyRow(
-                    contentPadding = PaddingValues(horizontal = 16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    items(pw.videos, key = { it.id }) { video ->
-                        VideoCard(video = video, onClick = { onVideoClick(video.id) })
-                    }
-                }
-            }
-        }
-
-        // Bottom padding for nav bar
         Spacer(modifier = Modifier.height(100.dp))
     }
 }
