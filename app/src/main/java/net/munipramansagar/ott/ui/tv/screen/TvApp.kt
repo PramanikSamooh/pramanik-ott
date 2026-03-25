@@ -137,7 +137,8 @@ sealed class TvNavItem(
 data class SidebarEntry(
     val item: TvNavItem,
     val isGroupHeader: Boolean = false,
-    val navIndex: Int = -1 // index into navItems for selection
+    val navIndex: Int = -1, // index into navItems for selection
+    val isUtility: Boolean = false // utility items (Search, Settings) — always visible at bottom
 )
 
 @OptIn(ExperimentalTvMaterial3Api::class)
@@ -191,9 +192,11 @@ fun TvApp(
         )
     }
 
-    // Build sidebar entries with group headers
+    // Build sidebar entries — ALL items are sub-items under groups
+    // No standalone top-level items — ensures Left always opens the right group
     val sidebarEntries = remember(navItems) {
         buildList {
+            // Home group (single item, but treated as group for consistency)
             add(SidebarEntry(TvNavItem.Home, navIndex = 0))
 
             // Muni Pramansagar Ji group
@@ -224,9 +227,9 @@ fun TvApp(
             add(SidebarEntry(TvNavItem.KalyanGroup, isGroupHeader = true))
             add(SidebarEntry(TvNavItem.Donate, navIndex = 13))
 
-            // Bottom
-            add(SidebarEntry(TvNavItem.Search, navIndex = 14))
-            add(SidebarEntry(TvNavItem.Settings, navIndex = 15))
+            // Utility group
+            add(SidebarEntry(TvNavItem.Search, navIndex = 14, isUtility = true))
+            add(SidebarEntry(TvNavItem.Settings, navIndex = 15, isUtility = true))
         }
     }
 
@@ -534,8 +537,24 @@ private fun TvSidebar(
                         onClick = { if (entry.navIndex >= 0) onItemSelected(entry.navIndex) }
                     )
                 }
+            } else if (entry.isUtility) {
+                // Utility items (Search, Settings) — only visible when expanded
+                if (isExpanded) {
+                    TvSidebarItem(
+                        item = entry.item,
+                        isSelected = selectedIndex == entry.navIndex,
+                        isExpanded = true,
+                        textAlpha = textAlpha,
+                        isHindi = isHindi,
+                        onFocusChange = { focused ->
+                            if (focused) onExpandChanged(true)
+                        },
+                        onContentFocusLost = { onExpandChanged(false) },
+                        onClick = { if (entry.navIndex >= 0) onItemSelected(entry.navIndex) }
+                    )
+                }
             } else {
-                // Top-level items — always visible
+                // Top-level items (Home) — always visible
                 TvSidebarItem(
                     item = entry.item,
                     isSelected = selectedIndex == entry.navIndex,
