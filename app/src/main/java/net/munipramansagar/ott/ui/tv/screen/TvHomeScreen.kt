@@ -75,6 +75,7 @@ fun TvHomeScreen(
     val continueWatching by homeViewModel.continueWatching.collectAsState(initial = emptyList())
     val pathshalaState = pathshalaViewModel?.uiState?.collectAsState()
     val context = LocalContext.current
+    val lazyListState = androidx.tv.foundation.lazy.list.rememberTvLazyListState()
 
     val onVideoClick: (Video) -> Unit = { video ->
         val intent = Intent(context, PlayerActivity::class.java).apply {
@@ -82,6 +83,11 @@ fun TvHomeScreen(
             putExtra("videoTitle", video.title)
         }
         context.startActivity(intent)
+    }
+
+    // Scroll to top when hero changes or returning from video
+    androidx.compose.runtime.LaunchedEffect(uiState.heroBannerVideos.size) {
+        lazyListState.scrollToItem(0)
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -94,6 +100,7 @@ fun TvHomeScreen(
             )
         } else {
             TvLazyColumn(
+                state = lazyListState,
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(bottom = 48.dp)
             ) {
