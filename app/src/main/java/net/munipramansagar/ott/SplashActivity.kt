@@ -72,6 +72,64 @@ class SplashActivity : ComponentActivity() {
     }
 
     private fun navigateToMain() {
+        // Check maintenance mode and version before launching
+        com.google.firebase.firestore.FirebaseFirestore.getInstance()
+            .collection("config").document("app").get()
+            .addOnSuccessListener { doc ->
+                if (doc.exists()) {
+                    val maintenanceRaw = doc.get("maintenanceMode")
+                    val maintenanceMode = when (maintenanceRaw) {
+                        is Boolean -> maintenanceRaw
+                        is String -> maintenanceRaw.equals("true", ignoreCase = true)
+                        else -> false
+                    }
+                    val maintenanceMessage = doc.getString("maintenanceMessage")
+                        ?: "App is under maintenance. Please try again later."
+                    val minVersionCode = (doc.getLong("minVersionCode")
+                        ?: doc.get("minVersionCode")?.toString()?.toIntOrNull()?.toLong()
+                        ?: 0L).toInt()
+                    val currentVersion = BuildConfig.VERSION_CODE
+
+                    when {
+                        maintenanceMode -> {
+                            android.app.AlertDialog.Builder(this)
+                                .setTitle("\uD83D\uDD27 Maintenance")
+                                .setMessage(maintenanceMessage)
+                                .setCancelable(false)
+                                .setPositiveButton("OK") { _, _ -> finish() }
+                                .show()
+                        }
+                        minVersionCode > currentVersion -> {
+                            android.app.AlertDialog.Builder(this)
+                                .setTitle("Update Required")
+                                .setMessage("A new version of Pramanik OTT is available. Please update to continue.")
+                                .setCancelable(false)
+                                .setPositiveButton("Update") { _, _ ->
+                                    try {
+                                        startActivity(Intent(Intent.ACTION_VIEW,
+                                            android.net.Uri.parse("market://details?id=$packageName")))
+                                    } catch (_: Exception) {
+                                        startActivity(Intent(Intent.ACTION_VIEW,
+                                            android.net.Uri.parse("https://play.google.com/store/apps/details?id=$packageName")))
+                                    }
+                                    finish()
+                                }
+                                .setNegativeButton("Later") { _, _ -> launchApp() }
+                                .show()
+                        }
+                        else -> launchApp()
+                    }
+                } else {
+                    launchApp()
+                }
+            }
+            .addOnFailureListener {
+                // No internet or error — launch normally
+                launchApp()
+            }
+    }
+
+    private fun launchApp() {
         val targetActivity = if (DeviceUtil.isTv(this)) {
             TvActivity::class.java
         } else {

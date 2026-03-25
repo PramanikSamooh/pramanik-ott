@@ -31,9 +31,11 @@ class MainActivity : AppCompatActivity() {
         val db = FirebaseFirestore.getInstance()
         db.collection("config").document("app").get()
             .addOnSuccessListener { doc ->
+                Log.d("MainActivity", "Config doc exists: ${doc.exists()}, data: ${doc.data}")
                 if (doc.exists()) {
                     // Handle both boolean and string "true"/"True"
                     val maintenanceRaw = doc.get("maintenanceMode")
+                    Log.d("MainActivity", "maintenanceMode raw: $maintenanceRaw (type: ${maintenanceRaw?.javaClass?.name})")
                     val maintenanceMode = when (maintenanceRaw) {
                         is Boolean -> maintenanceRaw
                         is String -> maintenanceRaw.equals("true", ignoreCase = true)
