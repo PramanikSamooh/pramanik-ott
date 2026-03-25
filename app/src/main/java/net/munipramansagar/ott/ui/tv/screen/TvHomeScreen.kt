@@ -24,6 +24,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -177,42 +178,22 @@ fun TvHomeScreen(
     }
 }
 
-@OptIn(ExperimentalTvMaterial3Api::class)
 @Composable
 private fun TvHomeShimmer() {
-    TvLazyColumn(
-        modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(bottom = 48.dp)
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(androidx.compose.ui.graphics.Color(0xFF0D0D1A)),
+        contentAlignment = Alignment.Center
     ) {
-        // Banner shimmer
-        item {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(360.dp)
-                    .background(shimmerBrush())
-            )
-            Spacer(modifier = Modifier.height(32.dp))
-        }
-
-        // Row shimmers
-        items(3) {
-            Column(modifier = Modifier.padding(horizontal = 48.dp)) {
-                Box(
-                    modifier = Modifier
-                        .width(180.dp)
-                        .height(20.dp)
-                        .background(shimmerBrush(), RoundedCornerShape(6.dp))
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(20.dp)) {
-                    repeat(5) {
-                        TvVideoCardShimmer()
-                    }
-                }
-            }
-            Spacer(modifier = Modifier.height(32.dp))
-        }
+        // Meditation lotus skeleton image — fills screen
+        coil.compose.AsyncImage(
+            model = net.munipramansagar.ott.R.drawable.skeleton_loader,
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.fillMaxSize(),
+            alpha = 1f
+        )
     }
 }
 
@@ -389,13 +370,18 @@ private fun QrCodeImage(url: String, qrSize: Int = 72) {
                 modifier = Modifier
                     .size(qrSize.dp)
                     .clip(RoundedCornerShape(6.dp))
-                    .background(androidx.compose.ui.graphics.Color.White),
+                    .background(androidx.compose.ui.graphics.Color.White)
+                    .padding(4.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Canvas(
-                    modifier = Modifier.size((qrSize - 8).dp)
+                    modifier = Modifier.fillMaxSize()
                 ) {
-                    drawImage(qrBitmap.asImageBitmap())
+                    val imageBitmap = qrBitmap.asImageBitmap()
+                    drawImage(
+                        image = imageBitmap,
+                        dstSize = androidx.compose.ui.unit.IntSize(size.width.toInt(), size.height.toInt())
+                    )
                 }
             }
             Spacer(modifier = Modifier.height(2.dp))
