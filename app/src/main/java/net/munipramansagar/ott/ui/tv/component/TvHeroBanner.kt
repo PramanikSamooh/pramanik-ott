@@ -90,7 +90,7 @@ fun TvHeroBanner(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(280.dp)
+            .height(380.dp)
             .clip(RoundedCornerShape(bottomStart = 20.dp, bottomEnd = 20.dp))
             .onFocusChanged { isBannerFocused = it.hasFocus }
             .onKeyEvent { event ->

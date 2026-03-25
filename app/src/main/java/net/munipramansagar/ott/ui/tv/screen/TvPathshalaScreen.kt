@@ -593,9 +593,9 @@ fun TvPathshalaTodayCard(
     ) {
         Column {
             Text(
-                text = if (isHindi) "\u092A\u093E\u0920\u0936\u093E\u0932\u093E \u0906\u091C" else "Pathshala Today",
-                style = PramanikTvTheme.typography.titleLarge.copy(
-                    fontWeight = FontWeight.Bold,
+                text = if (isHindi) "आज की कक्षाएँ" else "Today's Classes",
+                style = PramanikTvTheme.typography.bodyLarge.copy(
+                    fontWeight = FontWeight.SemiBold,
                     color = Saffron
                 )
             )
