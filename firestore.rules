@@ -1,90 +1,101 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Public read collections (mobile/TV app — no auth required)
+
+    // ⚠️ ADMIN EMAIL CHECK — only these emails can write
+    function isAdmin() {
+      return request.auth != null && (
+        request.auth.token.email == "gunayatan.org@gmail.com" ||
+        request.auth.token.email == "sachin@ifsjaipur.com" ||
+        request.auth.token.email == "pramaniksamooh@gmail.com"
+      );
+    }
+
+    // Public read, admin write collections
     match /videos/{videoId} {
       allow read: if true;
-      allow write: if request.auth != null;
+      allow write: if isAdmin();
     }
     match /channels/{channelId} {
       allow read: if true;
-      allow write: if request.auth != null;
+      allow write: if isAdmin();
     }
     match /categories/{catId} {
       allow read: if true;
-      allow write: if request.auth != null;
+      allow write: if isAdmin();
     }
     match /homeRows/{rowId} {
       allow read: if true;
-      allow write: if request.auth != null;
+      allow write: if isAdmin();
     }
     match /live/{docId} {
       allow read: if true;
-      allow write: if request.auth != null;
+      allow write: if isAdmin();
     }
     match /config/{docId} {
       allow read: if true;
-      allow write: if request.auth != null;
+      allow write: if isAdmin();
     }
     match /announcements/{docId} {
       allow read: if true;
-      allow write: if request.auth != null;
+      allow write: if isAdmin();
     }
     match /shorts/{docId} {
       allow read: if true;
-      allow write: if request.auth != null;
+      allow write: if isAdmin();
     }
     match /pathshala/{document=**} {
       allow read: if true;
-      allow write: if request.auth != null;
+      allow write: if isAdmin();
     }
     match /sections/{sectionId} {
       allow read: if true;
-      allow write: if request.auth != null;
+      allow write: if isAdmin();
     }
     match /playlists/{playlistId} {
       allow read: if true;
-      allow write: if request.auth != null;
+      allow write: if isAdmin();
     }
     match /playlists/{playlistId}/videos/{videoId} {
       allow read: if true;
-      allow write: if request.auth != null;
+      allow write: if isAdmin();
     }
     match /donations/{docId} {
       allow read: if true;
-      allow write: if request.auth != null;
+      allow write: if isAdmin();
     }
     match /curated_nitya_poojan/{docId} {
       allow read: if true;
-      allow write: if request.auth != null;
+      allow write: if isAdmin();
     }
     match /curated_path/{docId} {
       allow read: if true;
-      allow write: if request.auth != null;
+      allow write: if isAdmin();
     }
     match /curated_stotra/{docId} {
       allow read: if true;
-      allow write: if request.auth != null;
+      allow write: if isAdmin();
     }
     match /curated_granth_vachan/{docId} {
       allow read: if true;
-      allow write: if request.auth != null;
+      allow write: if isAdmin();
     }
     match /curated_bhajan/{docId} {
       allow read: if true;
-      allow write: if request.auth != null;
+      allow write: if isAdmin();
     }
-    // TV link sessions (public write for code generation, read for polling)
+    // TV link sessions (public read/write for QR code linking)
     match /tv_sessions/{code} {
       allow read, write: if true;
     }
-    // User watch history (auth required)
+    // User watch history (only own data)
     match /users/{uid}/watch_history/{videoId} {
       allow read, write: if request.auth != null && request.auth.uid == uid;
     }
     // Deny everything else
     match /{document=**} {
-      allow read, write: if request.auth != null;
+      allow read: if true;
+      allow write: if isAdmin();
     }
   }
 }
