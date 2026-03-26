@@ -44,6 +44,8 @@ class WatchHistoryRepository @Inject constructor(
         playlistIndex: Int = -1
     ) {
         val completed = totalDurationMs > 0 && positionMs > (totalDurationMs * 0.9)
+        // Preserve bookmark state from existing entry
+        val existing = dao.getEntry(videoId)
         val entry = WatchHistoryEntry(
             videoId = videoId,
             title = title,
@@ -58,7 +60,9 @@ class WatchHistoryRepository @Inject constructor(
             totalDurationMs = totalDurationMs,
             completed = completed,
             lastWatchedAt = System.currentTimeMillis(),
-            playlistIndex = playlistIndex
+            playlistIndex = playlistIndex,
+            bookmarked = existing?.bookmarked ?: false,
+            bookmarkedAt = existing?.bookmarkedAt ?: 0L
         )
         dao.upsert(entry)
 
