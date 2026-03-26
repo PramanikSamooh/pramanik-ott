@@ -35,6 +35,14 @@ class PramanikApp : Application() {
                 .setCacheSizeBytes(FirebaseFirestoreSettings.CACHE_SIZE_UNLIMITED)
                 .build()
             FirebaseFirestore.getInstance().firestoreSettings = settings
+
+            // Subscribe to FCM topics for push notifications
+            val isTv = net.munipramansagar.ott.util.DeviceUtil.isTv(this)
+            com.google.firebase.messaging.FirebaseMessaging.getInstance().apply {
+                subscribeToTopic("all")
+                subscribeToTopic(if (isTv) "tv" else "mobile")
+            }
+            Log.d("PramanikApp", "FCM subscribed to topics: all, ${if (isTv) "tv" else "mobile"}")
         } catch (e: Exception) {
             Log.e("PramanikApp", "Firebase init error", e)
         }

@@ -212,6 +212,31 @@ async function processPlaylistVideos(
   return totalCount;
 }
 
+// ── Send Push Notification via FCM (placed early for fast discovery) ──
+export const sendPushNotification = onRequest(
+  { cors: ["https://admin.munipramansagar.net", "http://localhost:3000", "http://localhost:3001"] },
+  async (req, res) => {
+    if (req.method !== "POST") { res.status(405).json({ error: "POST only" }); return; }
+    const { title, body, type, videoId, target } = req.body;
+    if (!title || !body) { res.status(400).json({ error: "title and body required" }); return; }
+    const message: admin.messaging.Message = {
+      topic: target === "mobile" ? "mobile" : target === "tv" ? "tv" : "all",
+      notification: { title, body },
+      data: { type: type || "general", videoId: videoId || "", clickAction: "OPEN_APP" },
+      android: {
+        priority: type === "live" ? "high" as const : "normal" as const,
+        notification: { color: "#E8730A", channelId: "pramanik_notifications" },
+      },
+    };
+    try {
+      const response = await admin.messaging().send(message);
+      res.json({ success: true, messageId: response });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message || "Failed to send" });
+    }
+  }
+);
+
 // ══════════════════════════════════════════════════════════════
 // ── Scheduled: Fetch playlists from all channels every 6 hours ──
 // ══════════════════════════════════════════════════════════════
@@ -1035,3 +1060,5 @@ export const triggerFetch = onRequest(
     res.json({ success: true, videosWritten: results });
   }
 );
+
+// sendPushNotification is defined at the top of the file for fast discovery
