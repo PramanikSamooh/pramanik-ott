@@ -23,6 +23,18 @@ class TvActivity : ComponentActivity() {
     @Inject
     lateinit var languageManager: LanguageManager
 
+    // Back press handler — let Compose control it
+    var onBackPressHandler: (() -> Boolean)? = null
+
+    @Suppress("DEPRECATION")
+    override fun onBackPressed() {
+        if (onBackPressHandler?.invoke() == true) {
+            // Handled by Compose
+            return
+        }
+        super.onBackPressed()
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -30,7 +42,8 @@ class TvActivity : ComponentActivity() {
                 homeViewModel = homeViewModel,
                 searchViewModel = searchViewModel,
                 pathshalaViewModel = pathshalaViewModel,
-                languageManager = languageManager
+                languageManager = languageManager,
+                onRegisterBackHandler = { handler -> onBackPressHandler = handler }
             )
         }
     }

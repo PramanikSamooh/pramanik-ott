@@ -149,7 +149,8 @@ fun TvApp(
     homeViewModel: HomeViewModel,
     searchViewModel: SearchViewModel,
     pathshalaViewModel: PathshalaViewModel,
-    languageManager: LanguageManager
+    languageManager: LanguageManager,
+    onRegisterBackHandler: (((() -> Boolean)?) -> Unit)? = null
 ) {
     val language by languageManager.language.collectAsState()
     val isHindi = language == LanguageManager.HINDI
@@ -165,14 +166,26 @@ fun TvApp(
     val activity = LocalContext.current as? android.app.Activity
 
     // Back button: collapse sidebar → go to home → confirm exit
-    BackHandler(enabled = true) {
+    val backLogic = {
         if (isSidebarExpanded) {
             isSidebarExpanded = false
+            true
         } else if (selectedIndex != 0) {
             selectedIndex = 0
+            true
         } else {
             showExitDialog = true
+            true
         }
+    }
+
+    // Register with Activity for Android TV compatibility
+    LaunchedEffect(Unit) {
+        onRegisterBackHandler?.invoke { backLogic(); true }
+    }
+
+    BackHandler(enabled = true) {
+        backLogic()
     }
 
     if (showExitDialog) {
