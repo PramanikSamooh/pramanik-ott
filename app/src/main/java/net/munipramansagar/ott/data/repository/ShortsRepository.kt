@@ -20,12 +20,24 @@ class ShortsRepository @Inject constructor(
      */
     suspend fun getCuratedShorts(limit: Long = 20): List<Video> {
         return try {
-            shortsCollection
-                .orderBy("publishedAt", Query.Direction.DESCENDING)
-                .limit(limit)
+            val allShorts = shortsCollection
+                .limit(100)
                 .get()
                 .await()
-                .toObjects(Video::class.java)
+                .documents.mapNotNull { doc ->
+                    val hidden = doc.getBoolean("hidden") ?: false
+                    if (hidden) return@mapNotNull null
+                    val video = doc.toObject(Video::class.java) ?: return@mapNotNull null
+                    val pinned = doc.getBoolean("pinned") ?: false
+                    Pair(pinned, video)
+                }
+            // Pinned first, then by publishedAt descending
+            val sorted = allShorts
+                .sortedWith(compareByDescending<Pair<Boolean, Video>> { it.first }
+                    .thenByDescending { it.second.publishedAt })
+                .map { it.second }
+                .take(limit.toInt())
+            sorted
         } catch (_: Exception) {
             emptyList()
         }

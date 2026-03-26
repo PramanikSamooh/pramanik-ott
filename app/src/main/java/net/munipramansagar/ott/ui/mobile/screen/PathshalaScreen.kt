@@ -435,14 +435,23 @@ private fun PathshalaClassCard(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Time display
-            Text(
-                text = formatTime12Hour(pathshalaClass.time),
-                style = MaterialTheme.typography.bodyMedium.copy(
-                    fontWeight = FontWeight.Medium
-                ),
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            // Time display with timezone
+            Column {
+                Text(
+                    text = formatTime12Hour(pathshalaClass.time) + " IST",
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        fontWeight = FontWeight.Bold
+                    ),
+                    color = Saffron
+                )
+                Text(
+                    text = convertISTToTimezones(pathshalaClass.time),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 2,
+                    modifier = Modifier.horizontalScroll(rememberScrollState())
+                )
+            }
 
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -615,4 +624,37 @@ private fun formatTime12Hour(time: String): String {
         else -> hour
     }
     return "$displayHour:$minute $amPm"
+}
+
+// IST offset = +5:30 (330 min). Convert to other timezones.
+private data class TzInfo(val label: String, val offsetMin: Int)
+
+private val TIMEZONES = listOf(
+    TzInfo("IST", 330),      // India
+    TzInfo("AEST", 600),     // Australia East
+    TzInfo("SGT", 480),      // Singapore
+    TzInfo("CET", 60),       // Central Europe
+    TzInfo("EST", -300),     // US East
+    TzInfo("CST", -360),     // US Central
+    TzInfo("PST", -480),     // US Pacific
+)
+
+private fun convertISTToTimezones(istTime: String): String {
+    val parts = istTime.split(":")
+    if (parts.size != 2) return istTime
+    val istHour = parts[0].toIntOrNull() ?: return istTime
+    val istMin = parts[1].toIntOrNull() ?: return istTime
+    val istTotalMin = istHour * 60 + istMin
+
+    return TIMEZONES.joinToString("  •  ") { tz ->
+        val diff = tz.offsetMin - 330 // diff from IST
+        var totalMin = istTotalMin + diff
+        if (totalMin < 0) totalMin += 1440
+        if (totalMin >= 1440) totalMin -= 1440
+        val h = totalMin / 60
+        val m = totalMin % 60
+        val amPm = if (h < 12) "AM" else "PM"
+        val dh = when { h == 0 -> 12; h > 12 -> h - 12; else -> h }
+        "${tz.label} ${dh}:${m.toString().padStart(2, '0')} $amPm"
+    }
 }

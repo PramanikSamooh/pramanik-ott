@@ -78,6 +78,7 @@ fun TvHomeScreen(
 ) {
     val uiState by homeViewModel.uiState.collectAsState()
     val continueWatching by homeViewModel.continueWatching.collectAsState(initial = emptyList())
+    val bookmarkedVideos by homeViewModel.bookmarkedVideos.collectAsState(initial = emptyList())
     val pathshalaState = pathshalaViewModel?.uiState?.collectAsState()
     val context = LocalContext.current
     val lazyListState = androidx.tv.foundation.lazy.list.rememberTvLazyListState()
@@ -187,7 +188,61 @@ fun TvHomeScreen(
                     }
                 }
 
-                // Continue Watching moved to its own sidebar page
+                // Bookmarked Videos
+                if (bookmarkedVideos.isNotEmpty()) {
+                    item {
+                        Text(
+                            text = if (isHindi) "सहेजे गए वीडियो ★" else "Saved Videos ★",
+                            style = PramanikTvTheme.typography.titleMedium.copy(
+                                fontWeight = FontWeight.Bold, color = Color(0xFFE8730A)
+                            ),
+                            modifier = Modifier.padding(start = 8.dp, top = 16.dp, bottom = 8.dp)
+                        )
+                    }
+                    item {
+                        androidx.tv.foundation.lazy.list.TvLazyRow(
+                            contentPadding = PaddingValues(horizontal = 8.dp),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            items(bookmarkedVideos.take(5)) { entry ->
+                                val video = Video(
+                                    id = entry.videoId, title = entry.title,
+                                    thumbnailUrl = entry.thumbnailUrl.ifEmpty { "https://i.ytimg.com/vi/${entry.videoId}/hqdefault.jpg" },
+                                    channelName = entry.channelName
+                                )
+                                TvVideoCard(video = video, onClick = { onVideoClick(video) })
+                            }
+                        }
+                    }
+                }
+
+                // Continue Watching
+                if (continueWatching.isNotEmpty()) {
+                    item {
+                        Text(
+                            text = if (isHindi) "जारी रखें" else "Continue Watching",
+                            style = PramanikTvTheme.typography.titleMedium.copy(
+                                fontWeight = FontWeight.Bold, color = TextWhite
+                            ),
+                            modifier = Modifier.padding(start = 8.dp, top = 16.dp, bottom = 8.dp)
+                        )
+                    }
+                    item {
+                        androidx.tv.foundation.lazy.list.TvLazyRow(
+                            contentPadding = PaddingValues(horizontal = 8.dp),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            items(continueWatching.take(5)) { entry ->
+                                val video = Video(
+                                    id = entry.videoId, title = entry.title,
+                                    thumbnailUrl = entry.thumbnailUrl.ifEmpty { "https://i.ytimg.com/vi/${entry.videoId}/hqdefault.jpg" },
+                                    channelName = entry.channelName
+                                )
+                                TvVideoCard(video = video, onClick = { onVideoClick(video) })
+                            }
+                        }
+                    }
+                }
             }
         }
     }
