@@ -8,6 +8,9 @@ import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import com.google.android.play.core.appupdate.AppUpdateManagerFactory
+import com.google.android.play.core.install.model.AppUpdateType
+import com.google.android.play.core.install.model.UpdateAvailability
 import com.google.firebase.firestore.FirebaseFirestore
 import dagger.hilt.android.AndroidEntryPoint
 import net.munipramansagar.ott.ui.mobile.MobileActivity
@@ -17,6 +20,8 @@ import net.munipramansagar.ott.util.DeviceUtil
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
 
+    private val UPDATE_REQUEST_CODE = 1001
+
     override fun onCreate(savedInstanceState: Bundle?) {
         if (!DeviceUtil.isTv(this)) {
             installSplashScreen()
@@ -25,6 +30,36 @@ class MainActivity : AppCompatActivity() {
 
         // Check version + maintenance mode from Firestore
         checkAppStatus()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // Check if an update was downloaded but not installed
+        checkPendingUpdate()
+    }
+
+    private fun checkPendingUpdate() {
+        try {
+            val appUpdateManager = AppUpdateManagerFactory.create(this)
+            appUpdateManager.appUpdateInfo.addOnSuccessListener { info ->
+                if (info.updateAvailability() == UpdateAvailability.DEVELOPER_TRIGGERED_UPDATE_IN_PROGRESS) {
+                    appUpdateManager.startUpdateFlowForResult(info, AppUpdateType.IMMEDIATE, this, UPDATE_REQUEST_CODE)
+                }
+            }
+        } catch (_: Exception) {}
+    }
+
+    private fun checkPlayStoreUpdate() {
+        if (DeviceUtil.isTv(this)) return // Play Core not available on all TVs
+        try {
+            val appUpdateManager = AppUpdateManagerFactory.create(this)
+            appUpdateManager.appUpdateInfo.addOnSuccessListener { info ->
+                if (info.updateAvailability() == UpdateAvailability.UPDATE_AVAILABLE
+                    && info.isUpdateTypeAllowed(AppUpdateType.FLEXIBLE)) {
+                    appUpdateManager.startUpdateFlowForResult(info, AppUpdateType.FLEXIBLE, this, UPDATE_REQUEST_CODE)
+                }
+            }
+        } catch (_: Exception) {}
     }
 
     private fun checkAppStatus() {
@@ -94,6 +129,10 @@ class MainActivity : AppCompatActivity() {
             MobileActivity::class.java
         }
         startActivity(Intent(this, targetActivity))
+
+        // Check for Play Store updates (non-blocking)
+        checkPlayStoreUpdate()
+
         finish()
     }
 }

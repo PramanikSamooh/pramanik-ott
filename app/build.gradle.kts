@@ -5,6 +5,7 @@ plugins {
     id("com.google.dagger.hilt.android")
     id("com.google.devtools.ksp")
     id("com.google.gms.google-services")
+    id("com.google.firebase.crashlytics")
 }
 
 // Auto-patch NewPipeExtractor JAR for Android 9 compatibility
@@ -101,10 +102,13 @@ dependencies {
     // Firebase
     implementation(platform("com.google.firebase:firebase-bom:33.7.0"))
     implementation("com.google.firebase:firebase-firestore-ktx")
-    // Disabled for faster startup — re-enable when needed
-    // implementation("com.google.firebase:firebase-analytics-ktx")
-    // implementation("com.google.firebase:firebase-messaging-ktx")
+    implementation("com.google.firebase:firebase-crashlytics-ktx")
+    implementation("com.google.firebase:firebase-analytics-ktx")
+    implementation("com.google.firebase:firebase-messaging-ktx")
     // implementation("com.google.firebase:firebase-appcheck-playintegrity") // Enable for production
+
+    // In-app updates
+    implementation("com.google.android.play:app-update-ktx:2.1.0")
 
     // NewPipeExtractor (extract direct YouTube stream URLs)
     // We provide a patched Utils.java (Android 9 compat) — R8 disabled to avoid duplicate class conflict
