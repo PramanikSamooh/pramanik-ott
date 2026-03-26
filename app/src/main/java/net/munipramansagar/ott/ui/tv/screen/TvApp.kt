@@ -98,7 +98,7 @@ sealed class TvNavItem(
     data object MuniGroup : TvNavItem("Muni Pramansagar Ji", "मुनि प्रमाणसागर जी", Icons.Default.PlayCircle)
     data object PathshalaGroup : TvNavItem("Jain Pathshala", "जैन पाठशाला", Icons.Default.School)
     data object PoojanGroup : TvNavItem("Poojan & Path", "पूजन और पाठ", Icons.Default.Favorite)
-    data object EventsGroup : TvNavItem("Events", "कार्यक्रम", Icons.Default.Star)
+    data object EventsGroup : TvNavItem("Events", "कार्यक्रम", Icons.Default.PlayCircle)
     data object KalyanGroup : TvNavItem("Swa Par Kalyan", "स्व पर कल्याण", Icons.Default.Favorite)
 
     // Sub-items under Muni Pramansagar Ji
@@ -119,7 +119,7 @@ sealed class TvNavItem(
     data object GranthVachan : TvNavItem("Granth Vachan", "ग्रंथ वाचन", Icons.Default.ViewList, true)
 
     // Sub-items under Events
-    data object Programs : TvNavItem("Programs", "कार्यक्रम", Icons.Default.Star, true)
+    data object Programs : TvNavItem("Programs", "कार्यक्रम", Icons.Default.PlayCircle, true)
 
     // Sub-items under Kalyan
     data object Donate : TvNavItem("Donate", "दान", Icons.Default.Favorite, true)
@@ -631,7 +631,7 @@ private fun TvSidebarItem(
     }
     val contentColor = when {
         isFocused -> Color.White
-        isSelected -> Color.White
+        isSelected -> Color(0xFFE8730A) // Saffron for selected
         else -> Color.White.copy(alpha = 0.5f)
     }
     val accentWidth by animateDpAsState(
