@@ -52,6 +52,19 @@ class HomeViewModel @Inject constructor(
 
     // Continue watching — collected as Flow from Room
     val continueWatching = watchHistoryRepository.getContinueWatching(10)
+    val bookmarkedVideos = watchHistoryRepository.getBookmarked(20)
+
+    fun removeBookmark(videoId: String) {
+        viewModelScope.launch {
+            watchHistoryRepository.toggleBookmark(videoId)
+        }
+    }
+
+    fun removeFromHistory(videoId: String) {
+        viewModelScope.launch {
+            watchHistoryRepository.removeFromHistory(videoId)
+        }
+    }
     val recentlyWatched = watchHistoryRepository.getRecentlyWatched(20)
 
     init {

@@ -98,6 +98,7 @@ class PlayerActivity : AppCompatActivity() {
             hideSystemUI()
 
             initPlayer()
+            setupCustomControls()
             extractAndPlay()
         } catch (e: Throwable) {
             Log.e("PlayerActivity", "onCreate crashed", e)
@@ -210,6 +211,66 @@ class PlayerActivity : AppCompatActivity() {
             startActivity(nextIntent)
             finish()
         }
+    }
+
+    private var isBookmarked = false
+    private val speeds = floatArrayOf(0.5f, 0.75f, 1.0f, 1.25f, 1.5f, 2.0f)
+    private val speedLabels = arrayOf("0.5x", "0.75x", "1x", "1.25x", "1.5x", "2x")
+    private var currentSpeedIndex = 2 // default 1x
+
+    private fun setupCustomControls() {
+        // Bookmark button
+        val bookmarkBtn = playerView.findViewById<ImageButton>(R.id.exo_bookmark)
+        if (bookmarkBtn != null) {
+            // Check initial bookmark state
+            lifecycleScope.launch {
+                isBookmarked = watchHistoryRepository.isBookmarked(videoId)
+                updateBookmarkIcon(bookmarkBtn)
+            }
+            bookmarkBtn.setOnClickListener {
+                lifecycleScope.launch {
+                    watchHistoryRepository.toggleBookmark(
+                        videoId = videoId,
+                        title = videoTitle,
+                        thumbnailUrl = "https://i.ytimg.com/vi/$videoId/hqdefault.jpg",
+                        channelName = ""
+                    )
+                    isBookmarked = !isBookmarked
+                    updateBookmarkIcon(bookmarkBtn)
+                    android.widget.Toast.makeText(
+                        this@PlayerActivity,
+                        if (isBookmarked) "Saved ★" else "Removed",
+                        android.widget.Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }
+        }
+
+        // Speed button
+        val speedBtn = playerView.findViewById<ImageButton>(R.id.exo_playback_speed)
+        if (speedBtn != null) {
+            speedBtn.setOnClickListener {
+                val builder = android.app.AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog)
+                builder.setTitle("Playback Speed")
+                builder.setSingleChoiceItems(speedLabels, currentSpeedIndex) { dialog, which ->
+                    currentSpeedIndex = which
+                    player?.setPlaybackSpeed(speeds[which])
+                    dialog.dismiss()
+                }
+                builder.show()
+            }
+        }
+    }
+
+    private fun updateBookmarkIcon(btn: ImageButton) {
+        btn.setImageResource(
+            if (isBookmarked) android.R.drawable.btn_star_big_on
+            else android.R.drawable.btn_star_big_off
+        )
+        btn.setColorFilter(
+            if (isBookmarked) android.graphics.Color.parseColor("#FFE8730A")
+            else android.graphics.Color.WHITE
+        )
     }
 
     private fun extractAndPlay() {

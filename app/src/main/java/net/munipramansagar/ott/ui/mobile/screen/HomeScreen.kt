@@ -3,6 +3,11 @@ package net.munipramansagar.ott.ui.mobile.screen
 import android.content.Intent
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.getValue
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -104,6 +109,7 @@ fun HomeScreen(
 ) {
     val state by viewModel.uiState.collectAsState()
     val continueWatching by viewModel.continueWatching.collectAsState(initial = emptyList())
+    val bookmarkedVideos by viewModel.bookmarkedVideos.collectAsState(initial = emptyList())
     val context = LocalContext.current
 
     if (state.isLoading) {
@@ -193,7 +199,7 @@ fun HomeScreen(
                 contentPadding = PaddingValues(horizontal = 16.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                items(continueWatching, key = { it.videoId }) { entry ->
+                items(continueWatching, key = { "cw_${it.videoId}" }) { entry ->
                     ContinueWatchingCard(
                         entry = entry,
                         isHindi = isHindi,
@@ -208,6 +214,42 @@ fun HomeScreen(
                                 putExtra("sectionId", entry.sectionId)
                             }
                             context.startActivity(intent)
+                        },
+                        onLongClick = {
+                            viewModel.removeFromHistory(entry.videoId)
+                        }
+                    )
+                }
+            }
+        }
+
+        // ── 7. Saved/Bookmarked Videos ──
+        if (bookmarkedVideos.isNotEmpty()) {
+            Spacer(modifier = Modifier.height(16.dp))
+            SectionHeader(
+                title = if (isHindi) "सहेजे गए वीडियो ★" else "Saved Videos ★"
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            LazyRow(
+                contentPadding = PaddingValues(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                items(bookmarkedVideos, key = { "bm_${it.videoId}" }) { entry ->
+                    ContinueWatchingCard(
+                        entry = entry,
+                        isHindi = isHindi,
+                        isBookmark = true,
+                        onClick = {
+                            val intent = Intent(context, PlayerActivity::class.java).apply {
+                                putExtra("videoId", entry.videoId)
+                                putExtra("videoTitle", entry.title)
+                                putExtra("videoTitleHi", entry.titleHi)
+                                putExtra("videoThumbnail", entry.thumbnailUrl)
+                            }
+                            context.startActivity(intent)
+                        },
+                        onLongClick = {
+                            viewModel.removeBookmark(entry.videoId)
                         }
                     )
                 }
@@ -492,11 +534,42 @@ private fun SectionHeader(title: String) {
 
 // ── Continue Watching Card ──
 @Composable
+@OptIn(ExperimentalFoundationApi::class)
 private fun ContinueWatchingCard(
     entry: WatchHistoryEntry,
     isHindi: Boolean,
-    onClick: () -> Unit
+    isBookmark: Boolean = false,
+    onClick: () -> Unit,
+    onLongClick: (() -> Unit)? = null
 ) {
+    var showRemoveDialog by remember { mutableStateOf(false) }
+
+    if (showRemoveDialog) {
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { showRemoveDialog = false },
+            containerColor = MaterialTheme.colorScheme.surface,
+            title = { Text(if (isHindi) "हटाएं?" else "Remove?", color = MaterialTheme.colorScheme.onSurface) },
+            text = { Text(
+                if (isBookmark) (if (isHindi) "इस वीडियो को सहेजे गए से हटाएं?" else "Remove from saved videos?")
+                else (if (isHindi) "इस वीडियो को जारी रखें से हटाएं?" else "Remove from continue watching?"),
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            ) },
+            confirmButton = {
+                androidx.compose.material3.TextButton(onClick = {
+                    showRemoveDialog = false
+                    onLongClick?.invoke()
+                }) {
+                    Text(if (isHindi) "हटाएं" else "Remove", color = Color(0xFFFF5252))
+                }
+            },
+            dismissButton = {
+                androidx.compose.material3.TextButton(onClick = { showRemoveDialog = false }) {
+                    Text(if (isHindi) "रद्द करें" else "Cancel", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+        )
+    }
+
     val progress = if (entry.totalDurationMs > 0)
         (entry.resumePositionMs.toFloat() / entry.totalDurationMs).coerceIn(0f, 1f)
     else 0f
@@ -505,9 +578,12 @@ private fun ContinueWatchingCard(
         modifier = Modifier
             .width(180.dp)
             .clip(RoundedCornerShape(12.dp))
-            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
-            .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(12.dp))
-            .clickable { onClick() }
+            .background(MaterialTheme.colorScheme.surface)
+            .border(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f), RoundedCornerShape(12.dp))
+            .combinedClickable(
+                onClick = { onClick() },
+                onLongClick = { if (onLongClick != null) showRemoveDialog = true }
+            )
     ) {
         // Thumbnail with progress bar
         Box {
