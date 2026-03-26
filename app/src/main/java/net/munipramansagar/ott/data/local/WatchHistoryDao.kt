@@ -38,4 +38,14 @@ interface WatchHistoryDao {
 
     @Query("SELECT COUNT(*) FROM watch_history")
     suspend fun count(): Int
+
+    // Bookmark queries
+    @Query("UPDATE watch_history SET bookmarked = :bookmarked, bookmarkedAt = :at WHERE videoId = :videoId")
+    suspend fun setBookmark(videoId: String, bookmarked: Boolean, at: Long = System.currentTimeMillis())
+
+    @Query("SELECT * FROM watch_history WHERE bookmarked = 1 ORDER BY bookmarkedAt DESC LIMIT :limit")
+    fun getBookmarked(limit: Int = 50): Flow<List<WatchHistoryEntry>>
+
+    @Query("SELECT bookmarked FROM watch_history WHERE videoId = :videoId")
+    suspend fun isBookmarked(videoId: String): Boolean?
 }

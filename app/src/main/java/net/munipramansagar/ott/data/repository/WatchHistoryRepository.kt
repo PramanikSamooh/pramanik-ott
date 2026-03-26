@@ -66,6 +66,36 @@ class WatchHistoryRepository @Inject constructor(
         syncToCloud(entry)
     }
 
+    // --- Bookmark operations ---
+
+    fun getBookmarked(limit: Int = 50): Flow<List<WatchHistoryEntry>> =
+        dao.getBookmarked(limit)
+
+    suspend fun toggleBookmark(videoId: String, title: String = "", thumbnailUrl: String = "", channelName: String = "") {
+        val existing = dao.getEntry(videoId)
+        if (existing != null) {
+            val newState = !(existing.bookmarked)
+            dao.setBookmark(videoId, newState, if (newState) System.currentTimeMillis() else 0L)
+        } else {
+            // Create a new entry just for bookmarking (not watched yet)
+            dao.upsert(WatchHistoryEntry(
+                videoId = videoId,
+                title = title,
+                thumbnailUrl = thumbnailUrl,
+                channelName = channelName,
+                bookmarked = true,
+                bookmarkedAt = System.currentTimeMillis()
+            ))
+        }
+    }
+
+    suspend fun isBookmarked(videoId: String): Boolean =
+        dao.isBookmarked(videoId) ?: false
+
+    suspend fun removeFromHistory(videoId: String) {
+        dao.delete(videoId)
+    }
+
     suspend fun clearHistory() {
         dao.clearAll()
         // Also clear cloud

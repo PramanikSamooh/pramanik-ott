@@ -24,5 +24,8 @@ data class WatchHistoryEntry(
     // Timestamp of last watch
     val lastWatchedAt: Long = System.currentTimeMillis(),
     // For auto-next: index within playlist
-    val playlistIndex: Int = -1
+    val playlistIndex: Int = -1,
+    // User bookmarked/saved this video
+    val bookmarked: Boolean = false,
+    val bookmarkedAt: Long = 0L
 )

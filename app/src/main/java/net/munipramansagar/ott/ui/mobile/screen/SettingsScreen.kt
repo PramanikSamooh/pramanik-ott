@@ -71,6 +71,7 @@ fun SettingsScreen(
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val language by viewModel.language.collectAsState()
+    val isHindi = language == "hi"
     val isSignedIn by viewModel.isSignedIn.collectAsState()
     val userEmail by viewModel.userEmail.collectAsState()
     val context = LocalContext.current
@@ -354,6 +355,7 @@ fun SettingsScreen(
         if (showLinkTvDialog) {
             LinkTvDialog(
                 isSignedIn = isSignedIn,
+                isHindi = isHindi,
                 onDismiss = { showLinkTvDialog = false }
             )
         }
@@ -468,6 +470,7 @@ private fun LanguageOption(
 @Composable
 private fun LinkTvDialog(
     isSignedIn: Boolean,
+    isHindi: Boolean = false,
     onDismiss: () -> Unit
 ) {
     var codeInput by remember { mutableStateOf("") }
@@ -480,21 +483,27 @@ private fun LinkTvDialog(
 
     androidx.compose.material3.AlertDialog(
         onDismissRequest = onDismiss,
-        containerColor = CardBg,
+        containerColor = MaterialTheme.colorScheme.surface,
         title = {
-            Text("Link TV", color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.Bold)
+            Text(
+                if (isHindi) "टीवी लिंक करें" else "Link TV",
+                color = MaterialTheme.colorScheme.onSurface,
+                fontWeight = FontWeight.Bold
+            )
         },
         text = {
             Column {
                 if (!isSignedIn) {
                     Text(
-                        "Please sign in with Google first, then link your TV.",
+                        if (isHindi) "कृपया पहले Google से साइन इन करें, फिर अपना टीवी लिंक करें।"
+                        else "Please sign in with Google first, then link your TV.",
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         style = MaterialTheme.typography.bodyMedium
                     )
                 } else {
                     Text(
-                        "Enter the 6-digit code shown on your TV:",
+                        if (isHindi) "अपने टीवी पर दिखाया गया 6-अंकीय कोड दर्ज करें:"
+                        else "Enter the 6-digit code shown on your TV:",
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         style = MaterialTheme.typography.bodyMedium
                     )
@@ -549,13 +558,13 @@ private fun LinkTvDialog(
                     enabled = codeInput.length == 6 && !isLinking,
                     colors = ButtonDefaults.buttonColors(containerColor = Saffron)
                 ) {
-                    Text(if (isLinking) "Linking..." else "Link TV")
+                    Text(if (isLinking) (if (isHindi) "लिंक हो रहा है..." else "Linking...") else (if (isHindi) "टीवी लिंक करें" else "Link TV"))
                 }
             }
         },
         dismissButton = {
             androidx.compose.material3.TextButton(onClick = onDismiss) {
-                Text("Cancel", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(if (isHindi) "रद्द करें" else "Cancel", color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
     )

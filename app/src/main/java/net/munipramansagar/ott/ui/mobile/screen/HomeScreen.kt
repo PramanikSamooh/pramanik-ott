@@ -115,9 +115,9 @@ fun HomeScreen(
             contentAlignment = Alignment.Center
         ) {
             Image(
-                painter = painterResource(id = net.munipramansagar.ott.R.drawable.skeleton_loader),
+                painter = painterResource(id = net.munipramansagar.ott.R.drawable.skeleton_loader_portrait),
                 contentDescription = null,
-                contentScale = ContentScale.Fit,
+                contentScale = ContentScale.Crop,
                 modifier = Modifier.fillMaxSize()
             )
         }

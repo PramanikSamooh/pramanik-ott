@@ -95,8 +95,8 @@ class HomeViewModel @Inject constructor(
                     }
                 }.awaitAll().filter { it.playlists.isNotEmpty() }
 
-                // Hero banner — try admin-pinned videos first, fallback to first section
-                val heroBanner = try {
+                // Hero banner — admin-pinned videos + latest videos combined
+                val pinnedVideos = try {
                     val heroDoc = com.google.firebase.firestore.FirebaseFirestore.getInstance()
                         .collection("config").document("hero").get().await()
                     if (heroDoc.exists()) {
@@ -110,11 +110,18 @@ class HomeViewModel @Inject constructor(
                                 thumbnailUrl = map["thumbnailUrl"] as? String ?: "https://i.ytimg.com/vi/$videoId/hqdefault.jpg",
                                 thumbnailUrlHQ = "https://i.ytimg.com/vi/$videoId/maxresdefault.jpg"
                             )
-                        }.ifEmpty { null }
-                    } else null
-                } catch (_: Exception) { null }
-                    ?: sectionDataList.firstOrNull()?.playlists?.firstOrNull()?.videos?.take(5)
+                        }
+                    } else emptyList()
+                } catch (_: Exception) { emptyList() }
+
+                // Latest videos from first section's first playlist
+                val latestVideos = sectionDataList
+                    .firstOrNull()?.playlists?.firstOrNull()?.videos?.take(5)
                     ?: emptyList()
+
+                // Combine: pinned first, then latest (deduplicated)
+                val pinnedIds = pinnedVideos.map { it.id }.toSet()
+                val heroBanner = pinnedVideos + latestVideos.filter { it.id !in pinnedIds }
 
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,

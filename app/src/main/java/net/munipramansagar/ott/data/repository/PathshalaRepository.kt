@@ -19,10 +19,34 @@ class PathshalaRepository @Inject constructor(
                 .collection("pathshala")
                 .document("classes")
                 .collection("items")
-                .get()
+                .get(com.google.firebase.firestore.Source.SERVER)
                 .await()
             snapshot.documents.mapNotNull { doc ->
-                doc.toObject(PathshalaClass::class.java)?.copy(id = doc.id)
+                try {
+                    // Handle dayOfWeek as either array or single int
+                    val rawDay = doc.get("dayOfWeek")
+                    val dayList: List<Int> = when (rawDay) {
+                        is Long -> listOf(rawDay.toInt())
+                        is Number -> listOf(rawDay.toInt())
+                        is List<*> -> rawDay.mapNotNull { (it as? Long)?.toInt() ?: (it as? Number)?.toInt() }
+                        else -> listOf(0)
+                    }
+                    PathshalaClass(
+                        id = doc.id,
+                        title = doc.getString("title") ?: "",
+                        titleHi = doc.getString("titleHi") ?: "",
+                        teacherId = doc.getString("teacherId") ?: "",
+                        teacherName = doc.getString("teacherName") ?: "",
+                        language = doc.getString("language") ?: "hindi",
+                        dayOfWeek = dayList,
+                        time = doc.getString("time") ?: "10:00",
+                        timezone = doc.getString("timezone") ?: "IST",
+                        youtubeLink = doc.getString("youtubeLink") ?: "",
+                        description = doc.getString("description") ?: "",
+                        recurring = doc.getBoolean("recurring") ?: true,
+                        active = doc.getBoolean("active") ?: true
+                    )
+                } catch (_: Exception) { null }
             }.filter { it.active }
         } catch (_: Exception) {
             emptyList()

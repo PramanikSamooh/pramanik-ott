@@ -73,7 +73,7 @@ fun PoojanScreen(
         ScrollableTabRow(
             selectedTabIndex = pagerState.currentPage,
             containerColor = Color.Transparent,
-            contentColor = TextWhite,
+            contentColor = MaterialTheme.colorScheme.onBackground,
             edgePadding = 16.dp,
             indicator = { tabPositions ->
                 if (pagerState.currentPage < tabPositions.size) {
@@ -96,7 +96,7 @@ fun PoojanScreen(
                             Icon(
                                 imageVector = tab.icon,
                                 contentDescription = null,
-                                tint = if (selected) Saffron else TextGray,
+                                tint = if (selected) Saffron else MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.size(16.dp)
                             )
                             Spacer(modifier = Modifier.width(6.dp))
@@ -104,7 +104,7 @@ fun PoojanScreen(
                                 text = if (isHindi) tab.labelHi else tab.labelEn,
                                 fontSize = 13.sp,
                                 fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
-                                color = if (selected) TextWhite else TextGray
+                                color = if (selected) Saffron else MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }

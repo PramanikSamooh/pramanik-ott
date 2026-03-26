@@ -78,10 +78,10 @@ fun VideoCard(
                 spotColor = Color.Black.copy(alpha = 0.3f)
             )
             .clip(cardShape)
-            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+            .background(MaterialTheme.colorScheme.surface)
             .border(
-                width = if (isFocused) 2.dp else 1.dp,
-                color = if (isFocused) Color(0xFFE8730A) else CardBorder,
+                width = if (isFocused) 2.dp else 0.5.dp,
+                color = if (isFocused) Color(0xFFE8730A) else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f),
                 shape = cardShape
             )
             .onFocusChanged { isFocused = it.isFocused }
