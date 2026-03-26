@@ -17,3 +17,6 @@ local.properties
 google-services.json
 functions/node_modules/
 functions/lib/
+
+# Never commit signing secrets
+local.properties
