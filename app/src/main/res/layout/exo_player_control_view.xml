@@ -66,24 +66,31 @@
             <!-- Bookmark button -->
             <ImageButton
                 android:id="@+id/exo_bookmark"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
                 android:src="@android:drawable/btn_star_big_off"
                 android:background="?android:attr/selectableItemBackgroundBorderless"
                 android:contentDescription="Bookmark"
                 android:tint="@android:color/white"
-                android:layout_marginEnd="4dp" />
+                android:layout_marginEnd="8dp"
+                android:focusable="true"
+                android:focusableInTouchMode="false"
+                android:nextFocusRight="@+id/exo_playback_speed"
+                android:nextFocusLeft="@id/exo_duration" />
 
             <!-- Speed button -->
             <ImageButton
                 android:id="@+id/exo_playback_speed"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
                 android:src="@android:drawable/ic_media_ff"
                 android:background="?android:attr/selectableItemBackgroundBorderless"
                 android:contentDescription="Speed"
                 android:tint="@android:color/white"
-                android:layout_marginEnd="4dp" />
+                android:layout_marginEnd="4dp"
+                android:focusable="true"
+                android:focusableInTouchMode="false"
+                android:nextFocusLeft="@id/exo_bookmark" />
 
             <!-- Fullscreen / settings removed — no confusing audio track -->
         </LinearLayout>

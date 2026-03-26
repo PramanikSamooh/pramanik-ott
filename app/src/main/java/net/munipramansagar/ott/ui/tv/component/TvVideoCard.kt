@@ -50,6 +50,7 @@ import net.munipramansagar.ott.ui.tv.theme.TextWhite
 fun TvVideoCard(
     video: Video,
     onClick: () -> Unit,
+    onLongClick: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
     cardWidth: Int = 256
 ) {
@@ -70,6 +71,7 @@ fun TvVideoCard(
     ) {
         Card(
             onClick = onClick,
+            onLongClick = onLongClick ?: {},
             modifier = Modifier
                 .fillMaxWidth()
                 .onFocusChanged { isFocused = it.isFocused || it.hasFocus },

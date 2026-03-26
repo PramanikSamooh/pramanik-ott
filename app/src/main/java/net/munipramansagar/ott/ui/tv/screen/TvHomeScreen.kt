@@ -83,12 +83,42 @@ fun TvHomeScreen(
     val context = LocalContext.current
     val lazyListState = androidx.tv.foundation.lazy.list.rememberTvLazyListState()
 
+    var videoToRemove by androidx.compose.runtime.mutableStateOf<String?>(null)
+    var removeType by androidx.compose.runtime.mutableStateOf("") // "continue" or "bookmark"
+
     val onVideoClick: (Video) -> Unit = { video ->
         val intent = Intent(context, PlayerActivity::class.java).apply {
             putExtra("videoId", video.id)
             putExtra("videoTitle", video.title)
         }
         context.startActivity(intent)
+    }
+
+    // Remove confirmation dialog
+    if (videoToRemove != null) {
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { videoToRemove = null },
+            containerColor = Color(0xFF1A1A2E),
+            title = { Text(if (isHindi) "हटाएं?" else "Remove?", color = Color.White) },
+            text = { Text(
+                if (removeType == "bookmark") (if (isHindi) "सहेजे गए से हटाएं?" else "Remove from saved?")
+                else (if (isHindi) "जारी रखें से हटाएं?" else "Remove from continue watching?"),
+                color = Color.White.copy(alpha = 0.7f)
+            ) },
+            confirmButton = {
+                androidx.compose.material3.TextButton(onClick = {
+                    val id = videoToRemove!!
+                    if (removeType == "bookmark") homeViewModel.removeBookmark(id)
+                    else homeViewModel.removeFromHistory(id)
+                    videoToRemove = null
+                }) { Text(if (isHindi) "हटाएं" else "Remove", color = Color(0xFFFF5252)) }
+            },
+            dismissButton = {
+                androidx.compose.material3.TextButton(onClick = { videoToRemove = null }) {
+                    Text(if (isHindi) "रद्द करें" else "Cancel", color = Color.White.copy(alpha = 0.5f))
+                }
+            }
+        )
     }
 
     // Scroll to top when hero changes or returning from video
@@ -210,7 +240,8 @@ fun TvHomeScreen(
                                     thumbnailUrl = entry.thumbnailUrl.ifEmpty { "https://i.ytimg.com/vi/${entry.videoId}/hqdefault.jpg" },
                                     channelName = entry.channelName
                                 )
-                                TvVideoCard(video = video, onClick = { onVideoClick(video) })
+                                TvVideoCard(video = video, onClick = { onVideoClick(video) },
+                                    onLongClick = { videoToRemove = entry.videoId; removeType = "bookmark" })
                             }
                         }
                     }
@@ -238,7 +269,8 @@ fun TvHomeScreen(
                                     thumbnailUrl = entry.thumbnailUrl.ifEmpty { "https://i.ytimg.com/vi/${entry.videoId}/hqdefault.jpg" },
                                     channelName = entry.channelName
                                 )
-                                TvVideoCard(video = video, onClick = { onVideoClick(video) })
+                                TvVideoCard(video = video, onClick = { onVideoClick(video) },
+                                    onLongClick = { videoToRemove = entry.videoId; removeType = "continue" })
                             }
                         }
                     }
