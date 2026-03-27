@@ -43,11 +43,11 @@ android {
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "net.munipramansagar.ott"
+        applicationId = "jain.news.pramanik"
         minSdk = 26
         targetSdk = 35
-        versionCode = 7
-        versionName = "2.4.0"
+        versionCode = 1987
+        versionName = "3.0.0"
     }
 
     signingConfigs {

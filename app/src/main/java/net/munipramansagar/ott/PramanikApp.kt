@@ -26,25 +26,42 @@ class PramanikApp : Application() {
             defaultHandler?.uncaughtException(thread, throwable)
         }
 
+        Log.d("PramanikApp", "onCreate starting")
         try {
             FirebaseApp.initializeApp(this)
+            Log.d("PramanikApp", "Firebase initialized")
+        } catch (e: Exception) {
+            Log.e("PramanikApp", "Firebase init error", e)
+        }
 
-            // Enable Firestore offline persistence
+        try {
             val settings = FirebaseFirestoreSettings.Builder()
                 .setPersistenceEnabled(true)
                 .setCacheSizeBytes(FirebaseFirestoreSettings.CACHE_SIZE_UNLIMITED)
                 .build()
             FirebaseFirestore.getInstance().firestoreSettings = settings
+        } catch (_: Exception) {
+            // Already set — ignore
+        }
 
-            // Subscribe to FCM topics for push notifications
+        try {
             val isTv = net.munipramansagar.ott.util.DeviceUtil.isTv(this)
-            com.google.firebase.messaging.FirebaseMessaging.getInstance().apply {
-                subscribeToTopic("all")
-                subscribeToTopic(if (isTv) "tv" else "mobile")
+            val fcm = com.google.firebase.messaging.FirebaseMessaging.getInstance()
+            fcm.subscribeToTopic("all").addOnCompleteListener { task ->
+                Log.d("PramanikApp", "FCM subscribe 'all': ${if (task.isSuccessful) "OK" else "FAILED"}")
             }
-            Log.d("PramanikApp", "FCM subscribed to topics: all, ${if (isTv) "tv" else "mobile"}")
+            fcm.subscribeToTopic(if (isTv) "tv" else "mobile").addOnCompleteListener { task ->
+                Log.d("PramanikApp", "FCM subscribe device type: ${if (task.isSuccessful) "OK" else "FAILED"}")
+            }
+            fcm.token.addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    Log.d("PramanikApp", "FCM token: ${task.result?.take(20)}...")
+                } else {
+                    Log.e("PramanikApp", "FCM token failed", task.exception)
+                }
+            }
         } catch (e: Exception) {
-            Log.e("PramanikApp", "Firebase init error", e)
+            Log.e("PramanikApp", "FCM setup error", e)
         }
     }
 
