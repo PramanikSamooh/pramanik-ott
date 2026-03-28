@@ -106,7 +106,7 @@ sealed class TvNavItem(
     // Sub-items under Muni Pramansagar Ji
     data object BhawnaYog : TvNavItem("Bhawna Yog", "भावना योग", Icons.Default.PlayCircle, true, drawableResId = net.munipramansagar.ott.R.drawable.ic_bhawna_yog)
     data object Pravachan : TvNavItem("Pravachan", "प्रवचन", Icons.Default.ViewList, true, drawableResId = net.munipramansagar.ott.R.drawable.ic_pravachan)
-    data object ShankaSamadhan : TvNavItem("Shanka Samadhan", "शंका समाधान", Icons.Default.ViewList, true)
+    data object ShankaSamadhan : TvNavItem("Shanka Samadhan", "शंका समाधान", Icons.Default.ViewList, true, drawableResId = net.munipramansagar.ott.R.drawable.ic_shanka_samadhan)
     data object Swadhyay : TvNavItem("Swadhyay", "स्वाध्याय", Icons.Default.ViewList, true, drawableResId = net.munipramansagar.ott.R.drawable.ic_swadhyay)
 
     // Sub-items under Pathshala

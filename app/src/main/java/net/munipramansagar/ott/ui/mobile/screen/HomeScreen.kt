@@ -92,7 +92,7 @@ data class MainCategory(
 val mainCategories = listOf(
     MainCategory("bhawna", "Bhawna Yog", "भावना योग", Icons.Default.SelfImprovement, Color(0xFF4CAF50), "section/bhawna-yog", net.munipramansagar.ott.R.drawable.ic_bhawna_yog),
     MainCategory("pravachan", "Pravachan", "प्रवचन", Icons.Default.MenuBook, Saffron, "section/pravachan", net.munipramansagar.ott.R.drawable.ic_pravachan),
-    MainCategory("shanka", "Shanka Samadhan", "शंका समाधान", Icons.Default.QuestionAnswer, Gold, "section/shanka-clips"),
+    MainCategory("shanka", "Shanka Samadhan", "शंका समाधान", Icons.Default.QuestionAnswer, Gold, "section/shanka-clips", net.munipramansagar.ott.R.drawable.ic_shanka_samadhan),
     MainCategory("swadhyay", "Swadhyay", "स्वाध्याय", Icons.Default.MenuBook, Color(0xFF9C27B0), "section/swadhyay", net.munipramansagar.ott.R.drawable.ic_swadhyay),
 )
 
