@@ -9,7 +9,6 @@ workflows:
       ios_signing:
         distribution_type: app_store
         bundle_identifier: org.gunayatan.pramanik
-        certificate_type: IOS_DISTRIBUTION
       vars:
         XCODE_SCHEME: "PramanikOTT"
         BUNDLE_ID: "org.gunayatan.pramanik"
