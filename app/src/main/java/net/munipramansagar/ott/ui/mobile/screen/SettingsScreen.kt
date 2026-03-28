@@ -404,7 +404,7 @@ fun SettingsScreen(
 
             // Version
             Text(
-                text = "v2.0.0",
+                text = "v${net.munipramansagar.ott.BuildConfig.VERSION_NAME}",
                 style = MaterialTheme.typography.bodySmall.copy(
                     letterSpacing = 1.sp
                 ),
