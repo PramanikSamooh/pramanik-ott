@@ -3,13 +3,16 @@ workflows:
     name: iOS Release
     max_build_duration: 60
     instance_type: mac_mini_m2
+    integrations:
+      app_store_connect: Codemagic
     environment:
       ios_signing:
         distribution_type: app_store
-        bundle_identifier: net.munipramansagar.pramanik
+        bundle_identifier: org.gunayatan.pramanik
       vars:
         XCODE_WORKSPACE: "iosApp/PramanikOTT.xcworkspace"
         XCODE_SCHEME: "PramanikOTT"
+        BUNDLE_ID: "org.gunayatan.pramanik"
       xcode: latest
       cocoapods: default
     scripts:
@@ -58,7 +61,3 @@ workflows:
           ./gradlew bundleRelease
     artifacts:
       - app/build/outputs/bundle/release/*.aab
-    publishing:
-      google_play:
-        credentials: $GOOGLE_PLAY_CREDENTIALS
-        track: beta
