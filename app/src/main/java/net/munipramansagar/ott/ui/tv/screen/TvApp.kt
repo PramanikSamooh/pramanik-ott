@@ -62,6 +62,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.foundation.Image
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.text.font.FontWeight
@@ -89,40 +90,41 @@ sealed class TvNavItem(
     val titleEn: String,
     val titleHi: String,
     val icon: ImageVector,
-    val isSubItem: Boolean = false
+    val isSubItem: Boolean = false,
+    val drawableResId: Int? = null // Custom drawable icon (overrides ImageVector)
 ) {
-    data object Home : TvNavItem("Home", "होम", Icons.Default.Home)
+    data object Home : TvNavItem("Home", "होम", Icons.Default.Home, drawableResId = net.munipramansagar.ott.R.drawable.ic_home_custom)
     data object ContinueWatching : TvNavItem("Continue", "जारी रखें", Icons.Default.PlayCircle)
 
     // Group headers
-    data object MuniGroup : TvNavItem("Muni Pramansagar Ji", "मुनि प्रमाणसागर जी", Icons.Default.PlayCircle)
-    data object PathshalaGroup : TvNavItem("Jain Pathshala", "जैन पाठशाला", Icons.Default.School)
-    data object PoojanGroup : TvNavItem("Poojan & Path", "पूजन और पाठ", Icons.Default.Favorite)
-    data object EventsGroup : TvNavItem("Events", "कार्यक्रम", Icons.Default.PlayCircle)
-    data object KalyanGroup : TvNavItem("Swa Par Kalyan", "स्व पर कल्याण", Icons.Default.Favorite)
+    data object MuniGroup : TvNavItem("Muni Pramansagar Ji", "मुनि प्रमाणसागर जी", Icons.Default.PlayCircle, drawableResId = net.munipramansagar.ott.R.drawable.ic_pravachan)
+    data object PathshalaGroup : TvNavItem("Jain Pathshala", "जैन पाठशाला", Icons.Default.School, drawableResId = net.munipramansagar.ott.R.drawable.ic_pathshala)
+    data object PoojanGroup : TvNavItem("Poojan & Path", "पूजन और पाठ", Icons.Default.Favorite, drawableResId = net.munipramansagar.ott.R.drawable.ic_puja)
+    data object EventsGroup : TvNavItem("Events", "कार्यक्रम", Icons.Default.PlayCircle, drawableResId = net.munipramansagar.ott.R.drawable.ic_events)
+    data object KalyanGroup : TvNavItem("Swa Par Kalyan", "स्व पर कल्याण", Icons.Default.Favorite, drawableResId = net.munipramansagar.ott.R.drawable.ic_donation)
 
     // Sub-items under Muni Pramansagar Ji
-    data object BhawnaYog : TvNavItem("Bhawna Yog", "भावना योग", Icons.Default.PlayCircle, true)
-    data object Pravachan : TvNavItem("Pravachan", "प्रवचन", Icons.Default.ViewList, true)
+    data object BhawnaYog : TvNavItem("Bhawna Yog", "भावना योग", Icons.Default.PlayCircle, true, drawableResId = net.munipramansagar.ott.R.drawable.ic_bhawna_yog)
+    data object Pravachan : TvNavItem("Pravachan", "प्रवचन", Icons.Default.ViewList, true, drawableResId = net.munipramansagar.ott.R.drawable.ic_pravachan)
     data object ShankaSamadhan : TvNavItem("Shanka Samadhan", "शंका समाधान", Icons.Default.ViewList, true)
-    data object Swadhyay : TvNavItem("Swadhyay", "स्वाध्याय", Icons.Default.ViewList, true)
+    data object Swadhyay : TvNavItem("Swadhyay", "स्वाध्याय", Icons.Default.ViewList, true, drawableResId = net.munipramansagar.ott.R.drawable.ic_swadhyay)
 
     // Sub-items under Pathshala
     data object AnimatedVideos : TvNavItem("Animated Videos", "एनिमेटेड वीडियो", Icons.Default.PlayCircle, true)
     data object LiveClasses : TvNavItem("Live Classes", "लाइव कक्षाएँ", Icons.Default.School, true)
 
     // Sub-items under Poojan & Path
-    data object NityaPoojan : TvNavItem("Nitya Poojan", "नित्य पूजन", Icons.Default.Favorite, true)
+    data object NityaPoojan : TvNavItem("Nitya Poojan", "नित्य पूजन", Icons.Default.Favorite, true, drawableResId = net.munipramansagar.ott.R.drawable.ic_puja)
     data object Path : TvNavItem("Path", "पाठ", Icons.Default.ViewList, true)
     data object Stotra : TvNavItem("Stotra", "स्तोत्र", Icons.Default.ViewList, true)
     data object Bhajan : TvNavItem("Bhajan", "भजन", Icons.Default.PlayCircle, true)
-    data object GranthVachan : TvNavItem("Granth Vachan", "ग्रंथ वाचन", Icons.Default.ViewList, true)
+    data object GranthVachan : TvNavItem("Granth Vachan", "ग्रंथ वाचन", Icons.Default.ViewList, true, drawableResId = net.munipramansagar.ott.R.drawable.ic_swadhyay)
 
     // Sub-items under Events
-    data object Programs : TvNavItem("Programs", "कार्यक्रम", Icons.Default.PlayCircle, true)
+    data object Programs : TvNavItem("Programs", "कार्यक्रम", Icons.Default.PlayCircle, true, drawableResId = net.munipramansagar.ott.R.drawable.ic_events)
 
     // Sub-items under Kalyan
-    data object Donate : TvNavItem("Donate", "दान", Icons.Default.Favorite, true)
+    data object Donate : TvNavItem("Donate", "दान", Icons.Default.Favorite, true, drawableResId = net.munipramansagar.ott.R.drawable.ic_donation)
 
     // Legacy support for dynamic sections
     data class SectionItem(
@@ -691,12 +693,22 @@ private fun TvSidebarItem(
                 .padding(start = if (isSelected) 8.dp else 12.dp),
             contentAlignment = Alignment.Center
         ) {
-            Icon(
-                imageVector = item.icon,
-                contentDescription = item.titleEn,
-                tint = contentColor,
-                modifier = Modifier.size(if (isSubItem) 18.dp else 22.dp)
-            )
+            if (item.drawableResId != null) {
+                Image(
+                    painter = androidx.compose.ui.res.painterResource(id = item.drawableResId),
+                    contentDescription = item.titleEn,
+                    modifier = Modifier.size(if (isSubItem) 20.dp else 26.dp),
+                    colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(contentColor)
+                )
+            } else {
+                Icon(
+                    imageVector = item.icon,
+                    contentDescription = item.titleEn,
+                    tint = contentColor,
+                    modifier = Modifier.size(if (isSubItem) 18.dp else 22.dp)
+                )
+            }
+            // Custom drawable icons used above when available
             if (showLiveDot) {
                 val liveDotTransition = rememberInfiniteTransition(label = "sidebar_live")
                 val liveDotAlpha by liveDotTransition.animateFloat(

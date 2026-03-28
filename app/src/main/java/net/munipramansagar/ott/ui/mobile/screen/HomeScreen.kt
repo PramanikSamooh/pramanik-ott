@@ -85,14 +85,15 @@ data class MainCategory(
     val labelHi: String,
     val icon: ImageVector,
     val color: Color,
-    val route: String
+    val route: String,
+    val drawableResId: Int? = null
 )
 
 val mainCategories = listOf(
-    MainCategory("bhawna", "Bhawna Yog", "भावना योग", Icons.Default.SelfImprovement, Color(0xFF4CAF50), "section/bhawna-yog"),
-    MainCategory("pravachan", "Pravachan", "प्रवचन", Icons.Default.MenuBook, Saffron, "section/pravachan"),
+    MainCategory("bhawna", "Bhawna Yog", "भावना योग", Icons.Default.SelfImprovement, Color(0xFF4CAF50), "section/bhawna-yog", net.munipramansagar.ott.R.drawable.ic_bhawna_yog),
+    MainCategory("pravachan", "Pravachan", "प्रवचन", Icons.Default.MenuBook, Saffron, "section/pravachan", net.munipramansagar.ott.R.drawable.ic_pravachan),
     MainCategory("shanka", "Shanka Samadhan", "शंका समाधान", Icons.Default.QuestionAnswer, Gold, "section/shanka-clips"),
-    MainCategory("swadhyay", "Swadhyay", "स्वाध्याय", Icons.Default.MenuBook, Color(0xFF9C27B0), "section/swadhyay"),
+    MainCategory("swadhyay", "Swadhyay", "स्वाध्याय", Icons.Default.MenuBook, Color(0xFF9C27B0), "section/swadhyay", net.munipramansagar.ott.R.drawable.ic_swadhyay),
 )
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -498,12 +499,21 @@ private fun CategoryCard(
                 .background(category.color.copy(alpha = 0.15f)),
             contentAlignment = Alignment.Center
         ) {
-            Icon(
-                imageVector = category.icon,
-                contentDescription = category.labelEn,
-                tint = category.color,
-                modifier = Modifier.size(26.dp)
-            )
+            if (category.drawableResId != null) {
+                Image(
+                    painter = androidx.compose.ui.res.painterResource(id = category.drawableResId),
+                    contentDescription = category.labelEn,
+                    modifier = Modifier.size(30.dp),
+                    colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(category.color)
+                )
+            } else {
+                Icon(
+                    imageVector = category.icon,
+                    contentDescription = category.labelEn,
+                    tint = category.color,
+                    modifier = Modifier.size(26.dp)
+                )
+            }
         }
         Spacer(modifier = Modifier.height(10.dp))
         Text(

@@ -50,6 +50,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.foundation.Image
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -233,15 +234,16 @@ data class BottomNavTab(
     val route: String,
     val labelEn: String,
     val labelHi: String,
-    val icon: ImageVector
+    val icon: ImageVector,
+    val drawableResId: Int? = null
 )
 
 val bottomTabs = listOf(
-    BottomNavTab(Routes.HOME, "Home", "होम", Icons.Default.Home),
-    BottomNavTab(Routes.PATHSHALA, "Pathshala", "पाठशाला", Icons.Default.School),
-    BottomNavTab(net.munipramansagar.ott.ui.mobile.navigation.Routes.POOJAN, "Poojan", "पूजन", Icons.Default.Spa),
-    BottomNavTab("section/events", "Events", "कार्यक्रम", Icons.Default.Star),
-    BottomNavTab(Routes.DONATE, "Donate", "दान", Icons.Default.Favorite),
+    BottomNavTab(Routes.HOME, "Home", "होम", Icons.Default.Home, net.munipramansagar.ott.R.drawable.ic_home_custom),
+    BottomNavTab(Routes.PATHSHALA, "Pathshala", "पाठशाला", Icons.Default.School, net.munipramansagar.ott.R.drawable.ic_pathshala),
+    BottomNavTab(net.munipramansagar.ott.ui.mobile.navigation.Routes.POOJAN, "Poojan", "पूजन", Icons.Default.Spa, net.munipramansagar.ott.R.drawable.ic_puja),
+    BottomNavTab("section/events", "Events", "कार्यक्रम", Icons.Default.Star, net.munipramansagar.ott.R.drawable.ic_events),
+    BottomNavTab(Routes.DONATE, "Donate", "दान", Icons.Default.Favorite, net.munipramansagar.ott.R.drawable.ic_donation),
 )
 
 @androidx.compose.runtime.Composable
@@ -281,12 +283,23 @@ private fun BottomNavigation(
                         .padding(vertical = 2.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Icon(
-                        imageVector = tab.icon,
-                        contentDescription = tab.labelEn,
-                        tint = if (isSelected) Saffron else MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(22.dp)
-                    )
+                    if (tab.drawableResId != null) {
+                        Image(
+                            painter = androidx.compose.ui.res.painterResource(id = tab.drawableResId),
+                            contentDescription = tab.labelEn,
+                            modifier = Modifier.size(24.dp),
+                            colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(
+                                if (isSelected) Saffron else MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        )
+                    } else {
+                        Icon(
+                            imageVector = tab.icon,
+                            contentDescription = tab.labelEn,
+                            tint = if (isSelected) Saffron else MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(22.dp)
+                        )
+                    }
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
                         text = if (isHindi) tab.labelHi else tab.labelEn,
