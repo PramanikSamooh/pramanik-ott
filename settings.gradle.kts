@@ -24,3 +24,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "PramanikOTT"
 include(":app")
+include(":shared")
