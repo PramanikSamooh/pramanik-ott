@@ -20,3 +20,4 @@ functions/lib/
 
 # Never commit signing secrets
 local.properties
+shared/build/
