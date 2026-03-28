@@ -60,7 +60,13 @@ struct PoojanView: View {
 struct CuratedVideosView: View {
     let collectionId: String
     let isHindi: Bool
-    @StateObject private var viewModel = CuratedVideosViewModel()
+    @StateObject private var viewModel: CuratedVideosViewModel
+
+    init(collectionId: String, isHindi: Bool) {
+        self.collectionId = collectionId
+        self.isHindi = isHindi
+        _viewModel = StateObject(wrappedValue: CuratedVideosViewModel())
+    }
 
     var body: some View {
         ScrollView {
@@ -76,8 +82,13 @@ struct CuratedVideosView: View {
         .task {
             await viewModel.loadVideos(collectionId: collectionId)
         }
-        .fullScreenCover(item: $viewModel.selectedVideoId) { videoId in
-            PlayerView(videoId: videoId, isHindi: isHindi)
+        .fullScreenCover(isPresented: Binding(
+            get: { viewModel.selectedVideoId != nil },
+            set: { if !$0 { viewModel.selectedVideoId = nil } }
+        )) {
+            if let videoId = viewModel.selectedVideoId {
+                PlayerView(videoId: videoId, isHindi: isHindi)
+            }
         }
     }
 }

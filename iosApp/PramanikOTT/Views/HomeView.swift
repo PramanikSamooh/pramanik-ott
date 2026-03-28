@@ -60,8 +60,13 @@ struct HomeView: View {
         .background(Color("Background"))
         .navigationTitle(isHindi ? "प्रमाणिक" : "Pramanik")
         .navigationBarTitleDisplayMode(.inline)
-        .fullScreenCover(item: $viewModel.selectedVideoId) { videoId in
-            PlayerView(videoId: videoId, isHindi: isHindi)
+        .fullScreenCover(isPresented: Binding(
+            get: { viewModel.selectedVideoId != nil },
+            set: { if !$0 { viewModel.selectedVideoId = nil } }
+        )) {
+            if let videoId = viewModel.selectedVideoId {
+                PlayerView(videoId: videoId, isHindi: isHindi)
+            }
         }
         .task {
             await viewModel.loadHome()
