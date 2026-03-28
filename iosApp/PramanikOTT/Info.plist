@@ -38,6 +38,8 @@
         <string>UIInterfaceOrientationLandscapeLeft</string>
         <string>UIInterfaceOrientationLandscapeRight</string>
     </array>
+    <key>CFBundleIconName</key>
+    <string>AppIcon</string>
     <key>UIApplicationSupportsIndirectInputEvents</key>
     <true/>
     <!-- Push notifications will be added after first successful build -->
