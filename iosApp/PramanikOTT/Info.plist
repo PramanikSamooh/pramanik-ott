@@ -40,10 +40,11 @@
     </array>
     <key>UIApplicationSupportsIndirectInputEvents</key>
     <true/>
-    <key>UIBackgroundModes</key>
+    <!-- Push notifications will be added after first successful build -->
+    <!-- <key>UIBackgroundModes</key>
     <array>
         <string>remote-notification</string>
-    </array>
+    </array> -->
     <key>NSAppTransportSecurity</key>
     <dict>
         <key>NSAllowsArbitraryLoads</key>
