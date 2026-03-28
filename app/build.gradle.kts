@@ -46,8 +46,8 @@ android {
         applicationId = "jain.news.pramanik"
         minSdk = 26
         targetSdk = 35
-        versionCode = 1987
-        versionName = "3.0.0"
+        versionCode = 1988
+        versionName = "3.0.1"
     }
 
     signingConfigs {
