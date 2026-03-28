@@ -30,7 +30,7 @@ workflows:
       - name: Build iOS
         script: |
           cd iosApp
-          xcodebuild build -workspace PramanikOTT.xcworkspace \
+          xcodebuild -workspace PramanikOTT.xcworkspace \
             -scheme PramanikOTT \
             -sdk iphoneos \
             -configuration Release \
@@ -40,12 +40,13 @@ workflows:
             DEVELOPMENT_TEAM="9C9EZRD3AT"
       - name: Export IPA
         script: |
-          xcodebuild -exportArchive \
-            -archivePath iosApp/build/PramanikOTT.xcarchive \
-            -exportPath iosApp/build \
-            -exportOptionsPlist iosApp/exportOptions.plist
+          xcode-project build-ipa \
+            --archive-path iosApp/build/PramanikOTT.xcarchive \
+            --export-options-plist /dev/null
     artifacts:
+      - iosApp/build/ipa/*.ipa
       - iosApp/build/*.ipa
+      - "**/*.ipa"
     publishing:
       app_store_connect:
         auth: integration
