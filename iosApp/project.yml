@@ -1,0 +1,39 @@
+name: PramanikOTT
+options:
+  bundleIdPrefix: org.gunayatan
+  deploymentTarget:
+    iOS: "16.0"
+  xcodeVersion: "16.0"
+
+settings:
+  base:
+    MARKETING_VERSION: "4.0.0"
+    CURRENT_PROJECT_VERSION: "1"
+    DEVELOPMENT_TEAM: "${DEVELOPMENT_TEAM}"
+    CODE_SIGN_STYLE: Manual
+
+targets:
+  PramanikOTT:
+    type: application
+    platform: iOS
+    sources:
+      - path: PramanikOTT
+        type: group
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: org.gunayatan.pramanik
+        INFOPLIST_FILE: PramanikOTT/Info.plist
+        CODE_SIGN_ENTITLEMENTS: PramanikOTT/PramanikOTT.entitlements
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+    dependencies:
+      - framework: Pods/FirebaseCore.framework
+        implicit: true
+    scheme:
+      testTargets: []
+      gatherCoverageData: false
+    postCompileScripts:
+      - script: |
+          "${PODS_ROOT}/FirebaseCrashlytics/run"
+        name: Firebase Crashlytics
+        inputFiles:
+          - $(SRCROOT)/$(BUILT_PRODUCTS_DIR)/$(INFOPLIST_PATH)

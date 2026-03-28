@@ -10,12 +10,16 @@ workflows:
         distribution_type: app_store
         bundle_identifier: org.gunayatan.pramanik
       vars:
-        XCODE_WORKSPACE: "iosApp/PramanikOTT.xcworkspace"
         XCODE_SCHEME: "PramanikOTT"
         BUNDLE_ID: "org.gunayatan.pramanik"
       xcode: latest
       cocoapods: default
     scripts:
+      - name: Generate Xcode project
+        script: |
+          brew install xcodegen
+          cd iosApp
+          xcodegen generate
       - name: Install CocoaPods
         script: |
           cd iosApp
@@ -31,7 +35,9 @@ workflows:
             -sdk iphoneos \
             -configuration Release \
             -archivePath build/PramanikOTT.xcarchive \
-            archive
+            archive \
+            CODE_SIGN_IDENTITY="iPhone Distribution" \
+            DEVELOPMENT_TEAM="${DEVELOPMENT_TEAM}"
       - name: Export IPA
         script: |
           xcodebuild -exportArchive \
