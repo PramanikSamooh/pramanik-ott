@@ -19,6 +19,12 @@ targets:
     sources:
       - path: PramanikOTT
         type: group
+        excludes:
+          - "**/*.plist"
+    resources:
+      - path: PramanikOTT/GoogleService-Info.plist
+      - path: PramanikOTT/Info.plist
+        buildPhase: none
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: org.gunayatan.pramanik
@@ -28,9 +34,8 @@ targets:
     scheme:
       testTargets: []
       gatherCoverageData: false
-    postCompileScripts:
-      - script: |
-          "${PODS_ROOT}/FirebaseCrashlytics/run"
-        name: Firebase Crashlytics
-        inputFiles:
-          - $(SRCROOT)/$(BUILT_PRODUCTS_DIR)/$(INFOPLIST_PATH)
+    # Crashlytics build phase - enable after first successful build
+    # postCompileScripts:
+    #   - script: |
+    #       "${PODS_ROOT}/FirebaseCrashlytics/run"
+    #     name: Firebase Crashlytics
