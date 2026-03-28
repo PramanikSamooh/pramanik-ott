@@ -41,8 +41,9 @@ workflows:
       - name: Export IPA
         script: |
           xcode-project build-ipa \
-            --archive-path iosApp/build/PramanikOTT.xcarchive \
-            --export-options-plist /dev/null
+            --workspace iosApp/PramanikOTT.xcworkspace \
+            --scheme PramanikOTT \
+            --archive-directory iosApp/build
     artifacts:
       - iosApp/build/ipa/*.ipa
       - iosApp/build/*.ipa
