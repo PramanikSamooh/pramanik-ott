@@ -8,7 +8,7 @@ options:
 settings:
   base:
     MARKETING_VERSION: "4.0.0"
-    CURRENT_PROJECT_VERSION: "1"
+    CURRENT_PROJECT_VERSION: "2"
     DEVELOPMENT_TEAM: "9C9EZRD3AT"
     CODE_SIGN_STYLE: Manual
 
