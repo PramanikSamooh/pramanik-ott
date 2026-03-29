@@ -12,8 +12,7 @@ struct ContentView: View {
                 HomeView(isHindi: isHindi)
             }
             .tabItem {
-                Image("ic_home_custom")
-                    .renderingMode(.template)
+                Image(systemName: "house.fill")
                 Text(isHindi ? "होम" : "Home")
             }
             .tag(0)
@@ -22,8 +21,7 @@ struct ContentView: View {
                 PathshalaView(isHindi: isHindi)
             }
             .tabItem {
-                Image("ic_pathshala")
-                    .renderingMode(.template)
+                Image(systemName: "graduationcap.fill")
                 Text(isHindi ? "पाठशाला" : "Pathshala")
             }
             .tag(1)
@@ -32,8 +30,7 @@ struct ContentView: View {
                 PoojanView(isHindi: isHindi)
             }
             .tabItem {
-                Image("ic_puja")
-                    .renderingMode(.template)
+                Image(systemName: "hands.sparkles.fill")
                 Text(isHindi ? "पूजन" : "Poojan")
             }
             .tag(2)
@@ -44,7 +41,7 @@ struct ContentView: View {
                 })
             }
             .tabItem {
-                Image(systemName: "gearshape")
+                Image(systemName: "gearshape.fill")
                 Text(isHindi ? "सेटिंग्स" : "Settings")
             }
             .tag(3)

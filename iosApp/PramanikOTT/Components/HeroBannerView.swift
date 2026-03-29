@@ -87,10 +87,10 @@ struct CategoryGridView: View {
     }
 
     let categories = [
-        Category(id: "bhawna", labelEn: "Bhawna Yog", labelHi: "भावना योग", icon: "ic_bhawna_yog", color: .green, route: "section/bhawna-yog"),
-        Category(id: "pravachan", labelEn: "Pravachan", labelHi: "प्रवचन", icon: "ic_pravachan", color: Color("Saffron"), route: "section/pravachan"),
-        Category(id: "shanka", labelEn: "Shanka Samadhan", labelHi: "शंका समाधान", icon: "ic_shanka_samadhan", color: .yellow, route: "section/shanka-clips"),
-        Category(id: "swadhyay", labelEn: "Swadhyay", labelHi: "स्वाध्याय", icon: "ic_swadhyay", color: .purple, route: "section/swadhyay"),
+        Category(id: "bhawna", labelEn: "Bhawna Yog", labelHi: "भावना योग", icon: "figure.mind.and.body", color: .green, route: "section/bhawna-yog"),
+        Category(id: "pravachan", labelEn: "Pravachan", labelHi: "प्रवचन", icon: "mic.fill", color: Color("Saffron"), route: "section/pravachan"),
+        Category(id: "shanka", labelEn: "Shanka Samadhan", labelHi: "शंका समाधान", icon: "bubble.left.and.bubble.right.fill", color: .yellow, route: "section/shanka-clips"),
+        Category(id: "swadhyay", labelEn: "Swadhyay", labelHi: "स्वाध्याय", icon: "book.fill", color: .purple, route: "section/swadhyay"),
     ]
 
     var body: some View {
@@ -103,11 +103,10 @@ struct CategoryGridView: View {
                                 .fill(cat.color.opacity(0.15))
                                 .frame(width: 56, height: 56)
                                 .overlay {
-                                    Image(cat.icon)
-                                        .renderingMode(.template)
+                                    Image(systemName: cat.icon)
                                         .resizable()
                                         .scaledToFit()
-                                        .frame(width: 28, height: 28)
+                                        .frame(width: 24, height: 24)
                                         .foregroundColor(cat.color)
                                 }
 
