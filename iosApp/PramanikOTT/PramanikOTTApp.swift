@@ -16,20 +16,25 @@ struct PramanikOTTApp: App {
 
 class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDelegate, MessagingDelegate {
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        FirebaseApp.configure()
+        // Firebase init - wrapped safely
+        if FirebaseApp.app() == nil {
+            FirebaseApp.configure()
+        }
 
-        // Push notifications
-        UNUserNotificationCenter.current().delegate = self
-        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound]) { granted, _ in
-            if granted {
-                DispatchQueue.main.async {
-                    application.registerForRemoteNotifications()
+        // Push notifications - wrapped safely
+        do {
+            UNUserNotificationCenter.current().delegate = self
+            UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound]) { granted, _ in
+                if granted {
+                    DispatchQueue.main.async {
+                        application.registerForRemoteNotifications()
+                    }
                 }
             }
+            Messaging.messaging().delegate = self
+            Messaging.messaging().subscribe(toTopic: "all")
+            Messaging.messaging().subscribe(toTopic: "mobile")
         }
-        Messaging.messaging().delegate = self
-        Messaging.messaging().subscribe(toTopic: "all")
-        Messaging.messaging().subscribe(toTopic: "mobile")
 
         return true
     }
